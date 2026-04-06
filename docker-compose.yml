@@ -1,0 +1,37 @@
+services:
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fatec-rooms-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://${DB_HOST}:${DB_PORT:-3306}/${DB_NAME}?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - fatec-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fatec-rooms-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - fatec-net
+    restart: unless-stopped
+
+networks:
+  fatec-net:
+    driver: bridge
