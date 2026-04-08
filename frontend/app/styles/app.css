@@ -780,6 +780,150 @@ body {
   font-size: 15px;
   font-weight: 600;
 }
+/* ══════════════════════════════════════════
+   PÁGINA DE CADASTRO e LOGNI
+══════════════════════════════════════════ */
+
+.page-hero-cadastro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 0px;
+  margin-right: 20px auto;
+  padding: 30px;
+  height: 175px;
+}
+
+/* Formulário */
+
+.form-group-cadastro {
+  margin-bottom: 12px;
+  margin-left: 85px;
+  margin-right: 85px;
+  padding: 10px;
+
+}
+
+@media (max-width: 768px) {
+  .form-group-cadastro {
+  margin-bottom: 12px;
+  margin-left: 25px;
+  margin-right: 25px;
+  padding: 10px;
+
+}
+}
+
+.form-group-cadastro label {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 8px;
+  font-family: var(--font-main);
+  text-transform: uppercase;
+}
+
+.form-group-cadastro input,
+.form-group-cadastro textarea,
+.form-group-cadastro select {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: var(--gray-100);
+  color: var(--gray-800);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.form-group-cadastro input:focus,
+.form-group-cadastro textarea:focus,
+.form-group-cadastro select:focus {
+  border-color: var(--red);
+  background: white;
+}
+
+.form-group-cadastro textarea {
+  resize: none;
+  height: 100px;
+}
+
+.form-group-cadastro select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.btn-submit-cadastro {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background-color: var(--red);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 18px;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 85%;
+  height: 50px;
+}
+
+.btn-submit-cadastro:hover {
+  background-color: var(--red-dark);
+}
+
+.cadastro-link{
+  margin-top:90px;
+  margin-left: 6% ;
+  margin-right: auto ;
+  
+  width: 87%;
+  padding: 12px;
+
+}
+
+.cadastro-link h3{
+  margin-bottom: 3px;
+  font-family: var(--font-main);
+  font-size: 18px;
+  font-weight: 600;
+
+}
+
+.cadastro-link p{
+margin-bottom: 16px;
+font-size: 14px;
+font-weight: bold;
+color: var(--gray-500);
+
+}
+
+.cadastro-link a{
+  display: block;
+  margin: 20px auto;
+  padding: 10px;
+  background-color: var(--red);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 18px;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+  height: 53px;
+  text-align: center;
+  text-decoration: none;
+
+}
+
+
+
+
 
 /* ══════════════════════════════════════════
    RODAPÉ
@@ -800,3 +944,6 @@ body {
 }
 
 .spacer { height: 32px; }
+
+
+

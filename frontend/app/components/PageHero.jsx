@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-export default function PageHero({ tag, title, description, variant = "default" }) {
+export default function PageHero({ tag, title, description, variant = "default", className = "" }) {
   return (
-    <div className={variant === "diretor" ? "dir-header" : "page-hero"}>
+    <div className={`${variant === "diretor" ? "dir-header" : "page-hero"} ${className}`}>
       <div className={variant === "diretor" ? "dir-badge" : "hero-tag"}>
         {variant === "diretor" && (
           <svg viewBox="0 0 24 24">
