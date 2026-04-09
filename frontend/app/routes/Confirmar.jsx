@@ -187,7 +187,7 @@ export default function AprovarCadastros() {
 
             {/* Filtros */}
             <div className="aprovacao-filtros">
-                {["pendente", "aprovado", "recusado"].map((f) => (
+                {["pendente", "aprovado"].map((f) => (
                     <button
                         key={f}
                         className={`filtro-btn ${filtro === f ? "active" : ""}`}
@@ -213,9 +213,7 @@ export default function AprovarCadastros() {
                         </svg>
                         <p>
                             Nenhuma solicitação{" "}
-                            {filtro === "pendente" ? "pendente"
-                                : filtro === "aprovado" ? "aprovada"
-                                : "recusada"}.
+                            {filtro === "pendente" ? "pendente" : "aprovada"}
                         </p>
                     </div>
                 ) : (
@@ -228,9 +226,7 @@ export default function AprovarCadastros() {
                             {/* Cabeçalho */}
                             <div className="aprovacao-card-header">
                                 <div className={`aprovacao-dot ${
-                                    c.status === "aprovado" ? "dot-green"
-                                    : c.status === "recusado" ? "dot-red"
-                                    : "dot-yellow"
+                                    c.status === "aprovado" ? "dot-green" : "dot-yellow"
                                 }`} />
                                 <div className="aprovacao-nome-wrap">
                                     <span className="aprovacao-apelido">{c.apelido}</span>
