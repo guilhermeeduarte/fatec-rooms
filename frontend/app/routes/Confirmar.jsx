@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
@@ -92,12 +93,21 @@ const authLevelOptions = [
 ];
 
 export default function AprovarCadastros() {
+    const navigate = useNavigate();
     const [cadastros, setCadastros] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filtro, setFiltro] = useState("pendente");
     const [confirmacao, setConfirmacao] = useState(null);
     // confirmacao: { id, acao: "aprovado"|"recusado", authLevel }
+
+    // Verificar se o usuário é coordenador
+    useEffect(() => {
+        const authlevel = localStorage.getItem('authlevel');
+        if (authlevel !== '1') {
+            navigate('/');
+        }
+    }, [navigate]);
 
     useEffect(() => {
         async function loadCadastros() {

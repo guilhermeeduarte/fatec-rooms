@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
@@ -99,7 +99,16 @@ const modalOptions = [
 ];
 
 export default function Coordenador() {
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Verificar se o usuário é coordenador
+  useEffect(() => {
+    const authlevel = localStorage.getItem('authlevel');
+    if (authlevel !== '1') {
+      navigate('/home');
+    }
+  }, [navigate]);
 
   return (
     <>
