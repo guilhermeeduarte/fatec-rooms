@@ -7,4 +7,17 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  server: {
+    watch: {
+      usePolling: true,
+    },
+    host: true,
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      }
+    }
+  },
 });

@@ -3,9 +3,6 @@
    ============================================= */
 
 /* ── Variáveis ── */
-
-
-
 :root {
   --red:       #C0121C;
   --red-dark:  #8B0D14;
@@ -45,7 +42,6 @@ body {
   background: var(--gray-50);
   color: var(--gray-800);
 }
-
 
 /* ══════════════════════════════════════════
    NAVBAR
@@ -479,7 +475,7 @@ body {
 }
 
 /* ══════════════════════════════════════════
-   ÁREA DO DIRETOR
+   ÁREA DO COORDENADOR / DIRETOR
 ══════════════════════════════════════════ */
 .stats-row {
   display: grid;
@@ -560,6 +556,20 @@ body {
   border-color: var(--red);
   box-shadow: var(--shadow-red);
   transform: translateY(-2px);
+}
+
+/* Garante que Link e button se comportem igual ao card */
+a.menu-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+button.menu-card {
+  width: 100%;
+  text-align: left;
+  background: white;
+  font-family: var(--font-main);
 }
 
 .menu-icon {
@@ -708,15 +718,16 @@ body {
   line-height: 1.4;
 }
 
-/* Modal */
+/* ══════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════ */
 .modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 200;
   display: flex;
-  align-items: center;
-  margin: 0 auto;
+  align-items: flex-end;
   animation: fadeUp 0.2s ease;
 }
 
@@ -751,6 +762,8 @@ body {
   border-bottom: 1px solid var(--gray-200);
   cursor: pointer;
   transition: opacity var(--transition);
+  text-decoration: none;
+  color: inherit;
 }
 
 .modal-option:last-child { border-bottom: none; }
@@ -779,10 +792,60 @@ body {
   font-size: 15px;
   font-weight: 600;
 }
-/* ══════════════════════════════════════════
-   PÁGINA DE CADASTRO e LOGNI
-══════════════════════════════════════════ */
 
+/* Modal de confirmação */
+.modal-desc {
+  font-size: 14px;
+  color: var(--gray-500);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.modal-acoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modal-btn-cancelar {
+  padding: 12px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: white;
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.modal-btn-cancelar:hover {
+  border-color: var(--gray-500);
+  color: var(--gray-800);
+}
+
+.modal-btn-confirmar-green,
+.modal-btn-confirmar-red {
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.modal-btn-confirmar-green { background: #22C55E; }
+.modal-btn-confirmar-green:hover { background: #16A34A; }
+.modal-btn-confirmar-red { background: var(--red); }
+.modal-btn-confirmar-red:hover { background: var(--red-dark); }
+
+/* ══════════════════════════════════════════
+   PÁGINA DE CADASTRO E LOGIN
+══════════════════════════════════════════ */
 .page-hero-cadastro {
   display: flex;
   flex-direction: column;
@@ -795,24 +858,20 @@ body {
   height: 175px;
 }
 
-/* Formulário */
-
 .form-group-cadastro {
   margin-bottom: 12px;
   margin-left: 85px;
   margin-right: 85px;
   padding: 10px;
-
 }
 
 @media (max-width: 768px) {
   .form-group-cadastro {
-  margin-bottom: 12px;
-  margin-left: 25px;
-  margin-right: 25px;
-  padding: 10px;
-
-}
+    margin-bottom: 12px;
+    margin-left: 25px;
+    margin-right: 25px;
+    padding: 10px;
+  }
 }
 
 .form-group-cadastro label {
@@ -847,15 +906,8 @@ body {
   background: white;
 }
 
-.form-group-cadastro textarea {
-  resize: none;
-  height: 100px;
-}
-
-.form-group-cadastro select {
-  appearance: none;
-  cursor: pointer;
-}
+.form-group-cadastro textarea { resize: none; height: 100px; }
+.form-group-cadastro select   { appearance: none; cursor: pointer; }
 
 .btn-submit-cadastro {
   display: block;
@@ -872,37 +924,31 @@ body {
   height: 50px;
 }
 
-.btn-submit-cadastro:hover {
-  background-color: var(--red-dark);
-}
+.btn-submit-cadastro:hover { background-color: var(--red-dark); }
 
-.cadastro-link{
-  margin-top:90px;
-  margin-left: 6% ;
-  margin-right: auto ;
-  
+.cadastro-link {
+  margin-top: 90px;
+  margin-left: 6%;
+  margin-right: auto;
   width: 87%;
   padding: 12px;
-
 }
 
-.cadastro-link h3{
+.cadastro-link h3 {
   margin-bottom: 3px;
   font-family: var(--font-main);
   font-size: 18px;
   font-weight: 600;
-
 }
 
-.cadastro-link p{
-margin-bottom: 16px;
-font-size: 14px;
-font-weight: bold;
-color: var(--gray-500);
-
+.cadastro-link p {
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--gray-500);
 }
 
-.cadastro-link a{
+.cadastro-link a {
   display: block;
   margin: 20px auto;
   padding: 10px;
@@ -917,12 +963,440 @@ color: var(--gray-500);
   height: 53px;
   text-align: center;
   text-decoration: none;
-
 }
 
+/* ══════════════════════════════════════════
+   SELETOR DE CARGO (Cadastro)
+══════════════════════════════════════════ */
+.cargo-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
+.cargo-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--gray-100);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
 
+/* Esconde o radio nativo */
+.cargo-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
 
+.cargo-card:hover {
+  border-color: var(--red);
+  background: white;
+}
+
+.cargo-card.selected {
+  border-color: var(--red);
+  background: #FFF4F4;
+}
+
+.cargo-icon {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1.5px solid var(--gray-200);
+  transition: border-color var(--transition);
+}
+
+.cargo-card.selected .cargo-icon {
+  border-color: var(--red);
+  background: #FFF0F0;
+}
+
+.cargo-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--gray-500);
+  fill: none;
+  stroke-width: 2;
+  transition: stroke var(--transition);
+}
+
+.cargo-card.selected .cargo-icon svg { stroke: var(--red); }
+
+.cargo-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cargo-title {
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.cargo-desc {
+  font-size: 11px;
+  color: var(--gray-500);
+  line-height: 1.4;
+}
+
+.cargo-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+
+.cargo-card.selected .cargo-check {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.cargo-check svg {
+  width: 12px;
+  height: 12px;
+  stroke: transparent;
+  fill: none;
+  stroke-width: 3;
+  transition: stroke var(--transition);
+}
+
+.cargo-card.selected .cargo-check svg { stroke: white; }
+
+/* Erro de formulário */
+.form-error {
+  background: #FFF0F0;
+  border: 1.5px solid rgba(192, 18, 28, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--red-dark);
+  font-family: var(--font-main);
+  font-weight: 600;
+  margin-bottom: 12px;
+  animation: fadeUp 0.3s ease;
+}
+
+/* ══════════════════════════════════════════
+   PÁGINA DE APROVAÇÃO DE CADASTROS
+══════════════════════════════════════════ */
+
+/* Filtros */
+.aprovacao-filtros {
+  display: flex;
+  gap: 8px;
+  padding: 20px 20px 4px;
+}
+
+.filtro-btn {
+  flex: 1;
+  padding: 9px 6px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  background: white;
+  font-family: var(--font-main);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.filtro-btn:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.filtro-btn.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: white;
+}
+
+.filtro-badge {
+  background: white;
+  color: var(--red);
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.filtro-btn.active .filtro-badge {
+  background: white;
+  color: var(--red);
+}
+
+/* Lista de solicitações */
+.aprovacao-lista {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Card de solicitação */
+.aprovacao-card {
+  background: white;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  animation: fadeUp 0.45s ease both;
+}
+
+.aprovacao-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.aprovacao-nome-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.aprovacao-apelido {
+  font-family: var(--font-main);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.aprovacao-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.badge-blue { background: #EFF6FF; color: #1D4ED8; }
+.badge-red  { background: #FFF0F0; color: var(--red); }
+
+/* Detalhes */
+.aprovacao-detalhes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 12px;
+  background: var(--gray-50);
+  border-radius: var(--radius-sm);
+}
+
+.aprovacao-detalhe-row {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.detalhe-label {
+  font-family: var(--font-main);
+  font-weight: 600;
+  color: var(--gray-500);
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.detalhe-valor { color: var(--gray-800); }
+
+.detalhe-email {
+  color: var(--red-dark);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.detalhe-authlevel {
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+/* Botões de ação */
+.aprovacao-acoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn-aprovar,
+.btn-rejeitar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-aprovar { background: #22C55E; color: white; }
+.btn-aprovar:hover { background: #16A34A; transform: translateY(-1px); }
+
+.btn-rejeitar { background: var(--red); color: white; }
+.btn-rejeitar:hover { background: var(--red-dark); transform: translateY(-1px); }
+
+.btn-aprovar svg,
+.btn-rejeitar svg {
+  width: 15px;
+  height: 15px;
+  stroke: white;
+  fill: none;
+  stroke-width: 2.5;
+}
+
+/* Estado vazio */
+.aprovacao-vazia {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--gray-500);
+}
+
+.aprovacao-vazia svg {
+  width: 48px;
+  height: 48px;
+  stroke: var(--gray-200);
+  fill: none;
+  stroke-width: 1.5;
+  margin-bottom: 12px;
+}
+
+.aprovacao-vazia p {
+  font-size: 14px;
+  font-family: var(--font-main);
+}
+
+/* ══════════════════════════════════════════
+   SELETOR DE AUTHLEVEL (Modal de aprovação)
+══════════════════════════════════════════ */
+.modal-authlevel {
+  margin-bottom: 20px;
+}
+
+.modal-authlevel-label {
+  display: block;
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  margin-bottom: 10px;
+}
+
+.modal-authlevel-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.authlevel-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--gray-100);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: left;
+  width: 100%;
+}
+
+.authlevel-option:hover {
+  border-color: var(--red);
+  background: white;
+}
+
+.authlevel-option.selected {
+  border-color: var(--red);
+  background: #FFF4F4;
+}
+
+.authlevel-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: white;
+  border: 1.5px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--gray-500);
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+
+.authlevel-option.selected .authlevel-num {
+  background: var(--red);
+  border-color: var(--red);
+  color: white;
+}
+
+.authlevel-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.authlevel-title {
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.authlevel-desc {
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+.authlevel-check {
+  width: 16px;
+  height: 16px;
+  stroke: var(--red);
+  fill: none;
+  stroke-width: 2.5;
+  flex-shrink: 0;
+}
 
 /* ══════════════════════════════════════════
    RODAPÉ
@@ -943,6 +1417,3 @@ color: var(--gray-500);
 }
 
 .spacer { height: 32px; }
-
-
-

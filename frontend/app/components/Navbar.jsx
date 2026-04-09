@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router";
 
 const menuLinks = [
-  { label: "Início", href: "/" },
   { label: "Reservar Sala", href: "/" },
   { label: "Área do Coordenador", href: "/coordenador" },
   { label: "Contato", href: "/contato" },
@@ -31,7 +30,7 @@ export default function Navbar({ activePage }) {
       </Link>
 
       {/* ícone perfil */}
-      <Link className="navbar__icon" to="/login" aria-label="Perfil">
+      <Link className="navbar__icon" to="/" aria-label="Perfil">
         <svg viewBox="0 0 24 24" strokeWidth="1.8">
           <circle cx="12" cy="8" r="4" />
           <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
