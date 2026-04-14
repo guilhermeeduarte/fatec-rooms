@@ -1399,6 +1399,184 @@ button.menu-card {
 }
 
 /* ══════════════════════════════════════════
+SOLICITAÇÕES DE RESERVA 
+══════════════════════════════════════════ */
+.div-calendario{
+  gap: 12px;
+  padding: 20px;
+  width: 100%;
+  height: 40%;
+  background: var(--gray-100);
+  border-radius: var(--radius-lg);
+  border: 3px transparent solid;
+  margin:10px;
+  align-items: center;
+
+}
+.div-calendario p{
+  font-size: 14px;
+  color: var(--gray-500);
+  margin-bottom: 8px;
+}
+
+.div-forms-reserva{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  width: 100%;
+  height: 40%;
+  background: var(--gray-100);
+  border-radius: var(--radius-lg);
+  border: 3px transparent solid;
+margin:10px;
+  justify-content: center;
+}
+.horario{
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+}
+
+/* forms */
+.form-group-reserva {
+  margin-bottom: 12px;
+  margin-left: 85px;
+  margin-right: 85px;
+  padding: 10px;
+}
+
+.form-group-reserva-check{
+  justify-content: center;
+
+  padding-top: 1px;
+  gap: 12px;
+  align-items: flex-start;
+  padding-left: 16px;
+  padding-right: 2px;
+}
+
+.form-group-reserva-check p{
+  font-size: 14px;
+  color: var(--gray-500);
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .form-group-reserva {
+    margin-bottom: 12px;
+    margin-left: 25px;
+    margin-right: 25px;
+    padding: 10px;
+  }
+}
+
+.form-group-reserva label {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 8px;
+  font-family: var(--font-main);
+  text-transform: uppercase;
+}
+
+.form-group-reserva input,
+.form-group-reserva textarea,
+.form-group-reserva select {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid var(--gray-500);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: var(--white);
+  color: var(--gray-800);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.form-group-reserva input:focus,
+.form-group-reserva textarea:focus,
+.form-group-reserva select:focus {
+  border-color: var(--red);
+  background: white;
+}
+
+.form-group-reserva textarea { resize: none; height: 100px; }
+.form-group-reserva select   { appearance: none; cursor: pointer; }
+
+.btn-submit-reserva {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background-color: var(--red);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 85%;
+  height: 50px;
+}
+
+.btn-submit-reserva:hover { background-color: var(--red-dark); }
+
+/* //modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.modal {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+}
+
+.lista-salas {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.btn-sala {
+    padding: 10px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-sala:hover {
+    background: #0056b3;
+}
+
+.btn-fechar {
+    margin-top: 10px;
+    background: red;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+}
+
+/* ══════════════════════════════════════════
    RODAPÉ
 ══════════════════════════════════════════ */
 .footer {
