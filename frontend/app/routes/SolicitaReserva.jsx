@@ -12,11 +12,14 @@ export default function SolicitaReserva() {
     const [modalOpen, setModalOpen] = useState(false);
     const [salas, setSalas] = useState([]);
     const [date, setDate] = useState(new Date());
+    const [categoriaAtiva, setCategoriaAtiva] = useState("laboratorio");
 
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState(null);
+
     const [form, setForm] = useState({
         data: "",
+        dataISO: "",
         espaco: "",
         hora: "",
         hora2: "",
@@ -25,6 +28,7 @@ export default function SolicitaReserva() {
         disciplina: "",
         naoSeAplica: false,
     });
+
     const reservas = {
         "2026-04-04": "aceita",
         "2026-04-09": "pendente",
@@ -33,12 +37,12 @@ export default function SolicitaReserva() {
     };
 
     function buscarSalasDisponiveis(data) {
-        // simulação
         return [
-            "Sala 101",
-            "Sala 102",
-            "Laboratório 201",
-            "Laboratório 204"
+            { nome: "Sala 101", tipo: "sala", andar: "1º andar" },
+            { nome: "Sala 102", tipo: "sala", andar: "1º andar" },
+            { nome: "Laboratório 201", tipo: "laboratorio", andar: "2º andar" },
+            { nome: "Laboratório 204", tipo: "laboratorio", andar: "2º andar" },
+            { nome: "Auditório A", tipo: "outro", andar: "Térreo" },
         ];
     }
 
@@ -48,10 +52,7 @@ export default function SolicitaReserva() {
             ...prev,
             [name]: type === "checkbox" ? checked : value,
         }));
-
-
     }
-
     async function handleSubmit(e) { }
 
     return (
@@ -65,18 +66,16 @@ export default function SolicitaReserva() {
                 description="Gerencie as reservas de salas e visualize o histórico de solicitações."
             />
 
-            <div className="content">
+            <div className="content-solicitarReserva">
 
                 <div className="div-calendario">
                     <div className="title-calendario">
                         <h3>Minhas Reservas:</h3>
                         <p>Selecione uma data para iniciar uma reserva.</p>
                     </div>
-                    
-                    
                     {/* calendario */}
                     <Calendar
-                    
+
                         onChange={(value) => {
                             setDate(value);
 
@@ -85,25 +84,33 @@ export default function SolicitaReserva() {
                             setForm((prev) => ({
                                 ...prev,
                                 data: value.toLocaleDateString("pt-BR"),
+                                dataISO: dataISO,
                             }));
 
                             const listaSalas = buscarSalasDisponiveis(dataISO);
                             setSalas(listaSalas);
+                            setCategoriaAtiva("laboratorio");
                             setModalOpen(true);
                         }}
-
                         value={date}
-
                         tileClassName={({ date }) => {
-                            const dataISO = date.toISOString().split("T")[0];
+                            const dataISO = date.toLocaleDateString("sv-SE");
+
+                            if (dataISO === form.dataISO) return "dia-selecionado";
+
                             const status = reservas[dataISO];
 
                             if (status === "aceita") return "dia-aceita";
                             if (status === "pendente") return "dia-pendente";
                             if (status === "cancelada") return "dia-cancelada";
+                            if (status === "selecionado") return "dia-selecionado";
 
                             return null;
                         }}
+                        locale="pt-BR"
+                        formatShortWeekday={(locale, date) =>
+                            date.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
+                        }
                     />
                     <div className="legenda">
                         <div><span className="box verde"></span> Aceita</div>
@@ -111,41 +118,83 @@ export default function SolicitaReserva() {
                         <div><span className="box vermelho"></span> Cancelada</div>
                         <div><span className="box cinza"></span> Selecionado</div>
                     </div>
+                    <div className="reservas-feitas">
+                        <h4>Horarios Reservados:</h4>
+                        <div className="lista-horarios">
+                            <p>
+                                <span className="hora">11:30</span>
+                                <span className="prof">Prof. Sirley</span>
+                            </p>
+                        </div>
+                    </div>
 
                 </div>
 
                 {modalOpen && (
-                    <div className="modal-overlay">
-                        <div className="modal">
-
-                            <h2>Salas disponíveis</h2>
-
-                            <div className="lista-salas">
-                                {salas.map((sala, index) => (
-                                    <button
-                                        key={index}
-                                        className="btn-sala"
-                                        onClick={() => {
-                                            setForm((prev) => ({
-                                                ...prev,
-                                                espaco: sala,
-                                            }));
-                                            setModalOpen(false);
-                                        }}
-                                    >
-                                        {sala}
-                                    </button>
-                                ))}
+                    <div className="modal-overlay" onClick={() => setModalOpen(false)}>
+                        <div className="modal-espacos" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-topo">
+                                <h2>Espaços disponíveis</h2>
+                                <button
+                                    className="btn-close-modal"
+                                    onClick={() => setModalOpen(false)}
+                                >
+                                    ×
+                                </button>
                             </div>
 
-                            <button className="btn-fechar" onClick={() => setModalOpen(false)}>
-                                Fechar
-                            </button>
+                            <div className="modal-tabs">
+                                <button
+                                    className={`tab-btn ${categoriaAtiva === "sala" ? "active" : ""}`}
+                                    onClick={() => setCategoriaAtiva("sala")}
+                                >
+                                    Salas
+                                </button>
 
+                                <button
+                                    className={`tab-btn ${categoriaAtiva === "laboratorio" ? "active" : ""}`}
+                                    onClick={() => setCategoriaAtiva("laboratorio")}
+                                >
+                                    Laboratórios
+                                </button>
+
+                                <button
+                                    className={`tab-btn ${categoriaAtiva === "outro" ? "active" : ""}`}
+                                    onClick={() => setCategoriaAtiva("outro")}
+                                >
+                                    Outros espaços
+                                </button>
+                            </div>
+
+                            <div className="lista-salas">
+                                {salas
+                                    .filter((sala) => sala.tipo === categoriaAtiva)
+                                    .map((sala, index) => (
+                                        <button
+                                            key={index}
+                                            className="btn-sala"
+                                            onClick={() => {
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    espaco: sala.nome,
+                                                }));
+                                                setModalOpen(false);
+                                            }}
+                                        >
+                                            <span className="sala-nome">{sala.nome}</span>
+                                            <span className="sala-andar">{sala.andar}</span>
+                                        </button>
+                                    ))}
+
+                                {salas.filter((sala) => sala.tipo === categoriaAtiva).length === 0 && (
+                                    <div className="sem-salas">
+                                        Nenhum espaço disponível nessa categoria.
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
-
                 <div className="div-forms-reserva">
 
                     <forms onSubmit={(e) => e.preventDefault()}>
