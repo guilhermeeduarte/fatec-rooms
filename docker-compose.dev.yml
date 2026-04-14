@@ -3,8 +3,8 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    container_name: fatec-rooms-backend
+      dockerfile: Dockerfile.dev
+    container_name: fatec-rooms-backend-dev
     ports:
       - "8080:8080"
     env_file:
@@ -15,6 +15,11 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       APP_JWT_SECRET: ${JWT_SECRET}
       APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/pom.xml:/app/pom.xml
+      - maven_cache:/root/.m2
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -24,23 +29,26 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    container_name: fatec-rooms-frontend
-    expose:
-      - "3000"
-    depends_on:
-      - backend
+      dockerfile: Dockerfile.dev
+    container_name: fatec-rooms-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
     networks:
       - fatec-net
     restart: unless-stopped
 
   nginx:
     image: nginx:1.25-alpine
-    container_name: fatec-rooms-nginx
+    container_name: fatec-rooms-nginx-dev
     ports:
       - "80:80"
     volumes:
-      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/nginx.dev.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - frontend
       - backend
@@ -51,3 +59,6 @@ services:
 networks:
   fatec-net:
     driver: bridge
+
+volumes:
+  maven_cache:

@@ -23,6 +23,7 @@ logs/
 spring.log
 
 # NODE / REACT
+.react-router
 node_modules/
 npm-debug.log*
 yarn-debug.log*
