@@ -11,6 +11,7 @@ export async function loader() {
 export default function Login() {
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
     const [form, setForm] = useState({
         email: "",
         senha: "",
@@ -21,9 +22,38 @@ export default function Login() {
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     }
 
+    function parseLoginError(message, status) {
+        if (!message) {
+            return status === 401
+                ? 'E-mail ou senha incorretos. Verifique seus dados e tente novamente.'
+                : 'Erro no login. Tente novamente mais tarde.';
+        }
+
+        const text = message.toLowerCase();
+        if (text.includes('usuário ou senha inválidos') || text.includes('credenciais')) {
+            return 'E-mail ou senha incorretos. Verifique seus dados e tente novamente.';
+        }
+        if (text.includes('cadastro ainda não foi aprovado') || text.includes('não foi aprovado')) {
+            return 'Seu cadastro ainda não foi aprovado por um coordenador. Aguarde aprovação antes de entrar.';
+        }
+        if (text.includes('enabled') || text.includes('bloqueado')) {
+            return 'Sua conta está bloqueada. Entre em contato com o coordenador.';
+        }
+        if (text.includes('senha')) {
+            return message;
+        }
+        return message;
+    }
+
     async function handleSubmit(e) {
         e.preventDefault();
         setError(null);
+
+        if (!form.email.trim() || !form.senha.trim()) {
+            setError('Preencha e-mail e senha para continuar.');
+            return;
+        }
+
         try {
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
@@ -39,10 +69,10 @@ export default function Login() {
                 let errorMessage = 'Erro no login';
                 try {
                     const errorData = await response.json();
-                    errorMessage = errorData.message || errorMessage;
+                    errorMessage = parseLoginError(errorData.message || errorData.error || '', response.status);
                 } catch (e) {
-                    // Se não conseguir fazer parse do JSON, usa o status text
-                    errorMessage = response.statusText || `Erro ${response.status}`;
+                    const text = await response.text();
+                    errorMessage = parseLoginError(text, response.status);
                 }
                 throw new Error(errorMessage);
             }
@@ -51,7 +81,6 @@ export default function Login() {
             localStorage.setItem('username', data.username);
             localStorage.setItem('authlevel', data.authlevel);
             setSubmitted(true);
-            // Redirecionar baseado no authlevel
             if (data.authlevel === 1) {
                 navigate('/coordenador');
             } else {
@@ -108,14 +137,24 @@ export default function Login() {
                         
                             <div className="form-group-cadastro">
                                 <label>Senha</label>
-                                <input
-                                    type="password"
-                                    name="senha"
-                                    placeholder="Digite sua senha"
-                                    value={form.senha}
-                                    onChange={handleChange}
-                                    required
-                                />
+                                <div className="input-with-icon">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        name="senha"
+                                        placeholder="Digite sua senha"
+                                        value={form.senha}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="password-toggle"
+                                        onClick={() => setShowPassword((prev) => !prev)}
+                                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                                    >
+                                        {showPassword ? "🙈" : "👁️"}
+                                    </button>
+                                </div>
                             </div>
 
                             <button type="submit" className="btn-submit-cadastro">
