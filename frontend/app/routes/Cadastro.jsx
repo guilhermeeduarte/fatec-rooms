@@ -11,6 +11,8 @@ export async function loader() {
 export default function Cadastro() {
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState(null);
+    const [showSenha, setShowSenha] = useState(false);
+    const [showConfirmSenha, setShowConfirmSenha] = useState(false);
     const [form, setForm] = useState({
         nome: "",
         email: "",
@@ -23,15 +25,44 @@ export default function Cadastro() {
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     }
 
+    function parseRegisterError(message) {
+        if (!message) {
+            return "Erro no cadastro. Tente novamente mais tarde.";
+        }
+
+        if (message.includes("Username já está em uso")) {
+            return "Usuário já cadastrado. Verifique seu e-mail institucional ou use outro login.";
+        }
+
+        if (message.includes("E-mail já está em uso")) {
+            return "E-mail já cadastrado. Use outro endereço ou faça login.";
+        }
+
+        if (message.includes("Senha deve ter ao menos 6 caracteres")) {
+            return "A senha deve ter ao menos 6 caracteres.";
+        }
+
+        if (message.toLowerCase().includes("notblank") || message.toLowerCase().includes("invalid")) {
+            return "Preencha todos os campos corretamente.";
+        }
+
+        return message;
+    }
+
     async function handleSubmit(e) {
         e.preventDefault();
         setError(null);
+        const nameParts = form.nome.trim().split(/\s+/).filter(Boolean);
+        if (nameParts.length < 2) {
+            setError("Informe nome e sobrenome no campo Nome completo.");
+            return;
+        }
         if (form.senha !== form.confirmarSenha) {
             setError("As senhas não coincidem.");
             return;
         }
         try {
-            const [firstname, ...lastnameParts] = form.nome.split(' ');
+            const [firstname, ...lastnameParts] = nameParts;
             const lastname = lastnameParts.join(' ');
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
@@ -48,16 +79,11 @@ export default function Cadastro() {
                 })
             });
             if (!response.ok) {
-                let errorMessage = 'Erro no cadastro';
-                try {
-                    const errorData = await response.text(); // register retorna String, não JSON
-                    errorMessage = errorData || errorMessage;
-                } catch (e) {
-                    errorMessage = response.statusText || `Erro ${response.status}`;
-                }
+                const errorText = await response.text(); // register retorna String, não JSON
+                const errorMessage = parseRegisterError(errorText);
                 throw new Error(errorMessage);
             }
-            const message = await response.text();
+            await response.text();
             setSubmitted(true);
             setTimeout(() => navigate('/'), 3000); // Redirecionar para login após 3 segundos
         } catch (err) {
@@ -107,6 +133,7 @@ export default function Cadastro() {
                                     onChange={handleChange}
                                     required
                                 />
+                                <small className="form-help">Informe nome e sobrenome.</small>
                             </div>
                             <div className="form-group-cadastro">
                                 <label>E-mail institucional</label>
@@ -121,25 +148,46 @@ export default function Cadastro() {
                             </div>
                             <div className="form-group-cadastro">
                                 <label>Crie sua senha</label>
-                                <input
-                                    type="password"
-                                    name="senha"
-                                    placeholder="Digite sua senha"
-                                    value={form.senha}
-                                    onChange={handleChange}
-                                    required
-                                />
+                                <div className="input-with-icon">
+                                    <input
+                                        type={showSenha ? "text" : "password"}
+                                        name="senha"
+                                        placeholder="Digite sua senha"
+                                        value={form.senha}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="password-toggle"
+                                        onClick={() => setShowSenha((prev) => !prev)}
+                                        aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
+                                    >
+                                        {showSenha ? "🙈" : "👁️"}
+                                    </button>
+                                </div>
+                                <small className="form-help">Senha deve ter ao menos 6 caracteres.</small>
                             </div>
                             <div className="form-group-cadastro">
                                 <label>Confirme sua senha</label>
-                                <input
-                                    type="password"
-                                    name="confirmarSenha"
-                                    placeholder="Confirme sua senha"
-                                    value={form.confirmarSenha}
-                                    onChange={handleChange}
-                                    required
-                                />
+                                <div className="input-with-icon">
+                                    <input
+                                        type={showConfirmSenha ? "text" : "password"}
+                                        name="confirmarSenha"
+                                        placeholder="Confirme sua senha"
+                                        value={form.confirmarSenha}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="password-toggle"
+                                        onClick={() => setShowConfirmSenha((prev) => !prev)}
+                                        aria-label={showConfirmSenha ? "Ocultar senha" : "Mostrar senha"}
+                                    >
+                                        {showConfirmSenha ? "🙈" : "👁️"}
+                                    </button>
+                                </div>
                             </div>
 
 

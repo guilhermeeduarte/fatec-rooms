@@ -15,13 +15,7 @@ const menuActions = [
     icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
     title: "Minhas Solicitações",
     desc: "Acompanhe o status das reservas.",
-    to: "/confirmar",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
-    title: "Lista de Salas",
-    desc: "Veja recursos e disponibilidade.",
-    to: "/lista-salas",
+    to: "/minhas-reservas",
   },
   {
     icon: <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>,
@@ -269,7 +263,7 @@ export default function Professor() {
 
             <div className="section-title section-title--top-space">
               Minhas reservas recentes
-              <Link className="see-all" to="/confirmar">Ver todas</Link>
+              <Link className="see-all" to="/minhas-reservas">Ver todas</Link>
             </div>
 
             <div className="reservas-list">

@@ -1,39 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
-
-const stats = [
-  {
-    highlight: true,
-    icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
-    number: 12,
-    label: "Salas ativas",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
-    number: 37,
-    label: "Reservas hoje",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
-    number: 28,
-    label: "Professores",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
-    number: 3,
-    label: "Pendentes",
-  },
-];
 
 const menuActions = [
   {
     icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
     title: "Gerenciar Salas",
     desc: "Adicionar, editar ou desativar salas",
-    modal: true,
+    to: "/gerenciar-salas",
   },
   {
     icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
@@ -45,70 +21,152 @@ const menuActions = [
     icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
     title: "Todas as Reservas",
     desc: "Visualize e aprove reservas",
+    to: "/reservas",
   },
   {
     icon: <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
     title: "Relatórios",
     desc: "Uso de salas e estatísticas",
+    to: "/relatorios",
   },
 ];
 
-const reservas = [
-  {
-    dot: "dot-green",
-    sala: "Sala 102 – Lab. Informática",
-    prof: "Prof. Carla Mendes",
-    horario: "08:00–10:00",
-    status: "Confirmada",
-    statusClass: "status-ok",
-  },
-  {
-    dot: "dot-yellow",
-    sala: "Sala 205 – Auditório",
-    prof: "Prof. Ricardo Alves",
-    horario: "10:30–12:00",
-    status: "Pendente",
-    statusClass: "status-pend",
-  },
-  {
-    dot: "dot-red",
-    sala: "Sala 301 – Multimídia",
-    prof: "Prof. Ana Beatriz",
-    horario: "14:00–16:00",
-    status: "Cancelada",
-    statusClass: "status-cancel",
-  },
-];
+const statusLabels = {
+  APPROVED: "Confirmada",
+  PENDING: "Pendente",
+  CANCELLED: "Cancelada",
+  REJECTED: "Recusada",
+};
 
-const modalOptions = [
-  {
-    icon: <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>,
-    label: "Adicionar nova sala",
-    href: "/salas/nova",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5l3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>,
-    label: "Editar sala existente",
-    href: "/salas/editar",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>,
-    label: "Desativar sala",
-    href: "/salas/desativar",
-  },
-];
+const statusClasses = {
+  APPROVED: "status-ok",
+  PENDING: "status-pend",
+  CANCELLED: "status-cancel",
+  REJECTED: "status-cancel",
+};
+
+
+function formatDate(isoDate) {
+  if (!isoDate) return "";
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return isoDate;
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function formatTime(timeStr) {
+  if (!timeStr) return "";
+  return timeStr.length > 5 ? timeStr.slice(0, 5) : timeStr;
+}
 
 export default function Coordenador() {
   const navigate = useNavigate();
-  const [modalOpen, setModalOpen] = useState(false);
+  const [rooms, setRooms] = useState([]);
+  const [professors, setProfessors] = useState([]);
+  const [todayBookings, setTodayBookings] = useState([]);
+  const [pendingBookings, setPendingBookings] = useState([]);
+  const [recentBookings, setRecentBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Verificar se o usuário é coordenador
   useEffect(() => {
     const authlevel = localStorage.getItem('authlevel');
     if (authlevel !== '1') {
       navigate('/');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    async function loadDashboard() {
+      const token = localStorage.getItem('token');
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+      const today = new Date().toISOString().slice(0, 10);
+
+      try {
+        const [roomsResp, usersResp, todayResp, pendingResp, recentResp] = await Promise.all([
+          fetch('/api/rooms', { headers }),
+          fetch('/api/admin/users', { headers }),
+          fetch(`/api/bookings/admin/by-date?date=${today}`, { headers }),
+          fetch('/api/bookings/admin/pending', { headers }),
+          fetch('/api/bookings/admin/all', { headers }),
+        ]);
+
+        if (!roomsResp.ok) throw new Error('Falha ao buscar salas');
+        if (!usersResp.ok) throw new Error('Falha ao buscar professores');
+        if (!todayResp.ok) throw new Error('Falha ao buscar reservas de hoje');
+        if (!pendingResp.ok) throw new Error('Falha ao buscar reservas pendentes');
+        if (!recentResp.ok) throw new Error('Falha ao buscar reservas recentes');
+
+        const roomsData = await roomsResp.json();
+        const usersData = await usersResp.json();
+        const todayData = await todayResp.json();
+        const pendingData = await pendingResp.json();
+        const recentData = await recentResp.json();
+
+        setRooms(roomsData || []);
+        setProfessors((usersData || []).filter((user) => user.authlevel === 2));
+        setTodayBookings(todayData || []);
+        setPendingBookings(pendingData || []);
+
+        const sortedRecent = (recentData || [])
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 5);
+        setRecentBookings(sortedRecent);
+      } catch (err) {
+        setError(err.message || 'Erro ao carregar painel do coordenador.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboard();
+  }, []);
+
+  const stats = useMemo(() => [
+    {
+      highlight: true,
+      icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
+      number: rooms.length,
+      label: "Salas ativas",
+    },
+    {
+      icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
+      number: todayBookings.length,
+      label: "Reservas hoje",
+    },
+    {
+      icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
+      number: professors.length,
+      label: "Professores",
+    },
+    {
+      icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
+      number: pendingBookings.length,
+      label: "Pendentes",
+    },
+  ], [rooms.length, todayBookings.length, professors.length, pendingBookings.length]);
+
+  if (loading) {
+    return (
+      <>
+        <Navbar activePage="Área do Coordenador" />
+        <div className="content">Carregando painel do coordenador...</div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Navbar activePage="Área do Coordenador" />
+        <div className="content">Erro: {error}</div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -142,7 +200,7 @@ export default function Coordenador() {
           </svg>
         </div>
         <div className="alert-text">
-          <h4>3 reservas aguardando aprovação</h4>
+          <h4>{pendingBookings.length} reservas aguardando aprovação</h4>
           <p>Professores estão aguardando sua confirmação para hoje.</p>
         </div>
       </div>
@@ -150,30 +208,17 @@ export default function Coordenador() {
       {/* Menu de ações */}
       <div className="section-title">Ações rápidas</div>
       <div className="menu-grid">
-        {menuActions.map((action) =>
-          action.modal ? (
-            // Card que abre modal — usa <button> estilizado como card
-            <button
-              key={action.title}
-              className="menu-card"
-              onClick={() => setModalOpen(true)}
-            >
-              <div className="menu-icon">{action.icon}</div>
-              <h3>{action.title}</h3>
-              <p>{action.desc}</p>
-            </button>
-          ) : (
-            <Link
-              key={action.title}
-              className="menu-card"
-              to={action.to}
-            >
-              <div className="menu-icon">{action.icon}</div>
-              <h3>{action.title}</h3>
-              <p>{action.desc}</p>
-            </Link>
-          )
-        )}
+        {menuActions.map((action) => (
+          <Link
+            key={action.title}
+            className="menu-card"
+            to={action.to}
+          >
+            <div className="menu-icon">{action.icon}</div>
+            <h3>{action.title}</h3>
+            <p>{action.desc}</p>
+          </Link>
+        ))}
       </div>
 
       {/* Reservas recentes */}
@@ -183,47 +228,35 @@ export default function Coordenador() {
       </div>
 
       <div className="reservas-list">
-        {reservas.map((r) => (
-          <div key={r.sala} className="reserva-item">
-            <div className={`reserva-dot ${r.dot}`} />
+        {recentBookings.length === 0 ? (
+          <div className="reserva-item">
             <div className="reserva-info">
-              <div className="reserva-sala">{r.sala}</div>
-              <div className="reserva-prof">{r.prof}</div>
-            </div>
-            <div className="reserva-time">
-              {r.horario}
-              <div className={`reserva-status ${r.statusClass}`}>{r.status}</div>
+              <div className="reserva-sala">Nenhuma reserva recente encontrada.</div>
             </div>
           </div>
-        ))}
+        ) : (
+          recentBookings.map((booking) => (
+            <div key={booking.id} className="reserva-item">
+              <div className={`reserva-dot ${statusClasses[booking.status] || "dot-green"}`} />
+              <div className="reserva-info">
+                <div className="reserva-sala">{booking.roomName} — {booking.roomLocation}</div>
+                <div className="reserva-prof">{booking.userDisplayName || booking.username}</div>
+              </div>
+              <div className="reserva-time">
+                {formatDate(booking.bookingDate)}<br />
+                {formatTime(booking.periodStart)}–{formatTime(booking.periodEnd)}
+                <div className={`reserva-status ${statusClasses[booking.status] || "status-ok"}`}>
+                  {statusLabels[booking.status] || booking.status}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       <div className="spacer" />
       <Footer />
 
-      {/* Modal Gerenciar Salas */}
-      {modalOpen && (
-        <div
-          className="modal-overlay"
-          onClick={(e) => e.target === e.currentTarget && setModalOpen(false)}
-        >
-          <div className="modal">
-            <div className="modal-handle" />
-            <h3>Gerenciar Salas</h3>
-            {modalOptions.map((opt) => (
-              <Link
-                key={opt.label}
-                className="modal-option"
-                to={opt.href}
-                onClick={() => setModalOpen(false)}
-              >
-                <div className="modal-opt-icon">{opt.icon}</div>
-                <span>{opt.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </>
   );
 }
