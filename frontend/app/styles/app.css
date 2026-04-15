@@ -2447,3 +2447,81 @@ margin:10px;
 .btn-salvar:hover {
   background: #388E3C;
 }
+
+/* ══════════════════════════════════════════
+   FEATURE TOGGLES (NOVO CHECK MODERNO)
+══════════════════════════════════════════ */
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+/* card clicável */
+.feature-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px solid var(--gray-200);
+  background: var(--gray-100);
+  cursor: pointer;
+  transition: 0.25s ease;
+  position: relative;
+  user-select: none;
+}
+
+/* escondendo checkbox */
+.feature-card input {
+  position: absolute;
+  opacity: 0;
+}
+
+/* hover */
+.feature-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--red);
+  background: #fff5f5;
+}
+
+/* ativo */
+.feature-card.active {
+  border-color: var(--red);
+  background: #fff0f0;
+  box-shadow: var(--shadow-red);
+}
+
+/* ícone */
+.feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border: 1.5px solid var(--gray-200);
+}
+
+/* texto */
+.feature-card strong {
+  display: block;
+  font-size: 14px;
+  font-family: var(--font-main);
+  color: var(--gray-800);
+}
+
+.feature-card p {
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+/* quando ativo muda ícone */
+.feature-card.active .feature-icon {
+  border-color: var(--red);
+  background: white;
+}
