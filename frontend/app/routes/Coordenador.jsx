@@ -9,7 +9,7 @@ const menuActions = [
     icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
     title: "Gerenciar Salas",
     desc: "Adicionar, editar ou desativar salas",
-    modal: true,
+    to: "/gerenciar-salas",
   },
   {
     icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
@@ -45,23 +45,6 @@ const statusClasses = {
   REJECTED: "status-cancel",
 };
 
-const modalOptions = [
-  {
-    icon: <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>,
-    label: "Adicionar nova sala",
-    href: "/salas/nova",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5l3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>,
-    label: "Editar sala existente",
-    href: "/salas/editar",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>,
-    label: "Desativar sala",
-    href: "/salas/desativar",
-  },
-];
 
 function formatDate(isoDate) {
   if (!isoDate) return "";
@@ -77,7 +60,6 @@ function formatTime(timeStr) {
 
 export default function Coordenador() {
   const navigate = useNavigate();
-  const [modalOpen, setModalOpen] = useState(false);
   const [rooms, setRooms] = useState([]);
   const [professors, setProfessors] = useState([]);
   const [todayBookings, setTodayBookings] = useState([]);
@@ -226,30 +208,17 @@ export default function Coordenador() {
       {/* Menu de ações */}
       <div className="section-title">Ações rápidas</div>
       <div className="menu-grid">
-        {menuActions.map((action) =>
-          action.modal ? (
-            // Card que abre modal — usa <button> estilizado como card
-            <button
-              key={action.title}
-              className="menu-card"
-              onClick={() => setModalOpen(true)}
-            >
-              <div className="menu-icon">{action.icon}</div>
-              <h3>{action.title}</h3>
-              <p>{action.desc}</p>
-            </button>
-          ) : (
-            <Link
-              key={action.title}
-              className="menu-card"
-              to={action.to}
-            >
-              <div className="menu-icon">{action.icon}</div>
-              <h3>{action.title}</h3>
-              <p>{action.desc}</p>
-            </Link>
-          )
-        )}
+        {menuActions.map((action) => (
+          <Link
+            key={action.title}
+            className="menu-card"
+            to={action.to}
+          >
+            <div className="menu-icon">{action.icon}</div>
+            <h3>{action.title}</h3>
+            <p>{action.desc}</p>
+          </Link>
+        ))}
       </div>
 
       {/* Reservas recentes */}
@@ -288,29 +257,6 @@ export default function Coordenador() {
       <div className="spacer" />
       <Footer />
 
-      {/* Modal Gerenciar Salas */}
-      {modalOpen && (
-        <div
-          className="modal-overlay"
-          onClick={(e) => e.target === e.currentTarget && setModalOpen(false)}
-        >
-          <div className="modal">
-            <div className="modal-handle" />
-            <h3>Gerenciar Salas</h3>
-            {modalOptions.map((opt) => (
-              <Link
-                key={opt.label}
-                className="modal-option"
-                to={opt.href}
-                onClick={() => setModalOpen(false)}
-              >
-                <div className="modal-opt-icon">{opt.icon}</div>
-                <span>{opt.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </>
   );
 }
