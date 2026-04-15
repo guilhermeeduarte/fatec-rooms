@@ -1,50 +1,75 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 
 export default function EditarReserva() {
-  const [reservas, setReservas] = useState([
-    {
-      id: 1,
-      data: "09/04/2026",
-      espaco: "Sala 101",
-      horaInicio: "10:00",
-      horaFim: "12:00",
-      motivo: "Aula de Banco de Dados",
-      status: "Pendente",
-    },
-    {
-      id: 2,
-      data: "10/04/2026",
-      espaco: "Laboratório 201",
-      horaInicio: "08:00",
-      horaFim: "10:00",
-      motivo: "Prova prática",
-      status: "Aceita",
-    },
-    {
-      id: 3,
-      data: "20/04/2026",
-      espaco: "Laboratório 231",
-      horaInicio: "08:00",
-      horaFim: "10:00",
-      motivo: "Prova prática",
-      status: "Aceita",
-    },
-    {
-      id: 4,
-      data: "20/04/2026",
-      espaco: "Laboratório 231",
-      horaInicio: "08:00",
-      horaFim: "10:00",
-      motivo: "Aula de Programação",
-      status: "Cancelada",
-    },
-  ]);
-
+  const [reservas, setReservas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [editandoId, setEditandoId] = useState(null);
   const [novoMotivo, setNovoMotivo] = useState("");
+
+  function traduzirStatus(status) {
+    switch ((status || "").toUpperCase()) {
+      case "PENDING":
+      case "PENDENTE":
+        return "Pendente";
+      case "APPROVED":
+      case "ACEITA":
+      case "ACEITO":
+        return "Aceita";
+      case "REJECTED":
+      case "RECUSADA":
+        return "Recusada";
+      case "CANCELLED":
+      case "CANCELADA":
+        return "Cancelada";
+      default:
+        return status || "Pendente";
+    }
+  }
+
+  useEffect(() => {
+    async function loadReservas() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Faça login para ver suas reservas.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch("/api/bookings/my", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Falha ao carregar suas reservas.");
+        }
+        const data = await response.json();
+        setReservas(data.map((reserva) => ({
+          id: reserva.id,
+          data: reserva.bookingDate?.split("-").reverse().join("/") || "",
+          espaco: reserva.roomName,
+          horaInicio: reserva.periodStart?.slice(0, 5) || "",
+          horaFim: reserva.periodEnd?.slice(0, 5) || "",
+          motivo: reserva.subject || reserva.notes || "",
+          status: traduzirStatus(reserva.status),
+        })));
+      } catch (err) {
+        setError(err.message || "Erro ao carregar suas reservas.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadReservas();
+  }, []);
 
   // 🔍 FILTROS
   const [busca, setBusca] = useState("");
@@ -56,24 +81,65 @@ export default function EditarReserva() {
     setNovoMotivo(reserva.motivo);
   }
 
-  function salvarEdicao(id) {
-    setReservas((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, motivo: novoMotivo } : r
-      )
-    );
-    setEditandoId(null);
+  async function salvarEdicao(id) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Faça login para editar a reserva.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/bookings/${id}/notes`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ notes: novoMotivo }),
+      });
+      if (!response.ok) {
+        throw new Error("Falha ao atualizar o motivo da reserva.");
+      }
+      setReservas((prev) =>
+        prev.map((r) =>
+          r.id === id ? { ...r, motivo: novoMotivo } : r
+        )
+      );
+      setEditandoId(null);
+    } catch (err) {
+      setError(err.message || "Erro ao salvar a edição.");
+    }
   }
 
-  function cancelarReserva(id) {
+  async function cancelarReserva(id) {
     const confirmar = window.confirm("Deseja realmente cancelar essa reserva?");
     if (!confirmar) return;
 
-    setReservas((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, status: "Cancelada" } : r
-      )
-    );
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Faça login para cancelar a reserva.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/bookings/${id}/cancel`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Falha ao cancelar a reserva.");
+      }
+      setReservas((prev) =>
+        prev.map((r) =>
+          r.id === id ? { ...r, status: "Cancelada" } : r
+        )
+      );
+    } catch (err) {
+      setError(err.message || "Erro ao cancelar a reserva.");
+    }
   }
 
   // 🔄 converter BR → ISO
@@ -84,9 +150,11 @@ export default function EditarReserva() {
 
   // 🔎 FILTRO COMPLETO
   const reservasFiltradas = reservas.filter((reserva) => {
-    const matchBusca = reserva.espaco
-      .toLowerCase()
-      .includes(busca.toLowerCase());
+    const buscaLower = busca.toLowerCase();
+    const matchBusca =
+      reserva.espaco.toLowerCase().includes(buscaLower) ||
+      reserva.motivo.toLowerCase().includes(buscaLower) ||
+      reserva.status.toLowerCase().includes(buscaLower);
 
     const matchStatus = statusFiltro
       ? reserva.status === statusFiltro
@@ -142,6 +210,11 @@ export default function EditarReserva() {
 
           {/* 🧾 CARDS */}
           <div className="container-reservas">
+            {loading && <p>Carregando reservas...</p>}
+            {error && <p className="error-message">{error}</p>}
+            {!loading && !error && reservasFiltradas.length === 0 && (
+              <p>Nenhuma reserva encontrada.</p>
+            )}
             {reservasFiltradas.map((reserva) => (
               <div
                 key={reserva.id}
