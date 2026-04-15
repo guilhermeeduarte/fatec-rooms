@@ -9,4 +9,5 @@ export default [
   route("cadastro", "routes/Cadastro.jsx"),
   route("confirmar", "routes/Confirmar.jsx"),
   route("solicitar-reserva", "routes/SolicitaReserva.jsx"),
+  route("lista-salas", "routes/ListaSalas.jsx"),
 ];
