@@ -7,5 +7,6 @@ export default [
   route("contato", "routes/Contato.jsx"),
   route("coordenador", "routes/Coordenador.jsx"),
   route("cadastro", "routes/Cadastro.jsx"),
-  route("confirmar", "routes/Confirmar.jsx")
+  route("confirmar", "routes/Confirmar.jsx"),
+  route("listasalas", "routes/ListaSalasOn.jsx")
 ];
