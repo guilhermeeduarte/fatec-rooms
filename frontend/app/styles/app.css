@@ -1978,7 +1978,6 @@ margin:10px;
    ÁREA DE LISTA DE SALAS
 ══════════════════════════════════════════ */
 
-/* Container principal */
 .container {
   max-width: 900px;
   margin: 2rem auto;
@@ -1986,7 +1985,6 @@ margin:10px;
   font-family: var(--font-body);
 }
 
-/* Filtros de busca */
 .filtros {
   display: flex;
   gap: 1rem;
@@ -2003,7 +2001,6 @@ margin:10px;
   font-family: var(--font-body);
 }
 
-/* Lista de salas */
 .lista-salas {
   display: flex;
   flex-direction: column;
@@ -2011,7 +2008,6 @@ margin:10px;
   font-family: var(--font-body);
 }
 
-/* Linha de cada sala */
 .linha-sala {
   display: flex;
   align-items: flex-start;
@@ -2023,7 +2019,6 @@ margin:10px;
   font-family: var(--font-body);
 }
 
-/* Bolinha de status */
 .status {
   width: 16px;
   height: 16px;
@@ -2033,14 +2028,12 @@ margin:10px;
 }
 
 .status.verde {
-  background: #28a745; /* verde */
+  background: #28a745;
 }
 
 .status.vermelho {
-  background: #dc3545; /* vermelho */
+  background: #dc3545; 
 }
-
-/* Informações da sala */
 .info {
   flex: 1;
 }
@@ -2052,14 +2045,12 @@ margin:10px;
   font-family: var(--font-main);
 }
 
-/* Bloco de informações lado a lado */
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 1rem;
 }
 
-/* Cada item da informação */
 .info-item {
   display: flex;
   flex-direction: column;
@@ -2081,7 +2072,6 @@ margin:10px;
   text-align: center;
 }
 
-/* Cores por tipo de sala */
 .Laboratório {
   border-left: 6px solid #ffc107;
 }
@@ -2094,3 +2084,178 @@ margin:10px;
   border-left: 6px solid #6f42c1; 
 }
 
+/* ══════════════════════════════════════════
+   ÁREA DE MINHAS RESERVAS E EDIÇÃO
+══════════════════════════════════════════ */
+
+.layout-reservas {
+  display: flex;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 40px auto;
+  align-items: flex-start;
+  font-family: var(--font-main);
+}
+
+.lado-direito {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-main);
+}
+
+.filtros {
+  width: 100%;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  font-family: var(--font-main);
+}
+
+.filtros input,
+.filtros select {
+  padding: 10px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  font-family: var(--font-main);
+}
+
+.filtros input[type="text"] {
+  flex: 1;
+  font-family: var(--font-main);
+}
+
+.container-reservas {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: var(--font-main);
+}
+
+.card-reserva {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 25px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  transition: 0.3s;
+  border-left: 6px solid #e0e0e0;
+  font-family: var(--font-main);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.card-reserva:hover {
+  transform: translateY(-3px);
+  font-family: var(--font-main);
+}
+
+.card-reserva[data-status="Aceita"] {
+  border-left: 6px solid #4CAF50;
+  font-family: var(--font-main);
+}
+
+.card-reserva[data-status="Pendente"] {
+  border-left: 6px solid #FFC107;
+  font-family: var(--font-main);
+}
+
+.card-reserva[data-status="Cancelada"] {
+  border-left: 6px solid #F44336;
+  opacity: 0.7;
+  font-family: var(--font-main);
+}
+
+.info-reserva {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 2fr 1fr;
+  gap: 20px;
+  width: 100%;
+  font-family: var(--font-main);
+}
+
+.item-reserva {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-main);
+}
+
+.label {
+  font-weight: 600;
+  color: #222;
+  font-size: 13px;
+  margin-bottom: 4px;
+  font-family: var(--font-main);
+}
+
+.valor {
+  color: #555;
+  font-size: 14px;
+  font-family: var(--font-main);
+}
+
+.item-reserva input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-family: var(--font-main);
+}
+
+.acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 120px;
+  font-family: var(--font-main);
+}
+
+.acoes button {
+  width: 100%;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s;
+  font-family: var(--font-main);
+}
+
+.acoes button:first-child {
+  background: #2196F3;
+  color: white;
+  font-family: var(--font-main);
+}
+
+.acoes button:first-child:hover {
+  background: #1976D2;
+}
+
+.acoes button:last-child {
+  background: #F44336;
+  color: white;
+  font-family: var(--font-main);
+}
+
+.acoes button:last-child:hover {
+  background: #D32F2F;
+}
+
+.btn-salvar {
+  margin-top: 8px;
+  background: #4CAF50;
+  color: white;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-main);
+}
+
+.btn-salvar:hover {
+  background: #388E3C;
+}
