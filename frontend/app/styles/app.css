@@ -968,7 +968,7 @@ button.menu-card {
 }
 
 .btn-action.btn-secondary {
-  background: #6B7280;
+  background: #2196F3;
 }
 
 .btn-action.btn-danger {
@@ -2065,7 +2065,7 @@ SOLICITAÇÕES DE RESERVA
   background: var(--gray-100);
   border-radius: var(--radius-lg);
   border: 3px transparent solid;
-margin:10px;
+  margin:10px;
   justify-content: center;
 }
 
