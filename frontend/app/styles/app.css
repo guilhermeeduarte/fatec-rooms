@@ -2969,3 +2969,107 @@ SOLICITAÇÕES DE RESERVA
   font-size: 14px;
   font-family: var(--font-main);
 }
+
+/* ══════════════════════════════════════════
+   PÁGINA DE PERFIL DO USUÁRIO
+══════════════════════════════════════════ */
+
+.user-profile {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 24px 44px;
+}
+
+.user-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--gray-200);
+  padding: 22px;
+  animation: fadeUp 0.4s ease both;
+}
+
+.user-card h3 {
+  font-family: var(--font-main);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--gray-800);
+}
+
+.user-info p {
+  font-size: 14px;
+  color: var(--gray-800);
+  margin-bottom: 8px;
+}
+
+.user-info strong {
+  font-family: var(--font-main);
+  font-weight: 600;
+  color: var(--gray-500);
+}
+
+/* Botão de editar */
+.btn-edit {
+  display: block;
+  margin: 20px auto;          
+  padding: 14px 100px;         
+  border-radius: 14px;
+  border: none;
+  font-family: var(--font-main);
+  font-size: 16px;           
+  font-weight: 700;
+  color: white;
+  background: var(--red);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-edit:hover {
+  background: var(--red-dark);
+  transform: translateY(-1px);
+}
+
+.user-form {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--gray-200);
+  padding: 22px;
+  animation: fadeUp 0.4s ease both;
+}
+
+.user-form h3 {
+  font-family: var(--font-main);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--gray-800);
+}
+
+.user-form .form-group {
+  margin-bottom: 16px;
+}
+
+.user-form .btn-submit {
+  margin-top: 16px;
+}
+
+.user-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--gray-100);
+  border: 2px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.user-avatar svg {
+  width: 40px;
+  height: 40px;
+  stroke: var(--gray-500);
+  fill: none;
+  stroke-width: 2;
+}
+

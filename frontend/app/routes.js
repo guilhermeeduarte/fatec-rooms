@@ -17,4 +17,5 @@ export default [
   route("minhas-reservas", "routes/MinhasReservas.jsx"),
   route("cadastro-salas", "routes/CadastroSalas.jsx"),
   route("coordenador-solicitacoes", "routes/CoordenadorSolicitacoes.jsx"),
+  route("perfil", "routes/Perfil.jsx"),
 ];
