@@ -2854,3 +2854,111 @@ margin:10px;
 .checkbox-card.active .checkbox-icon {
   border-color: var(--red);
 }
+
+/* ══════════════════════════════════════════
+   PÁGINA DE RESERVAS DO COORDENADOR
+══════════════════════════════════════════ */
+
+.layout-reservas {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 24px 44px;
+  display: grid;
+  gap: 24px;
+}
+
+.lado-direito {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Filtros */
+.filtros {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--gray-200);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.filtros input,
+.filtros select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: var(--gray-100);
+  color: var(--gray-800);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.filtros input:focus,
+.filtros select:focus {
+  border-color: var(--red);
+  background: white;
+}
+
+.filtro-datas {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.grupo-data {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grupo-data label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+  font-family: var(--font-main);
+}
+
+/* Lista de reservas */
+.container-reservas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-reserva {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  border: 1.5px solid var(--gray-200);
+  animation: fadeUp 0.4s ease both;
+}
+
+.card-reserva p {
+  font-size: 13px;
+  color: var(--gray-800);
+  margin-bottom: 6px;
+}
+
+.card-reserva strong {
+  font-family: var(--font-main);
+  font-weight: 600;
+  color: var(--gray-500);
+}
+
+/* Mensagens de erro */
+.error-message {
+  background: #FEE2E2;
+  border: 1px solid #FECACA;
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: #991B1B;
+  margin-bottom: 18px;
+  font-size: 14px;
+  font-family: var(--font-main);
+}
