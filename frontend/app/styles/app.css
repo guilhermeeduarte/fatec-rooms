@@ -1905,7 +1905,7 @@ SOLICITAÇÕES DE RESERVA
   margin-bottom: 8px;
 }
 
-
+/* reservas feitas */
 .reservas-feitas {
   width: 90%;
   max-height: 200px;
@@ -1955,14 +1955,18 @@ SOLICITAÇÕES DE RESERVA
 
 .hora {
   font-weight: 600;
-  color: #3f51b5;
+  color: ;
 }
 
-.prof {
+.prof {F
   font-size: 13px;
   color: var(--gray-600);
 }
 
+.local {
+  font-size: 13px;
+  color: var(--gray-600);
+}
 .lista-horarios::-webkit-scrollbar {
   width: 6px;
 }
@@ -1971,6 +1975,8 @@ SOLICITAÇÕES DE RESERVA
   background: var(--gray-300);
   border-radius: 10px;
 }
+
+
 /*calendario*/
 
 .react-calendar {
@@ -3351,6 +3357,116 @@ SOLICITAÇÕES DE RESERVA
   color: var(--gray-500);
   font-weight: 500;
 }
+
+
+
+
+/* ══════════════════════════════════════════
+HISTORICO
+══════════════════════════════════════════ */
+
+/* reservas feitas */
+.reservas-feitas-historico {
+  width: 80%;
+  max-height: 200px;
+  max-width: 1000px;
+
+  background-color: var(--white);
+  padding: 16px;
+  margin-left:auto;
+  margin-right:auto;
+  border-radius: 16px;
+  border: 1px solid var(--gray-200);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  justify-content: center; 
+  display: flex;
+  flex-direction: column;
+}
+
+.reservas-feitas-historico h4 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--gray-800);
+}
+
+.lista-horarios-historico {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.item-historico {
+  background: var(--gray-100);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--gray-700);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  margin-top:3px;
+}
+
+.item-historico:hover {
+  background: var(--gray-200);
+}
+
+.hora-historico {
+  font-weight: 600;
+  color: blue ;
+  font-size:18px
+}
+.data-historico {
+  font-size:15px;
+  font-weight: 600;
+  color: var(--gray-600) ;
+}
+
+.prof-hisotirco {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.local-hisotirco {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--gray-600);
+}
+
+.status-historico {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.status-aprovado {
+  color: #16a34a; 
+}
+
+.status-cancelado {
+  color: #dc2626; 
+}
+
+
+
+
+.lista-horarios-historico::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lista-horarios-historico::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 10px;
+}
+
 
 
 

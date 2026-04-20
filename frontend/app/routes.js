@@ -19,4 +19,6 @@ export default [
   route("coordenador-solicitacoes", "routes/CoordenadorSolicitacoes.jsx"),
   route("perfil", "routes/Perfil.jsx"),
   route("relatorio-reservas", "routes/RelatorioReservas.jsx"),
+  route("historico", "routes/Historico.jsx"),
+
 ];
