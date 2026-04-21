@@ -242,6 +242,92 @@ body {
 }
 
 /* ══════════════════════════════════════════
+   NAVBAR — RESPONSIVIDADE (SEM ALTERAR DESIGN)
+══════════════════════════════════════════ */
+
+/* 📱 MOBILE */
+@media (max-width: 768px) {
+
+  .navbar {
+    padding: 12px 16px;
+  }
+
+  .navbar__logo {
+    font-size: 16px;
+  }
+
+  .navbar__actions {
+    gap: 8px;
+  }
+
+  .navbar__icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* mantém alinhamento original (NÃO centraliza) */
+  .navbar__menu a {
+    font-size: 14px;
+    padding: 14px 20px;
+    text-align: left;
+  }
+
+  /* evita estourar lateral no mobile */
+  .navbar__user-menu {
+    right: 8px;
+    min-width: 180px;
+  }
+}
+
+
+/* 📱 CELULAR PEQUENO */
+@media (max-width: 480px) {
+
+  .navbar {
+    padding: 10px 12px;
+  }
+
+  .navbar__logo {
+    font-size: 14px;
+  }
+
+  .navbar__hamburger span {
+    width: 20px;
+  }
+
+  .navbar__menu a {
+    font-size: 13px;
+    padding: 12px 18px;
+  }
+
+}
+
+
+/* ⌚ TELAS MUITO PEQUENAS */
+@media (max-width: 320px) {
+
+  .navbar__logo {
+    font-size: 13px;
+  }
+
+  .navbar__icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+}
+
+
+/* 💻 DESKTOP (mantém seu comportamento original) */
+@media (min-width: 1024px) {
+
+  .navbar {
+    padding: 14px 28px;
+  }
+
+}
+
+/* ══════════════════════════════════════════
    HERO / CABEÇALHO DE PÁGINA
 ══════════════════════════════════════════ */
 .page-hero,
@@ -250,6 +336,12 @@ body {
   padding: 36px 24px 52px;
   position: relative;
   overflow: hidden;
+
+  /* Centralização adicionada */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .page-hero::after,
@@ -291,6 +383,9 @@ body {
   padding: 5px 12px;
   border-radius: 20px;
   margin-bottom: 14px;
+
+  /* Centralização do badge */
+  justify-content: center;
 }
 
 .dir-badge svg {
@@ -314,7 +409,13 @@ body {
   color: rgba(255, 255, 255, 0.72);
   font-size: 13px;
   line-height: 1.6;
+
+  /* Evita texto muito largo e mantém central bonito */
+  max-width: 600px;
 }
+
+
+
 
 /* ══════════════════════════════════════════
    LAYOUT GERAL
@@ -3250,5 +3351,7 @@ SOLICITAÇÕES DE RESERVA
   color: var(--gray-500);
   font-weight: 500;
 }
+
+
 
 
