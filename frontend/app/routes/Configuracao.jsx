@@ -1,28 +1,107 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 import { CalendarCheck,Clock, Users, Bell, ShieldCheck, ChevronRight } from "lucide-react";
 
+const API_URL = "/api";
 
 export default function Configuracao() {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
 
     const [prazo, setPrazo] = useState(7);
     const [editando, setEditando] = useState(false);
     const [valorTemp, setValorTemp] = useState(prazo);
 
-    const handleSalvar = () => {
+    const token = localStorage.getItem("token");
+    const authlevel = localStorage.getItem("authlevel");
+
+    useEffect(() => {
+        // Verificar se é coordenador
+        if (authlevel !== "1") {
+            navigate("/");
+            return;
+        }
+
+        async function fetchConfig() {
+            try {
+                const response = await fetch(`${API_URL}/config/booking/min-advance-days`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error("Erro ao carregar configurações");
+                }
+
+                const data = await response.json();
+                setPrazo(data.days || 7);
+                setValorTemp(data.days || 7);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchConfig();
+    }, [navigate, token, authlevel]);
+
+    const handleSalvar = async () => {
         if (valorTemp < 1) return;
-        setPrazo(valorTemp);
-        setEditando(false);
+        
+        setSaving(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            const response = await fetch(`${API_URL}/config/booking/min-advance-days`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ days: valorTemp }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Erro ao salvar configuração");
+            }
+
+            const data = await response.json();
+            setPrazo(data.days);
+            setEditando(false);
+            setSuccess("Configuração salva com sucesso!");
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleCancelar = () => {
         setValorTemp(prazo);
         setEditando(false);
+        setError(null);
+        setSuccess(null);
     };
+
+    if (loading) {
+        return (
+            <>
+                <Navbar activePage="configuracao" />
+                <div className="content">Carregando configurações...</div>
+                <Footer />
+            </>
+        );
+    }
 
     return (
         <>
@@ -36,6 +115,8 @@ export default function Configuracao() {
             />
 
             <div className="content-config">
+                {error && <div className="error-message">{error}</div>}
+                {success && <div className="success-message">{success}</div>}
 
                 {/* CARD */}
                 <h2 className="secao-titulo">Reservas</h2>
@@ -80,11 +161,11 @@ export default function Configuracao() {
                         </div>
 
                         <div className="botoes">
-                            <button className="btn-cancelar" onClick={handleCancelar}>
+                            <button className="btn-cancelar" onClick={handleCancelar} disabled={saving}>
                                 Cancelar
                             </button>
-                            <button className="btn-salvar" onClick={handleSalvar}>
-                                Salvar
+                            <button className="btn-salvar" onClick={handleSalvar} disabled={saving}>
+                                {saving ? "Salvando..." : "Salvar"}
                             </button>
                         </div>
                     </div>

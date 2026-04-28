@@ -66,6 +66,9 @@ export default function Navbar({ activePage }) {
             </button>
 
             <div className={`navbar__user-menu ${userMenuOpen ? "open" : ""}`}>
+              <Link to="/perfil" onClick={() => setUserMenuOpen(false)}>
+                Meu Perfil
+              </Link>
               <Link to={userAreaPath} onClick={() => setUserMenuOpen(false)}>
                 {userAreaLabel}
               </Link>
