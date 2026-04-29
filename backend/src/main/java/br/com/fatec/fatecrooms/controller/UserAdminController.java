@@ -1,10 +1,14 @@
 package br.com.fatec.fatecrooms.controller;
 
+import br.com.fatec.fatecrooms.DTO.UpdateAuthLevelRequest;
 import br.com.fatec.fatecrooms.DTO.UserSummaryDTO;
 import br.com.fatec.fatecrooms.service.UserAdminService;
+import br.com.fatec.fatecrooms.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +20,7 @@ import java.util.Map;
 public class UserAdminController {
 
     private final UserAdminService userAdminService;
+    private final UserService userService;
 
     @GetMapping("/pending")
     @PreAuthorize("hasRole('COORDINATOR')")
@@ -46,5 +51,16 @@ public class UserAdminController {
     @PreAuthorize("hasRole('COORDINATOR')")
     public ResponseEntity<String> disable(@PathVariable Integer id) {
         return ResponseEntity.ok(userAdminService.disableUser(id));
+    }
+
+    @PatchMapping("/{id}/authlevel")
+    @PreAuthorize("hasRole('COORDINATOR')")
+    public ResponseEntity<UserSummaryDTO> updateAuthLevel(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateAuthLevelRequest request,
+            Authentication authentication) {
+        return ResponseEntity.ok(
+                userService.updateAuthLevel(authentication.getName(), id, request)
+        );
     }
 }
