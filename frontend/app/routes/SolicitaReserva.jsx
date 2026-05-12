@@ -14,6 +14,7 @@ export default function SolicitaReserva() {
     const [availability, setAvailability] = useState(null);
     const [myBookings, setMyBookings] = useState([]);
     const [holidays, setHolidays] = useState([]);
+    const [examDatesSet, setExamDatesSet] = useState(new Set()); // ← armazena datas de semanas de avaliação
     const [date, setDate] = useState(new Date());
     const [loadingPage, setLoadingPage] = useState(true);
     const [loadingAvailability, setLoadingAvailability] = useState(false);
@@ -35,18 +36,60 @@ export default function SolicitaReserva() {
             try {
                 setLoadingPage(true);
                 setError(null);
-                const [roomsRes, bookingsRes, holidaysRes] = await Promise.all([
-                    fetch("/api/rooms", { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }),
-                    fetch("/api/bookings/my", { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }),
-                    fetch("/api/holidays", { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }),
+                
+                // Carrega dados em paralelo
+                const [roomsRes, bookingsRes, holidaysRes, semestersRes] = await Promise.all([
+                    fetch("/api/rooms", { headers: { Authorization: `Bearer ${token}` } }),
+                    fetch("/api/bookings/my", { headers: { Authorization: `Bearer ${token}` } }),
+                    fetch("/api/holidays", { headers: { Authorization: `Bearer ${token}` } }),
+                    fetch("/api/semesters", { headers: { Authorization: `Bearer ${token}` } }), // apenas ativos
                 ]);
+
                 if (!roomsRes.ok) throw new Error("Falha ao carregar salas.");
                 if (!bookingsRes.ok) throw new Error("Falha ao carregar suas reservas.");
+                
                 setSalas(await roomsRes.json() || []);
                 setMyBookings(await bookingsRes.json() || []);
+                
                 if (holidaysRes.ok) {
                     const data = await holidaysRes.json();
                     setHolidays(Array.isArray(data) ? data : []);
+                }
+
+                // Carregar semanas de avaliação dos semestres ativos
+                if (semestersRes.ok) {
+                    const semestersData = await semestersRes.json();
+                    const activeSemesters = Array.isArray(semestersData) ? semestersData : (semestersData.content || []);
+                    const examDates = new Set();
+
+                    // Para cada semestre ativo, buscar suas exam-weeks
+                    await Promise.all(
+                        activeSemesters.map(async (semester) => {
+                            if (semester.active !== 1) return; // apenas ativos
+                            try {
+                                const examRes = await fetch(`/api/semesters/${semester.id}/exam-weeks`, {
+                                    headers: { Authorization: `Bearer ${token}` }
+                                });
+                                if (examRes.ok) {
+                                    const weeks = await examRes.json();
+                                    weeks.forEach(week => {
+                                        // Gera todas as datas entre startDate e endDate (inclusive)
+                                        const start = new Date(week.startDate);
+                                        const end = new Date(week.endDate);
+                                        const current = new Date(start);
+                                        while (current <= end) {
+                                            const iso = current.toISOString().split('T')[0];
+                                            examDates.add(iso);
+                                            current.setDate(current.getDate() + 1);
+                                        }
+                                    });
+                                }
+                            } catch (err) {
+                                console.error(`Erro ao carregar exam-weeks do semestre ${semester.id}`, err);
+                            }
+                        })
+                    );
+                    setExamDatesSet(examDates);
                 }
             } catch (err) {
                 setError(err.message || "Erro ao carregar a página.");
@@ -242,6 +285,7 @@ export default function SolicitaReserva() {
                             if (view !== "month") return null;
                             const iso = getISOFromDate(d);
                             if (isHolidayDate(iso)) return "dia-feriado";
+                            if (examDatesSet.has(iso)) return "dia-avaliacao"; // ← classe para avaliação
                             if (iso === form.dataISO) return "dia-selecionado";
                             const st = roomStatusMap[iso];
                             if (st === "APPROVED") return "dia-aceita";
@@ -269,6 +313,7 @@ export default function SolicitaReserva() {
                         <div><span className="box vermelho"></span> Cancelada</div>
                         <div><span className="box cinza"></span> Selecionado</div>
                         <div><span className="box laranja"></span> Feriado</div>
+                        <div><span className="box magenta"></span> Avaliação</div> {/* ← nova legenda */}
                     </div>
 
                     <div className="reservas-feitas">

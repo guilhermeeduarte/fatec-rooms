@@ -41,6 +41,18 @@ const menuActions = [
     desc: "Uso de salas e estatísticas",
     to: "/relatorio-reservas",
   },
+  // NOVO ITEM: Reserva Recorrente com ícone na cor #8B0D14
+  {
+    icon: <svg viewBox="0 0 24 24">
+      <path d="M17 1l4 4-4 4" stroke="#8B0D14" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" stroke="#8B0D14" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M7 23l-4-4 4-4" stroke="#8B0D14" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" stroke="#8B0D14" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>,
+    title: "Reserva Recorrente",
+    desc: "Crie reservas que se repetem semanalmente",
+    to: "/reserva-recorrente",
+  },
 ];
 
 const statusLabels = {
@@ -205,22 +217,22 @@ export default function Coordenador() {
                 </div>
               ))}
             </div>
-                  {/* alerta de reservas pendentes */}
-                    {pendingBookings.length > 0 && (
-            <div className="alert-card">
-              <div className="alert-icon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
+            {/* alerta de reservas pendentes */}
+            {pendingBookings.length > 0 && (
+              <div className="alert-card">
+                <div className="alert-icon">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                </div>
+                <div className="alert-text">
+                  <h4>{pendingBookings.length} reservas aguardando aprovação</h4>
+                  <p>Professores estão aguardando sua confirmação para hoje.</p>
+                </div>
               </div>
-              <div className="alert-text">
-                <h4>{pendingBookings.length} reservas aguardando aprovação</h4>
-                <p>Professores estão aguardando sua confirmação para hoje.</p>
-              </div>
-            </div>
-          )}
+            )}
 
             {/* Menu de ações */}
             <div className="section-title">Ações rápidas</div>
@@ -297,10 +309,7 @@ export default function Coordenador() {
                 </div>
               </div>
             </div>
-
-
           </aside>
-
         </div>
       </main>
 
