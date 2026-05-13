@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 
 const menuActions = [
+
   {
     icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
     title: "Configurações",
@@ -41,7 +42,6 @@ const menuActions = [
     desc: "Uso de salas e estatísticas",
     to: "/relatorio-reservas",
   },
-  // NOVO ITEM: Reserva Recorrente com ícone na cor #8B0D14
   {
     icon: <svg viewBox="0 0 24 24">
       <path d="M17 1l4 4-4 4" stroke="#8B0D14" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
@@ -52,6 +52,12 @@ const menuActions = [
     title: "Reserva Recorrente",
     desc: "Crie reservas que se repetem semanalmente",
     to: "/reserva-recorrente",
+  },
+    {
+    icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
+    title: "Reservar Sala",
+    desc: "Reserva com aprovação imediata (coordenador)",
+    to: "/solicita-reserva-coordenador",
   },
 ];
 
@@ -229,7 +235,7 @@ export default function Coordenador() {
                 </div>
                 <div className="alert-text">
                   <h4>{pendingBookings.length} reservas aguardando aprovação</h4>
-                  <p>Professores estão aguardando sua confirmação para hoje.</p>
+                  <p>Professores estão aguardando sua confirmação.</p>
                 </div>
               </div>
             )}
