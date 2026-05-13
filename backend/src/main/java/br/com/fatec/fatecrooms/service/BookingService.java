@@ -23,7 +23,7 @@ public class BookingService {
     private final UserRepository                  userRepository;
     private final PeriodRepository                periodRepository;
     private final SystemConfigService             configService;
-    private final RecurringBookingRepository      recurringBookingRepository;
+    private final RecurringBookingRepository      recurringBookingRepository; // ← NOVO
 
     // ─────────────────────────────────────────────
     //  CONSULTAS ABERTAS
@@ -68,7 +68,7 @@ public class BookingService {
     }
 
     // ─────────────────────────────────────────────
-    //  PROFESSOR / COORDENADOR
+    //  PROFESSOR
     // ─────────────────────────────────────────────
 
     @Transactional
@@ -125,6 +125,8 @@ public class BookingService {
         }
 
         validateNoTimeOverlap(room.getId(), request.getBookingDate(), selectedPeriods, null);
+
+        // ── Validação extra: conflito com reservas recorrentes ────────────────
         validateNoRecurringConflict(room.getId(), request.getBookingDate(), selectedPeriods);
 
         Booking booking = new Booking();
@@ -134,13 +136,7 @@ public class BookingService {
         booking.setBookingDate(request.getBookingDate());
         booking.setSubject(request.getSubject());
         booking.setNotes(request.getNotes());
-
-        // ⭐ Auto-aprovação para coordenador (authlevel == 1)
-        if (user.getAuthlevel() == 1) {
-            booking.setStatus(Status.APPROVED);
-        } else {
-            booking.setStatus(Status.PENDING);
-        }
+        booking.setStatus(Status.PENDING);
 
         return toDTO(bookingRepository.save(booking));
     }
@@ -173,33 +169,6 @@ public class BookingService {
         booking.setStatus(Status.CANCELLED);
         return toDTO(bookingRepository.save(booking));
     }
-    
-    @Transactional
-public void generateBookingsFromRecurring(RecurringBooking recurring) {
-    Semester semester = recurring.getSemester();
-    LocalDate start = semester.getStartDate();
-    LocalDate end = semester.getEndDate();
-    
-    for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-        String dayName = date.getDayOfWeek().toString(); // MONDAY, TUESDAY, etc.
-        if (recurring.getWeekDays().contains(dayName)) {
-            // Verifica se já existe reserva para esta data (evitar duplicação)
-            boolean exists = bookingRepository.existsByRecurringBookingAndBookingDate(recurring, date);
-            if (!exists) {
-                Booking booking = new Booking();
-                booking.setRecurringBooking(recurring);
-                booking.setRoom(recurring.getRoom());
-                booking.setUser(recurring.getCreatedBy());
-                booking.setPeriods(new LinkedHashSet<>(recurring.getPeriods()));
-                booking.setBookingDate(date);
-                booking.setSubject(recurring.getSubject());
-                booking.setNotes(recurring.getNotes());
-                booking.setStatus(Status.APPROVED); // ou PENDING, conforme regra
-                bookingRepository.save(booking);
-            }
-        }
-    }
-}
 
     @Transactional
     public BookingDTO updateNotes(String username, Integer bookingId, BookingNotesRequest request) {
@@ -370,42 +339,33 @@ public void generateBookingsFromRecurring(RecurringBooking recurring) {
         return name.contains("sabado") || name.contains("sábado");
     }
 
-    // ─────────────────────────────────────────────
-    //  MÉTODO toDTO – CORRIGIDO (sem recurringBooking)
-    // ─────────────────────────────────────────────
+    public BookingDTO toDTO(Booking b) {
+        List<BookingDTO.PeriodSummary> periodSummaries = b.getPeriods().stream()
+                .sorted((a, c) -> a.getStartTime().compareTo(c.getStartTime()))
+                .map(p -> new BookingDTO.PeriodSummary(
+                        p.getId(), p.getName(), p.getStartTime(), p.getEndTime()))
+                .toList();
 
-  public BookingDTO toDTO(Booking b) {
-    List<BookingDTO.PeriodSummary> periodSummaries = b.getPeriods().stream()
-            .sorted((a, c) -> a.getStartTime().compareTo(c.getStartTime()))
-            .map(p -> new BookingDTO.PeriodSummary(
-                    p.getId(), p.getName(), p.getStartTime(), p.getEndTime()))
-            .toList();
-
-    Integer recurringId = b.getRecurringBooking() != null ? b.getRecurringBooking().getId() : null;
-    String reservationType = (recurringId != null) ? "RECORRENTE" : "COMUM";
-
-    return new BookingDTO(
-            b.getId(),
-            b.getRoom().getId(),
-            b.getRoom().getName(),
-            b.getRoom().getLocation(),
-            b.getUser().getId(),
-            b.getUser().getUsername(),
-            b.getUser().getDisplayname() != null
-                    ? b.getUser().getDisplayname()
-                    : b.getUser().getFirstname() + " " + b.getUser().getLastname(),
-            periodSummaries,
-            b.getBookingDate(),
-            b.getSubject(),
-            b.getNotes(),
-            b.getStatus(),
-            recurringId,
-            reservationType,
-            b.getReviewedBy() != null ? b.getReviewedBy().getUsername() : null,
-            b.getReviewedAt(),
-            b.getRejectReason(),
-            b.getCreatedAt(),
-            b.getUpdatedAt()
-    );
-}
+        return new BookingDTO(
+                b.getId(),
+                b.getRoom().getId(),
+                b.getRoom().getName(),
+                b.getRoom().getLocation(),
+                b.getUser().getId(),
+                b.getUser().getUsername(),
+                b.getUser().getDisplayname() != null
+                        ? b.getUser().getDisplayname()
+                        : b.getUser().getFirstname() + " " + b.getUser().getLastname(),
+                periodSummaries,
+                b.getBookingDate(),
+                b.getSubject(),
+                b.getNotes(),
+                b.getStatus(),
+                b.getReviewedBy() != null ? b.getReviewedBy().getUsername() : null,
+                b.getReviewedAt(),
+                b.getRejectReason(),
+                b.getCreatedAt(),
+                b.getUpdatedAt()
+        );
+    }
 }

@@ -1,6 +1,5 @@
 package br.com.fatec.fatecrooms.repository;
 
-import br.com.fatec.fatecrooms.model.RecurringBooking;
 import br.com.fatec.fatecrooms.model.RecurringBookingInstance;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -57,7 +56,4 @@ public interface RecurringBookingInstanceRepository extends JpaRepository<Recurr
             @Param("start")  LocalDate start,
             @Param("end")    LocalDate end
     );
-
-    // ⭐ NOVO MÉTODO – verifica se já existe instância para uma data específica
-    boolean existsByRecurringBookingAndBookingDate(RecurringBooking recurring, LocalDate date);
 }

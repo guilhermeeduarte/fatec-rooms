@@ -95,11 +95,8 @@ public class RecurringBookingService {
         rb.setPeriods(new LinkedHashSet<>(periods));
 
         RecurringBooking saved = recurringBookingRepository.save(rb);
-        
-        // ⭐ Gera as instâncias (RecurringBookingInstance) e também as reservas individuais (Booking)
-        generateInstancesAndBookings(saved, semester, normalizedDays, periods);
-        
-        log.info("Reserva recorrente #{} criada.", saved.getId());
+        int generated = generateInstances(saved, semester, normalizedDays, periods);
+        log.info("Reserva recorrente #{} criada: {} instâncias ativas.", saved.getId(), generated);
 
         return toDTO(getOrThrow(saved.getId()));
     }
@@ -113,20 +110,10 @@ public class RecurringBookingService {
             throw new BusinessException("Reserva recorrente já está cancelada.");
 
         rb.setStatus(RecurringBooking.Status.CANCELLED);
-        
-        // Cancela instâncias futuras e também as reservas associadas
         int cancelled = instanceRepository.cancelFutureInstances(
                 id, LocalDate.now(), "Reserva recorrente cancelada pelo coordenador.");
-        
-        // Cancela os bookings individuais associados (datas futuras)
-        LocalDate today = LocalDate.now();
-        List<Booking> futureBookings = bookingRepository.findByRecurringBookingAndBookingDateAfter(rb, today);
-        futureBookings.forEach(b -> b.setStatus(Booking.Status.CANCELLED));
-        bookingRepository.saveAll(futureBookings);
-        
         recurringBookingRepository.save(rb);
-        log.info("Reserva recorrente #{} cancelada. {} instâncias e {} reservas canceladas.", 
-                id, cancelled, futureBookings.size());
+        log.info("Reserva recorrente #{} cancelada. {} instâncias canceladas.", id, cancelled);
         return toDTO(getOrThrow(id));
     }
 
@@ -144,82 +131,54 @@ public class RecurringBookingService {
 
         inst.setStatus(RecurringBookingInstance.Status.CANCELLED);
         inst.setSkipReason(reason != null && !reason.isBlank() ? reason : "Cancelada manualmente.");
-        
-        // Também cancela o Booking associado, se existir
-        Optional<Booking> booking = bookingRepository.findByRecurringBookingAndBookingDate(
-                inst.getRecurringBooking(), inst.getBookingDate());
-        booking.ifPresent(b -> {
-            b.setStatus(Booking.Status.CANCELLED);
-            bookingRepository.save(b);
-        });
-        
         return instanceToDTO(instanceRepository.save(inst));
     }
 
-    // ── Geração de instâncias E BOOKINGS ───────────────────────────────────────
+    // ── Geração de instâncias ─────────────────────────────────────────────────
 
-    /**
-     * Gera tanto as instâncias (RecurringBookingInstance) quanto as reservas reais (Booking)
-     * para cada data dentro do semestre que corresponda aos dias da semana selecionados.
-     */
-    private void generateInstancesAndBookings(RecurringBooking rb, Semester semester,
-                                              List<String> weekDays, List<Period> periods) {
-        Set<LocalDate> holidays = loadHolidayDates();
-        Set<DayOfWeek> targetDays = weekDays.stream()
+    private int generateInstances(RecurringBooking rb, Semester semester,
+                                  List<String> weekDays, List<Period> periods) {
+        Set<LocalDate>  holidays   = loadHolidayDates();
+        Set<DayOfWeek>  targetDays = weekDays.stream()
                 .map(DayOfWeek::valueOf).collect(Collectors.toSet());
-        List<Integer> periodIds = periods.stream().map(Period::getId).toList();
+        List<Integer>   periodIds  = periods.stream().map(Period::getId).toList();
 
-        LocalDate cursor = semester.getStartDate();
+        LocalDate cursor  = semester.getStartDate();
         LocalDate endDate = semester.getEndDate();
         List<RecurringBookingInstance> instances = new ArrayList<>();
-        List<Booking> bookings = new ArrayList<>();
+        int count = 0;
 
         while (!cursor.isAfter(endDate)) {
             if (targetDays.contains(cursor.getDayOfWeek())) {
-                // Verifica se já existe instância ou reserva para evitar duplicação
-                boolean alreadyExists = instanceRepository.existsByRecurringBookingAndBookingDate(rb, cursor);
-                if (!alreadyExists) {
-                    RecurringBookingInstance inst = new RecurringBookingInstance();
-                    inst.setRecurringBooking(rb);
-                    inst.setBookingDate(cursor);
+                RecurringBookingInstance inst = new RecurringBookingInstance();
+                inst.setRecurringBooking(rb);
+                inst.setBookingDate(cursor);
 
-                    // Verifica conflitos ou feriados
-                    if (holidays.contains(cursor)) {
-                        inst.setStatus(RecurringBookingInstance.Status.SKIPPED);
-                        inst.setSkipReason("Feriado.");
-                    } else if (hasConflict(rb.getRoom().getId(), cursor, periodIds, null)) {
-                        inst.setStatus(RecurringBookingInstance.Status.SKIPPED);
-                        inst.setSkipReason("Conflito com reserva existente nesta data.");
-                    } else {
-                        inst.setStatus(RecurringBookingInstance.Status.ACTIVE);
-                        
-                        // Cria a reserva real (Booking) associada à recorrente
-                        Booking booking = new Booking();
-                        booking.setRecurringBooking(rb);
-                        booking.setRoom(rb.getRoom());
-                        booking.setUser(rb.getCreatedBy());
-                        booking.setPeriods(new LinkedHashSet<>(periods));
-                        booking.setBookingDate(cursor);
-                        booking.setSubject(rb.getSubject());
-                        booking.setNotes(rb.getNotes());
-                        booking.setStatus(Booking.Status.APPROVED); // Coordenador auto-aprova
-                        bookings.add(booking);
-                    }
-                    instances.add(inst);
+                if (holidays.contains(cursor)) {
+                    inst.setStatus(RecurringBookingInstance.Status.SKIPPED);
+                    inst.setSkipReason("Feriado.");
+                } else if (hasConflict(rb.getRoom().getId(), cursor, periodIds, null)) {
+                    inst.setStatus(RecurringBookingInstance.Status.SKIPPED);
+                    inst.setSkipReason("Conflito com reserva existente nesta data.");
+                } else {
+                    inst.setStatus(RecurringBookingInstance.Status.ACTIVE);
+                    count++;
                 }
+                instances.add(inst);
             }
             cursor = cursor.plusDays(1);
         }
-        
         instanceRepository.saveAll(instances);
-        if (!bookings.isEmpty()) {
-            bookingRepository.saveAll(bookings);
-            log.info("Geradas {} reservas individuais para a recorrente #{}", bookings.size(), rb.getId());
-        }
+        return count;
     }
 
     // ── Validações ────────────────────────────────────────────────────────────
 
+    /**
+     * SATURDAY é permitido apenas se a turma tiver has_saturday = 1.
+     * Turmas com has_saturday = 1 têm aula nos dias úteis E sábado —
+     * não existe turma exclusivamente de sábado.
+     */
     private List<String> validateAndNormalizeDays(List<String> rawDays, ClassGroup cg) {
         Set<String> valid = Set.of("MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY");
 
@@ -237,6 +196,7 @@ public class RecurringBookingService {
             throw new BusinessException(
                     "Esta turma não possui aulas de sábado. Remova SATURDAY da seleção.");
 
+        // Deve ter pelo menos um dia útil (turmas não são só de sábado)
         boolean hasWeekday = normalized.stream()
                 .anyMatch(d -> !d.equals("SATURDAY"));
         if (!hasWeekday)
@@ -264,10 +224,12 @@ public class RecurringBookingService {
             if (rb.getId().equals(excludeId)) continue;
             if (!rb.getRoom().getId().equals(roomId)) continue;
 
+            // Verifica sobreposição de dias da semana
             boolean dayOverlap = rb.getWeekDays().stream()
                     .anyMatch(weekDays::contains);
             if (!dayOverlap) continue;
 
+            // Verifica sobreposição de períodos
             List<Integer> existingPeriodIds = rb.getPeriods().stream()
                     .map(Period::getId).toList();
             boolean periodOverlap = existingPeriodIds.stream()

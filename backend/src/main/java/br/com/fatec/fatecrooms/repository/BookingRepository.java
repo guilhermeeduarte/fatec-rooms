@@ -3,14 +3,12 @@ package br.com.fatec.fatecrooms.repository;
 import br.com.fatec.fatecrooms.model.Booking;
 import br.com.fatec.fatecrooms.model.Booking.Status;
 import br.com.fatec.fatecrooms.model.Period;
-import br.com.fatec.fatecrooms.model.RecurringBooking;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
@@ -129,11 +127,4 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             @Param("start")  LocalDate start,
             @Param("end")    LocalDate end
     );
-
-    // ── Métodos específicos para reservas recorrentes ────────────────────────
-    boolean existsByRecurringBookingAndBookingDate(RecurringBooking recurring, LocalDate date);
-    
-    List<Booking> findByRecurringBookingAndBookingDateAfter(RecurringBooking recurring, LocalDate date);
-    
-    Optional<Booking> findByRecurringBookingAndBookingDate(RecurringBooking recurring, LocalDate date);
 }

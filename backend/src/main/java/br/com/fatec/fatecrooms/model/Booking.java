@@ -80,7 +80,4 @@ public class Booking {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recurring_booking_id")
-    private RecurringBooking recurringBooking;
 }

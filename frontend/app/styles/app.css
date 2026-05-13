@@ -5077,23 +5077,3 @@ button {
   background: #f8f9fa !important;
   border-left: 3px solid;
 }
-.dropdown-ocorrencias {
-  transition: all 0.2s ease;
-}
-
-.status-badge {
-  display: inline-block;
-  background: #f3f4f6;
-  border-radius: 12px;
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.card-reserva .info-reserva {
-  transition: background 0.1s;
-}
-
-.card-reserva .info-reserva:hover {
-  background: #fafafa;
-}
