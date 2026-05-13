@@ -43,6 +43,42 @@ body {
   color: var(--gray-800);
 }
 
+
+/* =============================================
+   MODO DALTÔNICO
+============================================= */
+
+body.daltonic-mode {
+
+  /* Vermelhos trocados por azul acessível */
+  --red: #005FCC;
+  --red-dark: #0047A3;
+  --red-light: #3B82F6;
+
+  /* Contraste */
+  --gray-50: #FFFFFF;
+  --gray-100: #F4F4F4;
+  --gray-200: #D1D1D1;
+  --gray-500: #4B4B4B;
+  --gray-800: #111111;
+
+  --shadow-red: 0 4px 20px rgba(0, 95, 204, 0.18);
+}
+
+/* Inputs mais visíveis */
+body.daltonic-mode input,
+body.daltonic-mode textarea,
+body.daltonic-mode select {
+  border: 2px solid var(--gray-500);
+}
+
+/* Melhor foco */
+body.daltonic-mode button:focus,
+body.daltonic-mode input:focus {
+  outline: 3px solid #2563EB;
+  outline-offset: 2px;
+}
+
 /* ══════════════════════════════════════════
    NAVBAR
 ══════════════════════════════════════════ */
@@ -3359,6 +3395,101 @@ SOLICITAÇÕES DE RESERVA
   fill: none;
   stroke-width: 2;
 }
+
+/* =============================================
+   ACESSIBILIDADE
+============================================= */
+
+/* Tamanho global da fonte */
+:root {
+  --user-font-size: 14px;
+}
+
+/* Aplicação global */
+body {
+  font-size: var(--user-font-size);
+}
+
+/* ── Card de acessibilidade ── */
+.accessibility-card {
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  margin-bottom: 22px;
+  box-shadow: var(--shadow-red);
+}
+
+.accessibility-card h3 {
+  font-family: var(--font-main);
+  font-size: 18px;
+  margin-bottom: 18px;
+  color: var(--gray-800);
+}
+
+.accessibility-option {
+  margin-bottom: 20px;
+}
+
+.accessibility-option label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: var(--user-font-size);
+  color: var(--gray-800);
+}
+
+/* ── Botão ── */
+.btn-accessibility {
+  border: none;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  background: var(--gray-200);
+  color: var(--gray-800);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-accessibility:hover {
+  transform: translateY(-1px);
+}
+
+.btn-accessibility.active {
+  background: var(--red);
+  color: var(--white);
+}
+
+/* ── Slider ── */
+.font-slider {
+  width: 100%;
+  appearance: none;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--gray-200);
+  outline: none;
+}
+
+/* Bolinha */
+.font-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--red);
+  cursor: pointer;
+  border: 3px solid var(--white);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.font-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--red);
+  cursor: pointer;
+  border: none;
+}
+
 
 /* ══════════════════════════════════════════
    PÁGINA DE RELATÓRIOS
