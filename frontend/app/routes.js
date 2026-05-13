@@ -25,5 +25,5 @@ export default [
   route("gerenciar-usuarios", "routes/GerenciarUsuario.jsx"),
   route("reserva-recorrente", "routes/ReservaRecorrente.jsx"),
   route("acessibilidade", "routes/Acessibilidade.jsx"),
-
+  route("solicita-reserva-coordenador", "routes/SolicitaReservaCoordenador.jsx"),
 ];

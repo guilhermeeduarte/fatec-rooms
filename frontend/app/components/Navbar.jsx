@@ -43,7 +43,7 @@ export default function Navbar({ activePage }) {
         <span />
       </button>
 
-      <Link className="navbar__logo" to="/">
+      <Link className="navbar__logo" to={token ? userAreaPath : "/"}>
         F<span>R</span>
       </Link>
 

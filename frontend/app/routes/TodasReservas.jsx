@@ -3,10 +3,29 @@ import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 
+const WEEKDAY_LABELS = {
+  MONDAY: "SEG",
+  TUESDAY: "TER",
+  WEDNESDAY: "QUA",
+  THURSDAY: "QUI",
+  FRIDAY: "SEX",
+  SATURDAY: "SAB",
+};
+
+const JS_DAY_TO_WEEKDAY = {
+  1: "MONDAY",
+  2: "TUESDAY",
+  3: "WEDNESDAY",
+  4: "THURSDAY",
+  5: "FRIDAY",
+  6: "SATURDAY",
+};
+
 export default function TodasReservas() {
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
 
   function traduzirStatus(status) {
     switch ((status || "").toUpperCase()) {
@@ -16,7 +35,9 @@ export default function TodasReservas() {
       case "APPROVED":
       case "ACEITA":
       case "ACEITO":
-        return "Aceita";
+      case "ACTIVE":
+      case "ATIVA":
+        return "Ativa";
       case "REJECTED":
       case "RECUSADA":
         return "Recusada";
@@ -26,6 +47,17 @@ export default function TodasReservas() {
       default:
         return status || "Pendente";
     }
+  }
+
+  function formatRecurringDays(days = []) {
+    return days.map((day) => WEEKDAY_LABELS[day] || day).join(", ");
+  }
+
+  function isRecurringOnDate(dateString, weekDays = []) {
+    if (!dateString || weekDays.length === 0) return false;
+    const date = new Date(dateString);
+    const weekdayName = JS_DAY_TO_WEEKDAY[date.getDay()];
+    return weekDays.includes(weekdayName);
   }
 
   useEffect(() => {
@@ -40,17 +72,29 @@ export default function TodasReservas() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch("/api/bookings/admin/all", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        if (!response.ok) {
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+
+        const [bookingsRes, recurringRes] = await Promise.all([
+          fetch("/api/bookings/admin/all", { headers }),
+          fetch("/api/recurring-bookings", { headers }),
+        ]);
+
+        if (!bookingsRes.ok) {
           throw new Error("Falha ao carregar as reservas.");
         }
-        const data = await response.json();
-        setReservas(data.map((reserva) => {
+        if (!recurringRes.ok) {
+          throw new Error("Falha ao carregar as reservas recorrentes.");
+        }
+
+        const [bookingsData, recurringData] = await Promise.all([
+          bookingsRes.json(),
+          recurringRes.json(),
+        ]);
+
+        const mappedBookings = bookingsData.map((reserva) => {
           const periods = reserva.periods || [];
           const first = periods[0];
           const last = periods[periods.length - 1];
@@ -58,7 +102,7 @@ export default function TodasReservas() {
           const createdAt = reserva.createdAt?.split("T")[0] || "";
 
           return {
-            id: reserva.id,
+            id: `booking-${reserva.id}`,
             bookingDate,
             createdAt,
             data: bookingDate ? bookingDate.split("-").reverse().join("/") : "",
@@ -71,7 +115,33 @@ export default function TodasReservas() {
             status: traduzirStatus(reserva.status),
             professor: reserva.userDisplayName || reserva.username || "Desconhecido",
           };
-        }));
+        });
+
+        const mappedRecurring = recurringData.map((reserva) => {
+          const periods = reserva.periods || [];
+          const first = periods[0];
+          const last = periods[periods.length - 1];
+          const createdAt = reserva.createdAt?.split("T")[0] || "";
+          const weekDays = reserva.weekDays || [];
+
+          return {
+            id: `recurring-${reserva.id}`,
+            bookingDate: "",
+            createdAt,
+            data: formatRecurringDays(weekDays) || "Recorrente",
+            dataSolicitacao: createdAt ? createdAt.split("-").reverse().join("/") : "",
+            tipoReserva: "Recorrente",
+            espaco: reserva.roomName,
+            horaInicio: first?.periodStart?.slice(0, 5) || "--:--",
+            horaFim: last?.periodEnd?.slice(0, 5) || "--:--",
+            motivo: reserva.subject || reserva.notes || "",
+            status: traduzirStatus(reserva.status),
+            professor: reserva.createdByUsername || "Desconhecido",
+            weekDays,
+          };
+        });
+
+        setReservas([...mappedBookings, ...mappedRecurring]);
       } catch (err) {
         setError(err.message || "Erro ao carregar as reservas.");
       } finally {
@@ -81,6 +151,43 @@ export default function TodasReservas() {
 
     loadReservas();
   }, []);
+
+  async function cancelarReserva(reserva) {
+    const confirmacao = window.confirm("Deseja realmente cancelar essa reserva?");
+    if (!confirmacao) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Faça login para cancelar a reserva.");
+      return;
+    }
+
+    const id = reserva.id.replace(/^(booking|recurring)-/, "");
+    const endpoint = reserva.tipoReserva === "Recorrente"
+      ? `/api/recurring-bookings/${id}/cancel`
+      : `/api/bookings/admin/${id}/cancel`;
+
+    try {
+      setCancellingId(reserva.id);
+      const response = await fetch(endpoint, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Falha ao cancelar a reserva.");
+      }
+      setReservas((prev) => prev.map((r) =>
+        r.id === reserva.id ? { ...r, status: "Cancelada" } : r
+      ));
+    } catch (err) {
+      setError(err.message || "Erro ao cancelar a reserva.");
+    } finally {
+      setCancellingId(null);
+    }
+  }
 
   // 🔍 FILTROS
   const [busca, setBusca] = useState("");
@@ -110,7 +217,7 @@ export default function TodasReservas() {
       : true;
 
     const matchDataReserva = dataReservaFiltro
-      ? reserva.bookingDate === dataReservaFiltro
+      ? reserva.bookingDate === dataReservaFiltro || isRecurringOnDate(dataReservaFiltro, reserva.weekDays)
       : true;
 
     const matchDataSolicitacao = dataSolicitacaoFiltro
@@ -126,7 +233,7 @@ export default function TodasReservas() {
 
   // Ordenar apenas quando "Todos os status" estiver selecionado
   const reservasOrdenadas = statusFiltro ? reservasFiltradas : [...reservasFiltradas].sort((a, b) => {
-    const order = { Pendente: 1, Aceita: 2, Recusada: 3, Cancelada: 4 };
+    const order = { Pendente: 1, Ativa: 1, Recusada: 2, Cancelada: 3 };
     return (order[a.status] || 5) - (order[b.status] || 5);
   });
 
@@ -162,7 +269,7 @@ export default function TodasReservas() {
             >
               <option value="">Todos os status</option>
               <option value="Pendente">Pendente</option>
-              <option value="Aceita">Aceita</option>
+              <option value="Ativa">Ativas</option>
               <option value="Cancelada">Cancelada</option>
               <option value="Recusada">Recusada</option>
             </select>
@@ -216,7 +323,7 @@ export default function TodasReservas() {
             {reservasOrdenadas.map((reserva) => (
               <div
                 key={reserva.id}
-                className={`card-reserva ${reserva.status.toLowerCase()}`}
+                className={`card-reserva ${reserva.tipoReserva.toLowerCase()} ${reserva.status.toLowerCase()}`}
                 data-status={reserva.status}
                 id={`reserva-${reserva.id}-${Math.random().toString(36).substr(2, 9)}`}
               >
@@ -263,6 +370,20 @@ export default function TodasReservas() {
                     <span className="label">Status</span>
                     <span className={`valor ${reserva.status.toLowerCase()}`}>{reserva.status}</span>
                   </div>
+
+                  {reserva.status !== "Cancelada" && reserva.status !== "Recusada" && (
+                    <div className="item-reserva">
+                      <span className="label">&nbsp;</span>
+                      <button
+                        type="button"
+                        className="btn-cancelar"
+                        onClick={() => cancelarReserva(reserva)}
+                        disabled={cancellingId === reserva.id}
+                      >
+                        {cancellingId === reserva.id ? "Cancelando..." : "Cancelar"}
+                      </button>
+                    </div>
+                  )}
 
                 </div>
               </div>

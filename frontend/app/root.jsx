@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import "./styles/app.css";
 
 import {
@@ -9,6 +10,15 @@ import {
 } from "react-router";
 
 export default function Root() {
+  useEffect(() => {
+    const daltonicMode = typeof window !== "undefined" && localStorage.getItem("daltonicMode") === "true";
+    if (daltonicMode) {
+      document.body.classList.add("daltonic-mode");
+    } else {
+      document.body.classList.remove("daltonic-mode");
+    }
+  }, []);
+
   return (
     <html lang="pt-br">
       <head>
