@@ -14,6 +14,14 @@
   --gray-500:  #6B6B6B;
   --gray-800:  #1A1A1A;
   --yellow:    #F59E0B;
+  --green:     #4CAF50;
+  --green-dark:#388E3C;
+  --green-light:#A5D6A7;
+  --blue:      #0EA5E9;
+  --blue-dark: #0B79C3;
+  --magenta:   #E83E8C;
+  --magenta-soft: rgba(232, 62, 140, 0.16);
+  --magenta-soft-strong: rgba(232, 62, 140, 0.24);
 
   --font-main: 'Sora', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -54,6 +62,9 @@ body.daltonic-mode {
   --red: #005FCC;
   --red-dark: #0047A3;
   --red-light: #3B82F6;
+  --green: #1F8B3A;
+  --green-dark: #16682C;
+  --green-light: #8EDC8B;
 
   /* Contraste */
   --gray-50: #FFFFFF;
@@ -1004,6 +1015,7 @@ button.menu-card {
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
+  color: var(--red);
 }
 
 .menu-icon svg {
@@ -2158,11 +2170,11 @@ SOLICITAÇÕES DE RESERVA
 
 /* cores */
 .dia-aceita::after {
-  background: #4CAF50;
+  background: var(--green);
 }
 
 .dia-pendente::after {
-  background: #FFC107;
+  background: var(--yellow);
 }
 
 .dia-cancelada::after {
@@ -2210,7 +2222,7 @@ SOLICITAÇÕES DE RESERVA
     margin-right: 5px;
 }
 
-.verde { background: #4CAF50; }
+.verde { background: var(--green); }
 .amarelo { background: var(--yellow); }
 .vermelho { background: var(--red); }
 .cinza { background: #9E9E9E; }
@@ -2753,6 +2765,12 @@ SOLICITAÇÕES DE RESERVA
   justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
+  position: relative;
+  padding-top: 25px;
+}
+
+.card-reserva.recorrente {
+  border-left: 6px solid var(--blue);
 }
 
 .card-reserva:hover {
@@ -2761,18 +2779,23 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .card-reserva[data-status="Aceita"] {
-  border-left: 6px solid #4CAF50;
+  border-left: 6px solid var(--green);
   font-family: var(--font-main);
 }
 
 .card-reserva[data-status="Pendente"] {
-  border-left: 6px solid #FFC107;
+  border-left: 6px solid var(--yellow);
+  font-family: var(--font-main);
+}
+
+.card-reserva[data-status="Ativa"] {
+  border-left: 6px solid var(--green);
   font-family: var(--font-main);
 }
 
 .card-reserva[data-status="Cancelada"] {
-  border-left: 6px solid #F44336;
-  opacity: 0.7;
+  border-left: 6px solid var(--red);
+  opacity: 0.95;
   font-family: var(--font-main);
 }
 
@@ -2809,18 +2832,23 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .valor.aceita {
-  color: #4CAF50;
+  color: var(--green);
+  font-weight: 600;
+}
+
+.valor.ativa {
+  color: var(--green);
   font-weight: 600;
 }
 
 .valor.pendente {
-  color: #FFC107;
+  color: var(--yellow);
   font-weight: 600;
 }
 
 .valor.cancelada,
 .valor.recusada {
-  color: #F44336;
+  color: var(--red);
   font-weight: 600;
 }
 
@@ -2873,7 +2901,7 @@ SOLICITAÇÕES DE RESERVA
 
 .btn-salvar {
   margin-top: 8px;
-  background: #4CAF50;
+  background: var(--green);
   color: white;
   padding: 8px;
   border-radius: 6px;
@@ -2883,7 +2911,7 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .btn-salvar:hover {
-  background: #388E3C;
+  background: var(--green-dark);
 }
 
 /* Ações para aprovar/rejeitar */
@@ -2907,12 +2935,12 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .btn-aprovar {
-  background: #4CAF50;
+  background: var(--green);
   color: white;
 }
 
 .btn-aprovar:hover {
-  background: #45A049;
+  background: var(--green-dark);
 }
 
 .btn-rejeitar {
@@ -3855,7 +3883,7 @@ HISTORICO
 }
 
 .card-reserva-completa.aceita {
-  border-left: 6px solid #4CAF50;
+  border-left: 6px solid var(--green);
   font-family: var(--font-main);
 }
 
@@ -3905,7 +3933,7 @@ HISTORICO
 }
 
 .valor-status.aceita {
-  color: #4CAF50;
+  color: var(--green);
   font-weight: 600;
 }
 
@@ -5131,7 +5159,7 @@ button {
   display: block;
   margin-top: 18px;
   padding: 14px 20px;
-  background-color: var(--red);
+  background-color: var(--blue);
   color: var(--white);
   border: none;
   border-radius: var(--radius-md);
@@ -5145,7 +5173,7 @@ button {
 }
 
 .btn-recorrente:hover {
-  background-color: var(--red-dark);
+  background-color: var(--blue-dark);
   transform: translateY(-1px);
 }
 
@@ -5188,14 +5216,15 @@ button {
 }
 /* Cor para dias de avaliação (magenta) */
 .dia-avaliacao {
-    background-color: #e83e8c !important;
-    color: white !important;
+    background-color: var(--magenta-soft) !important;
+    color: var(--gray-800) !important;
     border-radius: 20%;
 }
 
 /* Legenda - box magenta */
 .legenda .box.magenta {
-    background-color: #e83e8c;
+    background-color: var(--magenta-soft-strong);
+    color: var(--gray-800);
 }
 .calendar-tooltip {
   background: white !important;

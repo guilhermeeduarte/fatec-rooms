@@ -44,10 +44,10 @@ const menuActions = [
   },
   {
     icon: <svg viewBox="0 0 24 24">
-      <path d="M17 1l4 4-4 4" stroke="#8B0D14" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M3 11V9a4 4 0 0 1 4-4h14" stroke="#8B0D14" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M7 23l-4-4 4-4" stroke="#8B0D14" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M21 13v2a4 4 0 0 1-4 4H3" stroke="#8B0D14" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M17 1l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M7 23l-4-4 4-4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>,
     title: "Reserva Recorrente",
     desc: "Crie reservas que se repetem semanalmente",
