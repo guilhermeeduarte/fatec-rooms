@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
+import Popup from "../components/Popup";
 import Calendar from "react-calendar";
 
 const dayCodeMap = {
@@ -50,6 +51,14 @@ export default function ReservaRecorrente() {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      setShowErrorPopup(true);
+    }
+  }, [error]);
 
   const [semesters, setSemesters] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -258,6 +267,7 @@ export default function ReservaRecorrente() {
         throw new Error(parseBackendError(text) || "Falha ao criar reserva recorrente.");
       }
       setSuccess("Reserva recorrente criada com sucesso.");
+      setShowPopup(true);
       setForm((prev) => ({ ...prev, weekDays: [], periodIds: [], subject: "", notes: "" }));
       const updated = await fetch(`/api/recurring-bookings/by-semester/${form.semesterId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -397,8 +407,6 @@ export default function ReservaRecorrente() {
         {/* PAINEL DIREITO */}
         <div className="div-forms-reserva">
           <form onSubmit={handleSubmit}>
-            {error && <div className="form-title" style={{ color: "#b91c1c" }}>{error}</div>}
-            {success && <div className="form-title" style={{ color: "#166534" }}>{success}</div>}
 
             <div className="form-group-reserva">
               <label>Semestre:</label>
@@ -531,6 +539,9 @@ export default function ReservaRecorrente() {
           </form>
         </div>
       </div>
+
+      {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
+      {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
 
       <Footer />
     </>

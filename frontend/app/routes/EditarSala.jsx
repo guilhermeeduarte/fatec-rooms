@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
+import Popup from "../components/Popup";
 
 export default function EditarSala() {
   const navigate = useNavigate();
@@ -18,6 +19,14 @@ export default function EditarSala() {
   const [loadingRoom, setLoadingRoom] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      setShowErrorPopup(true);
+    }
+  }, [error]);
 
   useEffect(() => {
     const authlevel = localStorage.getItem("authlevel");
@@ -89,6 +98,7 @@ export default function EditarSala() {
       }
 
       setSuccess("Sala atualizada com sucesso.");
+      setShowPopup(true);
     } catch (err) {
       setError(err.message || "Erro ao atualizar sala.");
     } finally {
@@ -155,9 +165,6 @@ export default function EditarSala() {
               <button className="btn-submit" type="submit" disabled={loading}>
                 {loading ? "Atualizando..." : "Salvar alterações"}
               </button>
-
-              {success && <div className="success-msg"><p>{success}</p></div>}
-              {error && <div className="success-msg"><p>Erro: {error}</p></div>}
             </form>
           </>
         )}
@@ -166,6 +173,9 @@ export default function EditarSala() {
           <Link className="see-all" to="/gerenciar-salas">Voltar ao gerenciamento</Link>
         </div>
       </div>
+
+      {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
+      {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
 
       <Footer />
     </>

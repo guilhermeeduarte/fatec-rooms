@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
+import Popup from "../components/Popup";
 import {
   CalendarCheck,
   Clock,
@@ -49,6 +50,14 @@ export default function Configuracao() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      setShowErrorPopup(true);
+    }
+  }, [error]);
 
   // Prazo
   const [prazo, setPrazo] = useState(7);
@@ -183,10 +192,12 @@ export default function Configuracao() {
     const { name, startDate, endDate } = currentSemester;
     if (!name || !startDate || !endDate) {
       setError("Preencha todos os campos obrigatórios.");
+      setShowErrorPopup(true);
       return;
     }
     if (new Date(startDate) > new Date(endDate)) {
       setError("A data de início não pode ser posterior à data de fim.");
+      setShowErrorPopup(true);
       return;
     }
 
@@ -216,6 +227,7 @@ export default function Configuracao() {
       }
 
       setSuccess(editingSemesterId ? "Semestre atualizado com sucesso!" : "Semestre criado com sucesso!");
+      setShowPopup(true);
       handleCloseSemesterModal();
       await carregarTodosSemestres();
       await carregarInicial(); // atualiza lista de ativos para o seletor
@@ -237,6 +249,7 @@ export default function Configuracao() {
       });
       if (!resp.ok) throw new Error("Erro ao excluir semestre");
       setSuccess(`Semestre "${name}" excluído.`);
+      setShowPopup(true);
       await carregarTodosSemestres();
       await carregarInicial();
 
@@ -260,6 +273,7 @@ export default function Configuracao() {
       if (!resp.ok) throw new Error("Erro ao alterar status do semestre");
       const updated = await resp.json();
       setSuccess(`Semestre ${updated.active ? "ativado" : "desativado"} com sucesso.`);
+      setShowPopup(true);
       await carregarTodosSemestres();
       await carregarInicial();
 
@@ -290,6 +304,7 @@ export default function Configuracao() {
       setPrazo(data.days);
       setEditandoPrazo(false);
       setSuccess("Prazo de antecedência atualizado com sucesso!");
+      setShowPopup(true);
     } catch (err) { setError(err.message); }
     finally { setSavingPrazo(false); }
   }
@@ -342,6 +357,7 @@ export default function Configuracao() {
       });
       if (!resp.ok) { const e = await resp.json(); throw new Error(e.message || "Erro ao salvar"); }
       setSuccess(editingExamWeekId ? "Semana atualizada!" : "Semana criada!");
+      setShowPopup(true);
       handleCloseExamWeekForm();
       await carregarExamWeeks(semesterSelecionado);
     } catch (err) { setError(err.message); }
@@ -354,6 +370,7 @@ export default function Configuracao() {
       const resp = await fetch(`${API_URL}/semesters/${semesterSelecionado}/exam-weeks/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
       if (!resp.ok) throw new Error("Erro ao remover");
       setSuccess(`Semana de ${examType} removida.`);
+      setShowPopup(true);
       await carregarExamWeeks(semesterSelecionado);
     } catch (err) { setError(err.message); }
   }
@@ -383,6 +400,7 @@ export default function Configuracao() {
       });
       if (!resp.ok) { const e = await resp.json(); throw new Error(e.message || "Erro ao criar feriado"); }
       setSuccess("Feriado criado com sucesso!");
+      setShowPopup(true);
       setShowHolidayForm(false);
       setCurrentHoliday(EMPTY_HOLIDAY);
       await carregarFeriados();
@@ -397,6 +415,7 @@ export default function Configuracao() {
       const resp = await fetch(`${API_URL}/holidays/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
       if (!resp.ok) throw new Error("Erro ao remover feriado");
       setSuccess(`"${name}" removido.`);
+      setShowPopup(true);
       await carregarFeriados();
     } catch (err) { setError(err.message); }
   }
@@ -424,6 +443,7 @@ export default function Configuracao() {
       if (!resp.ok) throw new Error("Erro ao importar");
       const data = await resp.json();
       setSuccess(`${data.length} feriados nacionais de ${nationalYear} importados!`);
+      setShowPopup(true);
       setShowPreview(false);
       await carregarFeriados();
     } catch (err) { setError(err.message); }
@@ -471,8 +491,6 @@ export default function Configuracao() {
       />
 
       <div className="content-config">
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
 
         {/* ── PRAZO ── */}
         <h2 className="secao-titulo">Reservas</h2>
@@ -970,6 +988,9 @@ export default function Configuracao() {
           </div>
         </div>
       )}
+
+      {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
+      {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
 
       <Footer />
     </>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
+import Popup from "../components/Popup";
 import Calendar from "react-calendar";
 
 function formatDateTime(dateStr) {
@@ -41,6 +42,14 @@ export default function SolicitaReservaCoordenador() {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      setShowErrorPopup(true);
+    }
+  }, [error]);
 
   const [form, setForm] = useState({
     data: "",
@@ -134,6 +143,7 @@ export default function SolicitaReservaCoordenador() {
         }
       } catch (err) {
         setError(err.message || "Erro ao carregar a página.");
+        setShowErrorPopup(true);
       } finally {
         setLoadingPage(false);
       }
@@ -162,6 +172,7 @@ export default function SolicitaReservaCoordenador() {
       setAvailability(await res.json());
     } catch (err) {
       setError(err.message || "Erro ao buscar disponibilidade.");
+      setShowErrorPopup(true);
       setAvailability(null);
     } finally {
       setLoadingAvailability(false);
@@ -224,6 +235,7 @@ export default function SolicitaReservaCoordenador() {
   function handleRoomSelect(room) {
     if (!form.dataISO) {
       setError("Selecione uma data antes de escolher uma sala.");
+      setShowErrorPopup(true);
       return;
     }
     setSelectedRoom(room);
@@ -250,11 +262,13 @@ export default function SolicitaReservaCoordenador() {
 
     if (!form.roomId || selectedPeriodIds.length === 0 || !form.dataISO || !form.motivo) {
       setError("Preencha a data, sala, ao menos um período e o motivo.");
+      setShowErrorPopup(true);
       return;
     }
     if (isHolidayDate(form.dataISO)) {
       const h = holidayByDate[form.dataISO];
       setError(`Não é possível reservar em feriados. "${h?.name || "Feriado"}" — ${form.data}.`);
+      setShowErrorPopup(true);
       return;
     }
 
@@ -286,11 +300,11 @@ export default function SolicitaReservaCoordenador() {
       }
       const totalPeriods = selectedPeriodIds.length;
       // Mensagem de sucesso indicando que a reserva já está aprovada (coordenador)
-      setSuccess(
-        totalPeriods === 1
-          ? "Reserva criada e aprovada automaticamente!"
-          : `Reserva com ${totalPeriods} períodos criada e aprovada automaticamente!`
-      );
+      const successMessage = totalPeriods === 1
+        ? "Reserva criada e aprovada automaticamente!"
+        : `Reserva com ${totalPeriods} períodos criada e aprovada automaticamente!`;
+      setSuccess(successMessage);
+      setShowPopup(true);
       setSelectedRoom(null);
       setAvailability(null);
       setSelectedPeriodIds([]);
@@ -310,6 +324,7 @@ export default function SolicitaReservaCoordenador() {
       if (updatedRes.ok) setMyBookings(await updatedRes.json() || []);
     } catch (err) {
       setError(err.message || "Erro ao enviar a solicitação.");
+      setShowErrorPopup(true);
     } finally {
       setLoadingSubmit(false);
     }
@@ -358,6 +373,7 @@ export default function SolicitaReservaCoordenador() {
                 setError(
                   `Este dia é feriado: "${holidayByDate[isoDate]?.name || "Feriado"}". Selecione outra data.`
                 );
+                setShowErrorPopup(true);
                 return;
               }
               setError(null);
@@ -492,8 +508,6 @@ export default function SolicitaReservaCoordenador() {
 
         <div className="div-forms-reserva">
           <form onSubmit={handleSubmit}>
-            {error && <div className="form-title" style={{ color: "#b91c1c" }}>{error}</div>}
-            {success && <div className="form-title" style={{ color: "#166534" }}>{success}</div>}
 
             <div className="form-group-reserva">
               <label>Data e espaço selecionado:</label>
@@ -657,6 +671,8 @@ export default function SolicitaReservaCoordenador() {
         </div>
       </div>
 
+      {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
+      {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
       <Footer />
     </>
   );

@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
+import Popup from "../components/Popup";
 
 export default function RemoverSala() {
   const navigate = useNavigate();
@@ -15,6 +16,14 @@ export default function RemoverSala() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      setShowErrorPopup(true);
+    }
+  }, [error]);
 
   useEffect(() => {
     const authlevel = localStorage.getItem("authlevel");
@@ -75,6 +84,7 @@ export default function RemoverSala() {
       }
 
       setSuccess("Sala removida com sucesso.");
+      setShowPopup(true);
       setTimeout(() => navigate("/gerenciar-salas"), 800);
     } catch (err) {
       setError(err.message || "Erro ao remover sala.");
@@ -127,13 +137,13 @@ export default function RemoverSala() {
                   {deleting ? "Removendo..." : "Remover sala"}
                 </button>
               </div>
-
-              {success && <div className="success-msg"><p>{success}</p></div>}
-              {error && <div className="success-msg"><p>Erro: {error}</p></div>}
             </div>
           </>
         )}
       </div>
+
+      {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
+      {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
 
       <Footer />
     </>
