@@ -48,6 +48,39 @@ export default function Navbar({ activePage }) {
       </Link>
 
       <div className="navbar__actions">
+
+        {/* Acessibilidade */}
+        <Link
+          className="navbar__icon navbar__icon-link"
+          to="/acessibilidade"
+          aria-label="Acessibilidade"
+          title="Acessibilidade"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {/* círculo externo */}
+            <circle cx="12" cy="12" r="10.5" />
+
+            {/* cabeça */}
+            <circle cx="12" cy="7" r="1.3" />
+
+            {/* braços */}
+            <path d="M8 10h8" />
+
+            {/* corpo */}
+            <path d="M12 8.5v4.5" />
+
+            {/* pernas */}
+            <path d="M10 18l2-5 2 5" />
+          </svg>
+        </Link>
+
         {token ? (
           <div className="navbar__user">
             <button
@@ -66,6 +99,7 @@ export default function Navbar({ activePage }) {
             </button>
 
             <div className={`navbar__user-menu ${userMenuOpen ? "open" : ""}`}>
+
               <Link to="/perfil" onClick={() => setUserMenuOpen(false)}>
                 Meu Perfil
               </Link>

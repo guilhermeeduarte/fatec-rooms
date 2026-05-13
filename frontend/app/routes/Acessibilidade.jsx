@@ -8,26 +8,44 @@ import PageHero from "../components/PageHero";
 
 
 export default function Acessibilidade() {
-    const navigate = useNavigate();
+ const navigate = useNavigate();
 
-    //acess
-    const [fontSize, setFontSize] = useState(
-        Number(localStorage.getItem("fontSize")) || 14
-    );
+    const [fontSize, setFontSize] = useState(14);
+    const [daltonicMode, setDaltonicMode] = useState(false);
+    const [highContrast, setHighContrast] = useState(false);
 
-    const [daltonicMode, setDaltonicMode] = useState(
-        localStorage.getItem("daltonicMode") === "true"
-    );
 
+    /* Carrega configurações */
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const savedFontSize = localStorage.getItem("fontSize");
+            const savedDaltonicMode = localStorage.getItem("daltonicMode");
+
+            if (savedFontSize) {
+                setFontSize(Number(savedFontSize));
+            }
+
+            if (savedDaltonicMode === "true") {
+                setDaltonicMode(true);
+            }
+        }
+    }, []);
+
+    
+
+    /* Atualiza tamanho da fonte */
     useEffect(() => {
         document.documentElement.style.setProperty(
             "--user-font-size",
             `${fontSize}px`
         );
 
-        localStorage.setItem("fontSize", fontSize);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("fontSize", fontSize);
+        }
     }, [fontSize]);
 
+    /* Atualiza modo daltônico */
     useEffect(() => {
         if (daltonicMode) {
             document.body.classList.add("daltonic-mode");
@@ -35,10 +53,10 @@ export default function Acessibilidade() {
             document.body.classList.remove("daltonic-mode");
         }
 
-        localStorage.setItem("daltonicMode", daltonicMode);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("daltonicMode", daltonicMode);
+        }
     }, [daltonicMode]);
-
-    //
 
 
 
@@ -52,7 +70,7 @@ export default function Acessibilidade() {
                 description="Configure o sistemas para uma melhor navegação."
             />
 
-            <div className="user-profile">
+            <div className="container-acess">
 
                 {/*ACESS*/}
                 <div className="accessibility-card">
@@ -69,7 +87,7 @@ export default function Acessibilidade() {
                             {daltonicMode ? "Ativado" : "Desativado"}
                         </button>
                     </div>
-
+                 
                     <div className="accessibility-option">
                         <label>
                             Tamanho da Fonte: <strong>{fontSize}px</strong>
