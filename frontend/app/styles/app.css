@@ -59,9 +59,16 @@ body {
 
 
 /* =============================================
-   MODO DALTÔNICO
+   Acessibilidade
 ============================================= */
+button:focus,
+a:focus,
+input:focus {
+  outline: 3px solid #2563EB;
+  outline-offset: 3px;
+}
 
+/*----daltonismo---*/
 body.daltonic-mode {
 
   /* Vermelhos trocados por azul acessível */
@@ -102,6 +109,42 @@ body.daltonic-mode button:focus,
 body.daltonic-mode input:focus {
   outline: 3px solid #2563EB;
   outline-offset: 2px;
+}
+
+/* alto contraste*/
+
+body.high-contrast {
+
+  /* Fundo */
+  --gray-50: #000000;
+  --gray-100: #111111;
+   --gray-200: #8b8c8d; 
+
+  /* Texto */
+  --gray-500: #ece9e9;
+  --gray-800: #151414;
+
+  /* Cor principal */
+  --red: #FFD600;
+  --red-dark: #FFC400;
+  --red-light: #FFE082;
+
+  /* Azul */
+  --blue: #4FC3F7;
+  --blue-dark: #29B6F6;
+
+  /* Verde */
+  --green: #81C784;
+  --green-dark: #66BB6A;
+
+  /* Magenta */
+  --magenta: #FF4FA3;
+
+  /* Sombras removidas */
+  --shadow-red: none;
+
+  background: #000;
+  color: #fff;
 }
 
 /* ══════════════════════════════════════════
@@ -159,12 +202,12 @@ body.daltonic-mode input:focus {
   cursor: pointer;
   background: none;
   border: none;
-  padding: 4px;
+  padding: 3px;
 }
 
 .navbar__icon svg {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   stroke: white;
   fill: none;
   display: block;
@@ -321,10 +364,12 @@ body.daltonic-mode input:focus {
     gap: 8px;
   }
 
-  .navbar__icon svg {
-    width: 22px;
-    height: 22px;
-  }
+ .navbar__icon svg {
+  width: 26px;
+  height: 26px;
+  color: white;
+  display: block;
+}
 
   /* mantém alinhamento original (NÃO centraliza) */
   .navbar__menu a {
@@ -339,6 +384,28 @@ body.daltonic-mode input:focus {
     min-width: 180px;
   }
 }
+
+
+/* Ícone acessibilidade */
+.navbar__icon-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: transform var(--transition);
+}
+
+.navbar__icon-link:hover {
+  transform: scale(1.08);
+}
+
+.navbar__icon:focus,
+.navbar__icon-link:focus {
+  outline: 3px solid rgba(255,255,255,0.85);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
 
 
 /* 📱 CELULAR PEQUENO */
@@ -3452,6 +3519,14 @@ body {
   font-size: var(--user-font-size);
 }
 
+.container-acess{
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 24px 44px;
+  height: 600px
+}
+
+
 /* ── Card de acessibilidade ── */
 .accessibility-card {
   background: var(--white);
@@ -3532,7 +3607,19 @@ body {
   border: none;
 }
 
+button:focus,
+a:focus,
+input:focus {
+  outline: 3px solid #2563EB;
+  outline-offset: 3px;
+}
 
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 /* ══════════════════════════════════════════
    PÁGINA DE RELATÓRIOS
 ══════════════════════════════════════════ */
