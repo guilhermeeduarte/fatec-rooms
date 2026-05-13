@@ -484,18 +484,6 @@ body.high-contrast {
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
 }
 
-.page-hero::before,
-.dir-header::before {
-  content: '';
-  position: absolute;
-  top: -40px;
-  right: -50px;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-}
-
 .hero-tag,
 .dir-badge {
   display: inline-flex;
