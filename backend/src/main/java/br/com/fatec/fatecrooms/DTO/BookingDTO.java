@@ -33,7 +33,9 @@ public class BookingDTO {
     private String subject;
     private String notes;
     private Booking.Status status;
-
+    private Integer recurringBookingId; // ID da reserva recorrente que originou esta
+    private String reservationType;     // "COMUM" ou "RECORRENTE"
+    
     // Revisão
     private String reviewedByUsername;
     private LocalDateTime reviewedAt;
