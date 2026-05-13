@@ -22,6 +22,12 @@
   --magenta:   #E83E8C;
   --magenta-soft: rgba(232, 62, 140, 0.16);
   --magenta-soft-strong: rgba(232, 62, 140, 0.24);
+  --holiday:   #880cc2;
+  --holiday-text: #ffffff;
+  --calendar-active: #067cdddc;
+  --calendar-hover: var(--gray-100);
+  --calendar-disabled: #ccc;
+  --red-soft: #FECACA;
 
   --font-main: 'Sora', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -65,6 +71,14 @@ body.daltonic-mode {
   --green: #1F8B3A;
   --green-dark: #16682C;
   --green-light: #8EDC8B;
+  --magenta: #3B82F6;
+  --magenta-soft: rgba(59, 130, 246, 0.16);
+  --magenta-soft-strong: rgba(59, 130, 246, 0.24);
+  --holiday: #2563EB;
+  --holiday-text: #ffffff;
+  --calendar-active: #4F8EEB;
+  --calendar-hover: #E0EFFE;
+  --calendar-disabled: #A3A3A3;
 
   /* Contraste */
   --gray-50: #FFFFFF;
@@ -2046,11 +2060,11 @@ SOLICITAÇÕES DE RESERVA
 
 .react-calendar {
   width: 100%;
-  max-width: 540px;
-  height: 400px;
+  max-width: 580px;
+  min-height: 430px;
   background: var(--white);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 24px;
   font-family: var(--font-body);
   border: 2px solid var(--red);
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
@@ -2123,7 +2137,7 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .react-calendar__tile {
-  height: 42px;
+  height: 38px;
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -2148,13 +2162,13 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .react-calendar__tile--active {
-  background: #067cdddc !important;
+  background: var(--calendar-active) !important;
   color: white;
   font-weight: 600;
 }
 
 .react-calendar__month-view__days__day--neighboringMonth {
-  color: #ccc;
+  color: var(--calendar-disabled);
 }
 
 .dia-aceita::after,
@@ -2178,11 +2192,11 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .dia-cancelada::after {
-  background: #F44336;
+  background: var(--red);
 }
 
 .dia-selecionado {
-  background: #9E9E9E !important;
+  background: var(--gray-500) !important;
   color: white;
 }
 
@@ -4754,10 +4768,10 @@ button {
     }
   }
 }
-.calendar-holiday { background: #880cc2 !important; color: #ffffff !important; }
-.legend-holiday { background: #880cc2; }
-.dia-feriado { background: #880cc2 !important; color: #ffffff !important; pointer-events: none;  }
-.box.laranja { background: #880cc2; }
+.calendar-holiday { background: var(--holiday) !important; color: var(--holiday-text) !important; }
+.legend-holiday { background: var(--holiday); }
+.dia-feriado { background: var(--holiday) !important; color: var(--holiday-text) !important; pointer-events: none; }
+.box.laranja { background: var(--holiday); }
 
 /* ══════════════════════════════════════════
    RESERVA RECORRENTE
@@ -4914,7 +4928,7 @@ button {
 }
 
 .box-calendario-recorrente .react-calendar__tile--active {
-  background: #067cdddc !important;
+  background: var(--calendar-active) !important;
   color: white;
   font-weight: 600;
 }
@@ -4932,7 +4946,7 @@ button {
 
 /* Dia recorrente — só cor, sem bolinha */
 .dia-recorrente {
-  background: #FFF0F0 !important;
+  background: var(--red-soft) !important;
   color: var(--red-dark) !important;
   font-weight: 700;
 }

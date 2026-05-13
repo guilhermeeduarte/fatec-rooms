@@ -28,7 +28,7 @@ public class RecurringBookingController {
      * Lista todas as reservas recorrentes.
      */
     @GetMapping
-    @PreAuthorize("hasRole('COORDINATOR')")
+    @PreAuthorize("hasAnyRole('COORDINATOR','TEACHER')")
     public ResponseEntity<List<RecurringBookingDTO>> listAll() {
         return ResponseEntity.ok(recurringBookingService.listAll());
     }
@@ -38,7 +38,7 @@ public class RecurringBookingController {
      * Lista reservas recorrentes de um semestre específico.
      */
     @GetMapping("/by-semester/{semesterId}")
-    @PreAuthorize("hasRole('COORDINATOR')")
+    @PreAuthorize("hasAnyRole('COORDINATOR','TEACHER')")
     public ResponseEntity<List<RecurringBookingDTO>> listBySemester(
             @PathVariable Integer semesterId) {
         return ResponseEntity.ok(recurringBookingService.listBySemester(semesterId));

@@ -5,6 +5,25 @@ import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import Calendar from "react-calendar";
 
+function formatDateTime(dateStr) {
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return dateStr || "";
+
+  const pad = (value) => String(value).padStart(2, "0");
+  const day = pad(date.getDate());
+  const month = pad(date.getMonth() + 1);
+  const year = date.getFullYear();
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+
+  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
+function isActiveBooking(booking) {
+  return !["CANCELLED", "REJECTED"].includes(booking.status);
+}
+
 export default function SolicitaReservaCoordenador() {
   const navigate = useNavigate();
 
@@ -13,6 +32,7 @@ export default function SolicitaReservaCoordenador() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [availability, setAvailability] = useState(null);
   const [myBookings, setMyBookings] = useState([]);
+  const [recurringBookings, setRecurringBookings] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [examDatesSet, setExamDatesSet] = useState(new Set());
   const [date, setDate] = useState(new Date());
@@ -54,11 +74,13 @@ export default function SolicitaReservaCoordenador() {
         setLoadingPage(true);
         setError(null);
 
-        const [roomsRes, bookingsRes, holidaysRes, semestersRes] = await Promise.all([
-          fetch("/api/rooms", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/bookings/my", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/holidays", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/semesters", { headers: { Authorization: `Bearer ${token}` } }),
+        const headers = { Authorization: `Bearer ${token}` };
+        const [roomsRes, bookingsRes, holidaysRes, semestersRes, recurringRes] = await Promise.all([
+          fetch("/api/rooms", { headers }),
+          fetch("/api/bookings/my", { headers }),
+          fetch("/api/holidays", { headers }),
+          fetch("/api/semesters", { headers }),
+          fetch("/api/recurring-bookings", { headers }),
         ]);
 
         if (!roomsRes.ok) throw new Error("Falha ao carregar salas.");
@@ -66,6 +88,9 @@ export default function SolicitaReservaCoordenador() {
 
         setSalas(await roomsRes.json() || []);
         setMyBookings(await bookingsRes.json() || []);
+        if (recurringRes.ok) {
+          setRecurringBookings(await recurringRes.json() || []);
+        }
 
         if (holidaysRes.ok) {
           const data = await holidaysRes.json();
@@ -179,6 +204,22 @@ export default function SolicitaReservaCoordenador() {
     if (booking.bookingDate) acc[booking.bookingDate] = booking.status;
     return acc;
   }, {});
+
+  function formatWeekdays(weekDays = []) {
+    const weekdayMap = {
+      MONDAY: "Seg",
+      TUESDAY: "Ter",
+      WEDNESDAY: "Qua",
+      THURSDAY: "Qui",
+      FRIDAY: "Sex",
+      SATURDAY: "Sáb",
+      SUNDAY: "Dom",
+    };
+    return weekDays.map((day) => weekdayMap[day] || day).join(", ");
+  }
+
+  const activeBookings = myBookings.filter(isActiveBooking);
+  const activeRecurringBookings = recurringBookings.filter((booking) => booking.status === "ACTIVE");
 
   function handleRoomSelect(room) {
     if (!form.dataISO) {
@@ -380,17 +421,33 @@ export default function SolicitaReservaCoordenador() {
           <div className="reservas-feitas">
             <h4>Horários Reservados:</h4>
             <div className="lista-horarios">
-              {myBookings.length === 0 && <p>Nenhuma reserva encontrada.</p>}
-              {myBookings.map((booking) => {
+              {activeBookings.length === 0 && activeRecurringBookings.length === 0 && <p>Nenhuma reserva encontrada.</p>}
+
+              {activeBookings.map((booking) => {
                 const periods = booking.periods || [];
                 const first = periods[0];
                 const last = periods[periods.length - 1];
                 return (
-                  <p key={booking.id}>
+                  <p key={`booking-${booking.id}`}>
                     <span className="hora">
-                      {booking.bookingDate} • {first?.periodStart?.slice(0, 5) || "--:--"} -{" "}
+                      {formatDateTime(booking.bookingDate)} • {first?.periodStart?.slice(0, 5) || "--:--"} -{" "}
                       {last?.periodEnd?.slice(0, 5) || "--:--"}
                       {periods.length > 1 && ` (${periods.length} períodos)`}
+                    </span>
+                    <span className="prof">{booking.roomName}</span>
+                  </p>
+                );
+              })}
+
+              {activeRecurringBookings.map((booking) => {
+                const periods = booking.periods || [];
+                const first = periods[0];
+                const last = periods[periods.length - 1];
+                return (
+                  <p key={`recurring-${booking.id}`}>
+                    <span className="hora">
+                      Reserva recorrente • {formatWeekdays(booking.weekDays)} • {first?.periodStart?.slice(0, 5) || "--:--"} - {last?.periodEnd?.slice(0, 5) || "--:--"}
+                      {booking.activeInstances != null && booking.activeInstances > 0 && ` (${booking.activeInstances} instância${booking.activeInstances > 1 ? "s" : ""} ativa${booking.activeInstances > 1 ? "s" : ""})`}
                     </span>
                     <span className="prof">{booking.roomName}</span>
                   </p>
