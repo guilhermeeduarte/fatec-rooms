@@ -24,5 +24,6 @@ export default [
   route("esqueci-senha", "routes/EsqueciSenha.jsx"),
   route("gerenciar-usuarios", "routes/GerenciarUsuario.jsx"),
   route("reserva-recorrente", "routes/ReservaRecorrente.jsx"),
+  route("acessibilidade", "routes/Acessibilidade.jsx"),
 
 ];
