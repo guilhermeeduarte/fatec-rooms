@@ -117,6 +117,18 @@ export default function Configuracao() {
     carregarFeriados();
   }, []);
 
+  // Bloqueia scroll da página quando modal está aberto
+  useEffect(() => {
+    if (showExamWeekForm || showSemesterModal || showHolidayForm || showPreview) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showExamWeekForm, showSemesterModal, showHolidayForm, showPreview]);
+
   async function carregarInicial() {
     try {
       setLoading(true);
@@ -453,7 +465,7 @@ export default function Configuracao() {
   function traduzirTipo(type) {
     switch (type) {
       case "NATIONAL": return "Nacional";
-      case "LOCAL": return "Local";
+      case "CUSTOM": return "Local";
       default: return type;
     }
   }
@@ -461,7 +473,7 @@ export default function Configuracao() {
   function tipoCor(type) {
     switch (type) {
       case "NATIONAL": return { background: "#dbeafe", color: "#1d4ed8" };
-      case "LOCAL": return { background: "#fef9c3", color: "#854d0e" };
+      case "CUSTOM": return { background: "#fef9c3", color: "#854d0e" };
       default: return { background: "#f3f4f6", color: "#374151" };
     }
   }
@@ -661,7 +673,7 @@ export default function Configuracao() {
               style={{ padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }}
               >
               <option value="NATIONAL">Nacional</option>
-              <option value="LOCAL">Local</option>
+              <option value="CUSTOM">Local</option>
               </select>
               </div>
               <input

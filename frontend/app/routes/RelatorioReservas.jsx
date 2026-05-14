@@ -7,6 +7,19 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
 } from "recharts";
 
+// Mapa de cores por status
+const COLOR_MAP_AVULSAS = {
+  "Aprovadas": "#22C55E",    // Verde
+  "Pendentes": "#F59E0B",    // Amarelo
+  "Canceladas": "#EF4444",   // Vermelho
+};
+
+const COLOR_MAP_RECURRING = {
+  "Ativas": "#22C55E",                           // Verde
+  "Canceladas": "#EF4444",                       // Vermelho
+  "Puladas (feriado/conflito)": "#9CA3AF",      // Cinza
+};
+
 const COLORS_AVULSAS   = ["#22C55E", "#F59E0B", "#6B7280", "#EF4444"];
 const COLORS_RECURRING = ["#22C55E", "#EF4444", "#9CA3AF"];
 
@@ -231,8 +244,8 @@ export default function RelatorioReservas() {
                         <Pie data={pieAvulsas} cx="50%" cy="50%" labelLine={false}
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                           outerRadius={100} dataKey="value">
-                          {pieAvulsas.map((_, i) => (
-                            <Cell key={i} fill={COLORS_AVULSAS[i % COLORS_AVULSAS.length]} />
+                          {pieAvulsas.map((item) => (
+                            <Cell key={item.name} fill={COLOR_MAP_AVULSAS[item.name]} />
                           ))}
                         </Pie>
                         <Tooltip /><Legend />
@@ -251,8 +264,8 @@ export default function RelatorioReservas() {
                         <Pie data={pieInstancias} cx="50%" cy="50%" labelLine={false}
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                           outerRadius={100} dataKey="value">
-                          {pieInstancias.map((_, i) => (
-                            <Cell key={i} fill={COLORS_RECURRING[i % COLORS_RECURRING.length]} />
+                          {pieInstancias.map((item) => (
+                            <Cell key={item.name} fill={COLOR_MAP_RECURRING[item.name]} />
                           ))}
                         </Pie>
                         <Tooltip /><Legend />
@@ -362,8 +375,8 @@ export default function RelatorioReservas() {
                         <Pie data={pieRecurring} cx="50%" cy="50%" labelLine={false}
                           label={({ name, percent }) => `${name.split(" ")[0]} ${(percent * 100).toFixed(0)}%`}
                           outerRadius={100} dataKey="value">
-                          {pieRecurring.map((_, i) => (
-                            <Cell key={i} fill={COLORS_RECURRING[i % COLORS_RECURRING.length]} />
+                          {pieRecurring.map((item) => (
+                            <Cell key={item.name} fill={COLOR_MAP_RECURRING[item.name]} />
                           ))}
                         </Pie>
                         <Tooltip /><Legend />
