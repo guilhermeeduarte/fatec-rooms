@@ -23,7 +23,7 @@ public class BookingService {
     private final UserRepository                  userRepository;
     private final PeriodRepository                periodRepository;
     private final SystemConfigService             configService;
-    private final RecurringBookingRepository      recurringBookingRepository; // ← NOVO
+    private final RecurringBookingRepository      recurringBookingRepository;
 
     // ─────────────────────────────────────────────
     //  CONSULTAS ABERTAS
@@ -76,6 +76,8 @@ public class BookingService {
         User user = getUserOrThrow(username);
         Room room = getRoomOrThrow(request.getRoomId());
 
+        boolean isCoordinator = user.getAuthlevel() != null && user.getAuthlevel() == 1;
+
         if (room.getBookable() != 1) {
             throw new IllegalStateException("Sala não está disponível para reservas.");
         }
@@ -84,14 +86,17 @@ public class BookingService {
             throw new IllegalArgumentException("A data da reserva deve ser futura.");
         }
 
-        int minAdvanceDays = configService.getMinAdvanceDays();
-        if (minAdvanceDays > 0) {
-            LocalDate earliestAllowed = LocalDate.now().plusDays(minAdvanceDays);
-            if (request.getBookingDate().isBefore(earliestAllowed)) {
-                throw new IllegalArgumentException(
-                        "A reserva deve ser feita com no mínimo " + minAdvanceDays
-                                + " dia(s) de antecedência. Data mais próxima permitida: "
-                                + earliestAllowed + ".");
+        // Coordenador não está sujeito ao prazo mínimo de antecedência
+        if (!isCoordinator) {
+            int minAdvanceDays = configService.getMinAdvanceDays();
+            if (minAdvanceDays > 0) {
+                LocalDate earliestAllowed = LocalDate.now().plusDays(minAdvanceDays);
+                if (request.getBookingDate().isBefore(earliestAllowed)) {
+                    throw new IllegalArgumentException(
+                            "A reserva deve ser feita com no mínimo " + minAdvanceDays
+                                    + " dia(s) de antecedência. Data mais próxima permitida: "
+                                    + earliestAllowed + ".");
+                }
             }
         }
 
@@ -126,7 +131,7 @@ public class BookingService {
 
         validateNoTimeOverlap(room.getId(), request.getBookingDate(), selectedPeriods, null);
 
-        // ── Validação extra: conflito com reservas recorrentes ────────────────
+        // Validação extra: conflito com reservas recorrentes
         validateNoRecurringConflict(room.getId(), request.getBookingDate(), selectedPeriods);
 
         Booking booking = new Booking();
@@ -136,7 +141,15 @@ public class BookingService {
         booking.setBookingDate(request.getBookingDate());
         booking.setSubject(request.getSubject());
         booking.setNotes(request.getNotes());
-        booking.setStatus(Status.PENDING);
+
+        // Reservas criadas por coordenador são automaticamente aprovadas
+        if (isCoordinator) {
+            booking.setStatus(Status.APPROVED);
+            booking.setReviewedBy(user);
+            booking.setReviewedAt(LocalDateTime.now());
+        } else {
+            booking.setStatus(Status.PENDING);
+        }
 
         return toDTO(bookingRepository.save(booking));
     }
