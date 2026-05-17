@@ -4621,9 +4621,9 @@ button {
   display: flex;
   justify-content: center;
   gap: 1rem;
-
-  /* ══════════════════════════════════════════
- CALENDÁRIO INTERATIVO COM TOOLTIP
+}
+/* ══════════════════════════════════════════
+CALENDÁRIO INTERATIVO COM TOOLTIP
 ══════════════════════════════════════════ */
 
   .calendar-header > div {
@@ -4846,7 +4846,7 @@ button {
       font-size: 9px;
     }
   }
-}
+
 .calendar-holiday { background: var(--holiday) !important; color: var(--holiday-text) !important; }
 .legend-holiday { background: var(--holiday); }
 .dia-feriado { background: var(--holiday) !important; color: var(--holiday-text) !important; pointer-events: none; }
