@@ -47,6 +47,24 @@ export default function Root() {
 
         <ScrollRestoration />
         <Scripts />
+        
+        {/* UserWay */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(d){
+                var s = d.createElement("script");
+
+                s.setAttribute("data-position", "2");
+                s.setAttribute("data-account", "MvOoS3TA7I");
+                s.setAttribute("src", "https://cdn.userway.org/widget.js");
+
+                (d.body || d.head).appendChild(s);
+              })(document);
+            `,
+          }}
+        />
+
 
       </body>
     </html>
