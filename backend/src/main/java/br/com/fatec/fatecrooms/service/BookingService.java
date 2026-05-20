@@ -82,6 +82,15 @@ public class BookingService {
             throw new IllegalStateException("Sala não está disponível para reservas.");
         }
 
+        // Professores (authlevel = 2) são bloqueados quando o sistema está suspenso.
+        // Coordenadores nunca são bloqueados — eles podem reservar livremente.
+        if (!isCoordinator && configService.isTeacherBookingSuspended()) {
+            throw new IllegalStateException(
+                    "O sistema de reservas está temporariamente suspenso para professores. "
+                            + "Entre em contato com a coordenação para mais informações."
+            );
+        }
+
         if (!request.getBookingDate().isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("A data da reserva deve ser futura.");
         }
