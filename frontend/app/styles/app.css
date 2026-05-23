@@ -5330,3 +5330,271 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
   background: #f8f9fa !important;
   border-left: 3px solid;
 }
+/* Filtros avançados */
+.filtros-avancados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f1f5f9;
+  border-radius: 12px;
+}
+.filtros-avancados input,
+.filtros-avancados select {
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  flex: 1 0 160px;
+}
+
+/* Grade */
+.grade-container { overflow-x: auto; padding: 1rem; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.grade-tabela-wrapper { max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+.grade-tabela { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 600px; }
+.grade-tabela th, .grade-tabela td { border: 1px solid #cbd5e1; padding: 8px 6px; text-align: center; }
+.grade-tabela th { background-color: #f1f5f9; position: sticky; top: 0; }
+.sala-col { position: sticky; left: 0; background-color: #f8fafc; }
+.sala-nome { font-weight: 500; text-align: left !important; background-color: #f8fafc; }
+.linha-selecionada .sala-nome { background-color: #dbeafe; }
+.periodo-cell { cursor: pointer; transition: 0.1s; }
+.periodo-cell.disponivel { background-color: #dcfce7; }
+.periodo-cell.disponivel:hover { background-color: #bbf7d0; transform: scale(1.02); }
+.periodo-cell.ocupado { background-color: #fee2e2; cursor: not-allowed; color: #b91c1c; }
+.periodo-cell.selecionado { background-color: #3b82f6; color: white; font-weight: bold; }
+.grade-placeholder, .grade-feriado, .grade-loading { text-align: center; padding: 2rem; background: #fef9c3; border-radius: 12px; }
+.grade-feriado { background: #fed7aa; color: #9a3412; }
+.grade-loading { background: #e0f2fe; }
+.form-reserva-grade { margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem; }
+/* Bloco unificado de filtros */
+.filtros-unificados {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.filtros-basicos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.filtros-basicos .input-busca,
+.filtros-basicos .select-status,
+.filtros-basicos .select-tipo {
+  flex: 1 0 180px;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.filtro-data-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.grupo-data {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  color: #1e293b;
+}
+
+.grupo-data label {
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.grupo-data input {
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.btn-toggle-advanced {
+  background: #e2e8f0;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+.btn-toggle-advanced:hover {
+  background: #cbd5e1;
+}
+
+.btn-red {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-red:hover {
+  background: #dc2626;
+}
+
+.filtros-avancados {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.filtros-avancados input,
+.filtros-avancados select {
+  flex: 1 0 160px;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+/* Ajuste responsivo */
+@media (max-width: 768px) {
+  .filtros-basicos, .filtro-data-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .grupo-data {
+    width: 100%;
+  }
+  .filtros-avancados {
+    flex-direction: column;
+  }
+}
+/* Garantir que o footer fique sempre no final da página */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* O conteúdo principal deve crescer para empurrar o footer */
+.layout-reservas, .content-solicitarReserva {
+  flex: 1;
+}
+
+/* Footer deve ter margin-top automática se necessário, mas já estará no final */
+footer, .Footer {
+  margin-top: auto;
+}
+
+/* Estilos dos filtros (mesmo padrão do TodasReservas) */
+.filtros-unificados {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.filtros-basicos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.filtros-basicos .input-busca,
+.filtros-basicos .select-status,
+.filtros-basicos .input-data {
+  flex: 1 0 160px;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.btn-toggle-advanced {
+  background: #e2e8f0;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-red {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.filtros-avancados {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.filtros-avancados input,
+.filtros-avancados select {
+  flex: 1 0 150px;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+/* Cards com mais campos */
+.info-reserva.completa {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.item-reserva {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-reserva .label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.item-reserva .valor {
+  font-size: 0.9rem;
+  color: #1e293b;
+  word-break: break-word;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .filtros-basicos {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filtros-avancados {
+    flex-direction: column;
+  }
+  .info-reserva.completa {
+    grid-template-columns: 1fr;
+  }
+}
