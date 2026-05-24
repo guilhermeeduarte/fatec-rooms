@@ -41,10 +41,17 @@ public interface RecurringBookingInstanceRepository extends JpaRepository<Recurr
             @Param("reason")      String reason
     );
 
+    /**
+     * Retorna instâncias ativas de uma sala num intervalo,
+     * com recurringBooking e periods carregados (evita N+1 no ScheduleService).
+     */
     @Query("""
-        SELECT rbi FROM RecurringBookingInstance rbi
-        JOIN rbi.recurringBooking rb
-        JOIN rb.room
+        SELECT DISTINCT rbi FROM RecurringBookingInstance rbi
+        JOIN FETCH rbi.recurringBooking rb
+        JOIN FETCH rb.room
+        JOIN FETCH rb.classGroup cg
+        JOIN FETCH cg.course
+        JOIN FETCH rb.periods
         WHERE rb.room.id = :roomId
           AND rbi.bookingDate BETWEEN :start AND :end
           AND rbi.status = 'ACTIVE'
