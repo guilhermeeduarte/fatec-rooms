@@ -5,6 +5,9 @@ import br.com.fatec.fatecrooms.model.*;
 import br.com.fatec.fatecrooms.model.Booking.Status;
 import br.com.fatec.fatecrooms.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -388,6 +391,33 @@ public class BookingService {
                 b.getRejectReason(),
                 b.getCreatedAt(),
                 b.getUpdatedAt()
+        );
+    }
+
+    public PagedResponseDTO<BookingDTO> listAllPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Booking> result = bookingRepository.findAllWithDetailsPaged(pageable);
+        return toPagedResponse(result);
+    }
+
+    public PagedResponseDTO<BookingDTO> listByStatusPaged(Status status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Booking> result = bookingRepository.findByStatusPaged(status, pageable);
+        return toPagedResponse(result);
+    }
+
+    public PagedResponseDTO<BookingDTO> listByDatePaged(LocalDate date, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Booking> result = bookingRepository.findByDateWithDetailsPaged(date, pageable);
+        return toPagedResponse(result);
+    }
+
+    private PagedResponseDTO<BookingDTO> toPagedResponse(Page<Booking> page) {
+        return new PagedResponseDTO<>(
+                page.getContent().stream().map(this::toDTO).toList(),
+                page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages(),
+                page.isLast()
         );
     }
 }

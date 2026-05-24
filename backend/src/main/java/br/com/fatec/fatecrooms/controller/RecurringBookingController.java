@@ -1,9 +1,6 @@
 package br.com.fatec.fatecrooms.controller;
 
-import br.com.fatec.fatecrooms.DTO.CancelInstanceRequest;
-import br.com.fatec.fatecrooms.DTO.RecurringBookingDTO;
-import br.com.fatec.fatecrooms.DTO.RecurringBookingInstanceDTO;
-import br.com.fatec.fatecrooms.DTO.RecurringBookingRequest;
+import br.com.fatec.fatecrooms.DTO.*;
 import br.com.fatec.fatecrooms.service.RecurringBookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,19 +26,19 @@ public class RecurringBookingController {
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('COORDINATOR','TEACHER')")
-    public ResponseEntity<List<RecurringBookingDTO>> listAll() {
-        return ResponseEntity.ok(recurringBookingService.listAll());
+    public ResponseEntity<PagedResponseDTO<RecurringBookingDTO>> listAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(recurringBookingService.listAllPaged(page, size));
     }
 
-    /**
-     * GET /api/recurring-bookings/by-semester/{semesterId}
-     * Lista reservas recorrentes de um semestre específico.
-     */
     @GetMapping("/by-semester/{semesterId}")
     @PreAuthorize("hasAnyRole('COORDINATOR','TEACHER')")
-    public ResponseEntity<List<RecurringBookingDTO>> listBySemester(
-            @PathVariable Integer semesterId) {
-        return ResponseEntity.ok(recurringBookingService.listBySemester(semesterId));
+    public ResponseEntity<PagedResponseDTO<RecurringBookingDTO>> listBySemester(
+            @PathVariable Integer semesterId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(recurringBookingService.listBySemesterPaged(semesterId, page, size));
     }
 
     /**

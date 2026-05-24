@@ -113,46 +113,38 @@ public class BookingController {
     //  COORDENADOR — visão administrativa
     // ─────────────────────────────────────────────
 
-    /**
-     * GET /api/bookings/admin/all
-     * Lista todas as reservas.
-     */
     @GetMapping("/admin/all")
     @PreAuthorize("hasRole('COORDINATOR')")
-    public ResponseEntity<List<BookingDTO>> listAll() {
-        return ResponseEntity.ok(bookingService.listAll());
+    public ResponseEntity<PagedResponseDTO<BookingDTO>> listAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(bookingService.listAllPaged(page, size));
     }
 
-    /**
-     * GET /api/bookings/admin/pending
-     * Lista somente reservas pendentes de aprovação.
-     */
     @GetMapping("/admin/pending")
     @PreAuthorize("hasRole('COORDINATOR')")
-    public ResponseEntity<List<BookingDTO>> listPending() {
-        return ResponseEntity.ok(bookingService.listByStatus(Booking.Status.PENDING));
+    public ResponseEntity<PagedResponseDTO<BookingDTO>> listPending(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(bookingService.listByStatusPaged(Booking.Status.PENDING, page, size));
     }
 
-    /**
-     * GET /api/bookings/admin/by-status?status=APPROVED
-     * Lista por status (PENDING | APPROVED | REJECTED | CANCELLED).
-     */
     @GetMapping("/admin/by-status")
     @PreAuthorize("hasRole('COORDINATOR')")
-    public ResponseEntity<List<BookingDTO>> listByStatus(
-            @RequestParam Booking.Status status) {
-        return ResponseEntity.ok(bookingService.listByStatus(status));
+    public ResponseEntity<PagedResponseDTO<BookingDTO>> listByStatus(
+            @RequestParam Booking.Status status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(bookingService.listByStatusPaged(status, page, size));
     }
 
-    /**
-     * GET /api/bookings/admin/by-date?date=2025-08-10
-     * Agenda do dia.
-     */
     @GetMapping("/admin/by-date")
     @PreAuthorize("hasRole('COORDINATOR')")
-    public ResponseEntity<List<BookingDTO>> listByDate(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return ResponseEntity.ok(bookingService.listByDate(date));
+    public ResponseEntity<PagedResponseDTO<BookingDTO>> listByDate(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(bookingService.listByDatePaged(date, page, size));
     }
 
     /**

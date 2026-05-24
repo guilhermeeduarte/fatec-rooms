@@ -176,12 +176,12 @@ export default function ReservaRecorrente() {
   useEffect(() => {
     if (!form.semesterId) { setRecurringBookings([]); return; }
     const token = localStorage.getItem("token");
-    fetch(`/api/recurring-bookings/by-semester/${form.semesterId}`, {
+    fetch(`/api/recurring-bookings/by-semester/${form.semesterId}?page=0&size=200`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => (res.ok ? res.json() : []))
-      .then(setRecurringBookings)
-      .catch(() => setRecurringBookings([]));
+        .then((res) => (res.ok ? res.json() : { content: [] }))
+        .then((data) => setRecurringBookings(data.content ?? data))
+        .catch(() => setRecurringBookings([]));
   }, [form.semesterId]);
 
   useEffect(() => {
@@ -269,10 +269,13 @@ export default function ReservaRecorrente() {
       setSuccess("Reserva recorrente criada com sucesso.");
       setShowPopup(true);
       setForm((prev) => ({ ...prev, weekDays: [], periodIds: [], subject: "", notes: "" }));
-      const updated = await fetch(`/api/recurring-bookings/by-semester/${form.semesterId}`, {
+      const updated = await fetch(`/api/recurring-bookings/by-semester/${form.semesterId}?page=0&size=200`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (updated.ok) setRecurringBookings(await updated.json());
+      if (updated.ok) {
+        const data = await updated.json();
+        setRecurringBookings(data.content ?? data);
+      }
     } catch (err) {
       setError(err.message || "Erro ao enviar.");
     } finally {

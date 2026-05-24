@@ -98,7 +98,8 @@ export default function SolicitaReservaCoordenador() {
         setSalas(await roomsRes.json() || []);
         setMyBookings(await bookingsRes.json() || []);
         if (recurringRes.ok) {
-          setRecurringBookings(await recurringRes.json() || []);
+          const data = await recurringRes.json();
+          setRecurringBookings(data.content ?? data ?? []);
         }
 
         if (holidaysRes.ok) {

@@ -14,6 +14,10 @@ const JS_DAY_TO_WEEKDAY = {
 
 export default function TodasReservas() {
   const [reservas, setReservas] = useState([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 20;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
@@ -69,51 +73,27 @@ export default function TodasReservas() {
     return weekDays.includes(weekdayName);
   }
 
-  useEffect(() => {
-    async function loadReservas() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Faça login para ver as reservas.");
-        setLoading(false);
-        return;
-      }
-      try {
-        setLoading(true);
-        setError(null);
-        const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
-        const [bookingsRes, recurringRes] = await Promise.all([
-          fetch("/api/bookings/admin/all", { headers }),
-          fetch("/api/recurring-bookings", { headers }),
-        ]);
-        if (!bookingsRes.ok) throw new Error("Falha ao carregar as reservas.");
-        if (!recurringRes.ok) throw new Error("Falha ao carregar as reservas recorrentes.");
-        const [bookingsData, recurringData] = await Promise.all([bookingsRes.json(), recurringRes.json()]);
+  async function fetchReservas(pageNum, append = false) {
+    const token = localStorage.getItem("token");
+    const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
-        const mappedBookings = bookingsData.map((reserva) => {
-          const periods = reserva.periods || [];
-          const first = periods[0];
-          const last = periods[periods.length - 1];
-          const bookingDate = reserva.bookingDate?.split("T")[0] || reserva.bookingDate || "";
-          const createdAt = reserva.createdAt?.split("T")[0] || "";
-          const startTime = first?.periodStart?.slice(0,5) || "";
-          return {
-            id: `booking-${reserva.id}`,
-            bookingDate, createdAt,
-            data: bookingDate ? bookingDate.split("-").reverse().join("/") : "",
-            dataSolicitacao: createdAt ? createdAt.split("-").reverse().join("/") : "",
-            tipoReserva: reserva.reservationType || "Comum",
-            espaco: reserva.roomName,
-            horaInicio: startTime,
-            horaFim: last?.periodEnd?.slice(0,5) || "--:--",
-            motivo: reserva.subject || reserva.notes || "",
-            status: traduzirStatus(reserva.status),
-            professor: reserva.userDisplayName || reserva.username || "Desconhecido",
-            periodo: extrairPeriodo(startTime),
-            curso: extrairCurso(reserva.notes),
-          };
-        });
+    try {
+      if (pageNum === 0) setLoading(true);
+      else setLoadingMore(true);
+      setError(null);
 
-        const mappedRecurring = recurringData.map((reserva) => {
+      const [bookingsRes, recurringRes] = await Promise.all([
+        fetch(`/api/bookings/admin/all?page=${pageNum}&size=${PAGE_SIZE}`, { headers }),
+        pageNum === 0 ? fetch("/api/recurring-bookings?page=0&size=200", { headers }) : Promise.resolve(null),
+      ]);
+
+      if (!bookingsRes.ok) throw new Error("Falha ao carregar as reservas.");
+
+      const bookingsData = await bookingsRes.json(); // PagedResponseDTO
+      if (pageNum === 0 && recurringRes?.ok) {
+        const recurringData = await recurringRes.json();
+        const recurringList = recurringData.content ?? recurringData;
+        const mappedRecurring = recurringList.map((reserva) => {
           const periods = reserva.periods || [];
           const first = periods[0];
           const last = periods[periods.length - 1];
@@ -138,16 +118,57 @@ export default function TodasReservas() {
           };
         });
 
-        setReservas([...mappedBookings, ...mappedRecurring]);
-      } catch (err) {
-        setError(err.message || "Erro ao carregar as reservas.");
-      } finally {
-        setLoading(false);
+        const mappedBookings = mapBookings(bookingsData.content);
+        const combined = [...mappedBookings, ...mappedRecurring];
+        setReservas(combined);
+      } else {
+        const mappedBookings = mapBookings(bookingsData.content);
+        setReservas(prev => append ? [...prev, ...mappedBookings] : mappedBookings);
       }
-    }
-    loadReservas();
-  }, []);
 
+      setHasMore(!bookingsData.last);
+    } catch (err) {
+      setError(err.message || "Erro ao carregar as reservas.");
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }
+
+  function mapBookings(list) {
+    return (list || []).map((reserva) => {
+      const periods = reserva.periods || [];
+      const first = periods[0];
+      const last = periods[periods.length - 1];
+      const bookingDate = reserva.bookingDate?.split("T")[0] || reserva.bookingDate || "";
+      const createdAt = reserva.createdAt?.split("T")[0] || "";
+      const startTime = first?.periodStart?.slice(0,5) || "";
+      return {
+        id: `booking-${reserva.id}`,
+        bookingDate, createdAt,
+        data: bookingDate ? bookingDate.split("-").reverse().join("/") : "",
+        dataSolicitacao: createdAt ? createdAt.split("-").reverse().join("/") : "",
+        tipoReserva: "Comum",
+        espaco: reserva.roomName,
+        horaInicio: startTime,
+        horaFim: last?.periodEnd?.slice(0,5) || "--:--",
+        motivo: reserva.subject || reserva.notes || "",
+        status: traduzirStatus(reserva.status),
+        professor: reserva.userDisplayName || reserva.username || "Desconhecido",
+        periodo: extrairPeriodo(startTime),
+        curso: extrairCurso(reserva.notes),
+      };
+    });
+  }
+
+
+  useEffect(() => { fetchReservas(0); }, []);
+
+  function loadMore() {
+    const next = page + 1;
+    setPage(next);
+    fetchReservas(next, true);
+  }
   async function cancelarReserva(reserva) {
     const confirmacao = window.confirm("Deseja realmente cancelar essa reserva?");
     if (!confirmacao) return;
@@ -295,6 +316,18 @@ export default function TodasReservas() {
           </div>
         </div>
       </div>
+      {hasMore && !loading && (
+          <div style={{ textAlign: "center", margin: "20px 0" }}>
+            <button
+                className="btn-submit"
+                onClick={loadMore}
+                disabled={loadingMore}
+                style={{ width: "200px" }}
+            >
+              {loadingMore ? "Carregando..." : "Carregar mais"}
+            </button>
+          </div>
+      )}
       <Footer />
     </>
   );

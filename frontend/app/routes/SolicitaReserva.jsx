@@ -102,7 +102,8 @@ export default function SolicitaReserva() {
                 try {
                     const recurringRes = await fetch("/api/recurring-bookings", { headers });
                     if (recurringRes.ok) {
-                        setRecurringBookings(await recurringRes.json() || []);
+                        const data = await recurringRes.json(); // ← retorna PagedResponseDTO agora
+                        setRecurringBookings(data.content ?? data ?? []);
                     }
                 } catch (err) {
                     console.warn("Não foi possível carregar reservas recorrentes.", err);

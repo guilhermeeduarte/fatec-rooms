@@ -120,12 +120,12 @@ export default function Coordenador() {
       const today = new Date().toISOString().slice(0, 10);
 
       try {
-        const [roomsResp, usersResp, todayResp, pendingResp, recentResp] = await Promise.all([
+        const [roomsResp, usersResp, todayResp, recentResp, pendingResp] = await Promise.all([
           fetch('/api/rooms', { headers }),
           fetch('/api/admin/users', { headers }),
           fetch(`/api/bookings/admin/by-date?date=${today}`, { headers }),
-          fetch('/api/bookings/admin/pending', { headers }),
-          fetch('/api/bookings/admin/all', { headers }),
+          fetch('/api/bookings/admin/all?page=0&size=5', { headers }),
+          fetch('/api/bookings/admin/pending?page=0&size=50', { headers }),
         ]);
 
         if (!roomsResp.ok) throw new Error('Falha ao buscar salas');
@@ -137,18 +137,14 @@ export default function Coordenador() {
         const roomsData = await roomsResp.json();
         const usersData = await usersResp.json();
         const todayData = await todayResp.json();
-        const pendingData = await pendingResp.json();
         const recentData = await recentResp.json();
+        const pendingData = await pendingResp.json();
 
         setRooms(roomsData || []);
         setProfessors((usersData || []).filter((user) => user.authlevel === 2));
-        setTodayBookings(todayData || []);
-        setPendingBookings(pendingData || []);
-
-        const sortedRecent = (recentData || [])
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 5);
-        setRecentBookings(sortedRecent);
+        setTodayBookings(todayData.content ?? todayData);
+        setRecentBookings(recentData.content ?? recentData);
+        setPendingBookings(pendingData.content ?? pendingData);
       } catch (err) {
         setError(err.message || 'Erro ao carregar painel do coordenador.');
       } finally {

@@ -1,4 +1,4 @@
--- V16__reestrutura_cursos_e_turmas.sql
+-- V16__restructure_courses_and_class_groups.sql
 
 -- ── 1. Atualiza enum de shift ─────────────────────────────────────────────────
 ALTER TABLE class_groups
@@ -7,11 +7,10 @@ ALTER TABLE class_groups
 -- ── 2. Adiciona is_annual em courses ──────────────────────────────────────────
 ALTER TABLE courses
     ADD COLUMN is_annual TINYINT UNSIGNED NOT NULL DEFAULT 0
-        COMMENT '1 = curso anual (ex: AMS)'
+        COMMENT '1 = annual course (e.g. AMS)'
     AFTER has_saturday;
 
--- ── 3. Remove dados dependentes na ordem correta ──────────────────────────────
-SET FOREIGN_KEY_CHECKS = 0;
+-- ── 3. Remove dados dependentes na ordem correta (respeita FKs) ───────────────
 DELETE FROM recurring_booking_instances;
 DELETE FROM recurring_booking_periods;
 DELETE FROM recurring_bookings;
@@ -19,7 +18,6 @@ DELETE FROM booking_periods;
 DELETE FROM bookings;
 DELETE FROM class_groups;
 DELETE FROM courses;
-SET FOREIGN_KEY_CHECKS = 1;
 
 -- ── 4. Insere cursos corretos ─────────────────────────────────────────────────
 INSERT INTO courses (name, abbreviation, has_saturday, is_annual, active) VALUES
