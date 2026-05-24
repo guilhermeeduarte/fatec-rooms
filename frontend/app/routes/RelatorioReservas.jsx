@@ -192,8 +192,8 @@ export default function RelatorioReservas() {
         {/* ── ABAS ─────────────────────────────────────────────────────────────── */}
         <div style={{ display: "flex", gap: "12px", borderBottom: "2px solid var(--gray-200)", paddingBottom: "0" }}>
           {[
-            { key: "salas",       label: "📊 Salas" },
-            { key: "recorrentes", label: "🔁 Reservas Recorrentes" },
+            { key: "salas",       label: "Salas" },
+            { key: "recorrentes", label: "Reservas Recorrentes" },
           ].map(tab => (
             <button
               key={tab.key}

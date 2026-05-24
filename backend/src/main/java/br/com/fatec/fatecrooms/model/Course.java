@@ -28,6 +28,13 @@ public class Course {
     @Column(name = "has_saturday", columnDefinition = "tinyint UNSIGNED not null")
     private Byte hasSaturday = 0;
 
+    /**
+     * 1 = curso anual (AMS)
+     * 0 = curso semestral
+     */
+    @Column(name = "is_annual", columnDefinition = "tinyint UNSIGNED not null")
+    private Byte isAnnual = 0;
+
     @Column(name = "active", columnDefinition = "tinyint UNSIGNED not null")
     private Byte active = 1;
 
@@ -39,6 +46,9 @@ public class Course {
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ClassGroup> classGroups = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CourseAllowedShift> allowedShifts = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

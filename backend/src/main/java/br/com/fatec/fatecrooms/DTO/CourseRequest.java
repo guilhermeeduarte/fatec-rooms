@@ -1,9 +1,13 @@
 package br.com.fatec.fatecrooms.DTO;
 
+import br.com.fatec.fatecrooms.model.ClassGroup;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -18,4 +22,9 @@ public class CourseRequest {
     private String abbreviation;
 
     private boolean hasSaturday = false;
+
+    private boolean isAnnual = false;
+
+    @NotEmpty(message = "Selecione ao menos um turno permitido.")
+    private List<ClassGroup.Shift> allowedShifts;
 }
