@@ -14,6 +14,20 @@
   --gray-500:  #6B6B6B;
   --gray-800:  #1A1A1A;
   --yellow:    #F59E0B;
+  --green:     #4CAF50;
+  --green-dark:#388E3C;
+  --green-light:#A5D6A7;
+  --blue:      #0EA5E9;
+  --blue-dark: #0B79C3;
+  --magenta:   #E83E8C;
+  --magenta-soft: rgba(232, 62, 140, 0.16);
+  --magenta-soft-strong: rgba(232, 62, 140, 0.24);
+  --holiday:   #880cc2;
+  --holiday-text: #ffffff;
+  --calendar-active: #067cdddc;
+  --calendar-hover: var(--gray-100);
+  --calendar-disabled: #ccc;
+  --red-soft: #FECACA;
 
   --font-main: 'Sora', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -41,6 +55,96 @@ body {
   font-family: var(--font-body);
   background: var(--gray-50);
   color: var(--gray-800);
+}
+
+
+/* =============================================
+   Acessibilidade
+============================================= */
+button:focus,
+a:focus,
+input:focus {
+  outline: 3px solid #2563EB;
+  outline-offset: 3px;
+}
+
+/*----daltonismo---*/
+body.daltonic-mode {
+
+  /* Vermelhos trocados por azul acessível */
+  --red: #005FCC;
+  --red-dark: #0047A3;
+  --red-light: #3B82F6;
+  --green: #1F8B3A;
+  --green-dark: #16682C;
+  --green-light: #8EDC8B;
+  --magenta: #3B82F6;
+  --magenta-soft: rgba(59, 130, 246, 0.16);
+  --magenta-soft-strong: rgba(59, 130, 246, 0.24);
+  --holiday: #2563EB;
+  --holiday-text: #ffffff;
+  --calendar-active: #4F8EEB;
+  --calendar-hover: #E0EFFE;
+  --calendar-disabled: #A3A3A3;
+
+  /* Contraste */
+  --gray-50: #FFFFFF;
+  --gray-100: #F4F4F4;
+  --gray-200: #D1D1D1;
+  --gray-500: #4B4B4B;
+  --gray-800: #111111;
+
+  --shadow-red: 0 4px 20px rgba(0, 95, 204, 0.18);
+}
+
+/* Inputs mais visíveis */
+body.daltonic-mode input,
+body.daltonic-mode textarea,
+body.daltonic-mode select {
+  border: 2px solid var(--gray-500);
+}
+
+/* Melhor foco */
+body.daltonic-mode button:focus,
+body.daltonic-mode input:focus {
+  outline: 3px solid #2563EB;
+  outline-offset: 2px;
+}
+
+/* alto contraste*/
+
+body.high-contrast {
+
+  /* Fundo */
+  --gray-50: #000000;
+  --gray-100: #111111;
+   --gray-200: #8b8c8d; 
+
+  /* Texto */
+  --gray-500: #ece9e9;
+  --gray-800: #151414;
+
+  /* Cor principal */
+  --red: #FFD600;
+  --red-dark: #FFC400;
+  --red-light: #FFE082;
+
+  /* Azul */
+  --blue: #4FC3F7;
+  --blue-dark: #29B6F6;
+
+  /* Verde */
+  --green: #81C784;
+  --green-dark: #66BB6A;
+
+  /* Magenta */
+  --magenta: #FF4FA3;
+
+  /* Sombras removidas */
+  --shadow-red: none;
+
+  background: #000;
+  color: #fff;
 }
 
 /* ══════════════════════════════════════════
@@ -98,12 +202,12 @@ body {
   cursor: pointer;
   background: none;
   border: none;
-  padding: 4px;
+  padding: 3px;
 }
 
 .navbar__icon svg {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   stroke: white;
   fill: none;
   display: block;
@@ -260,10 +364,12 @@ body {
     gap: 8px;
   }
 
-  .navbar__icon svg {
-    width: 22px;
-    height: 22px;
-  }
+ .navbar__icon svg {
+  width: 26px;
+  height: 26px;
+  color: white;
+  display: block;
+}
 
   /* mantém alinhamento original (NÃO centraliza) */
   .navbar__menu a {
@@ -278,6 +384,28 @@ body {
     min-width: 180px;
   }
 }
+
+
+/* Ícone acessibilidade */
+.navbar__icon-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: transform var(--transition);
+}
+
+.navbar__icon-link:hover {
+  transform: scale(1.08);
+}
+
+.navbar__icon:focus,
+.navbar__icon-link:focus {
+  outline: 3px solid rgba(255,255,255,0.85);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
 
 
 /* 📱 CELULAR PEQUENO */
@@ -354,18 +482,6 @@ body {
   height: 48px;
   background: var(--gray-50);
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-}
-
-.page-hero::before,
-.dir-header::before {
-  content: '';
-  position: absolute;
-  top: -40px;
-  right: -50px;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
 }
 
 .hero-tag,
@@ -477,6 +593,7 @@ body {
 .dashboard-sidebar {
   display: grid;
   gap: 20px;
+  align-self: start;
 }
 
 .dashboard-panel {
@@ -968,6 +1085,7 @@ button.menu-card {
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
+  color: var(--red);
 }
 
 .menu-icon svg {
@@ -1998,11 +2116,11 @@ SOLICITAÇÕES DE RESERVA
 
 .react-calendar {
   width: 100%;
-  max-width: 540px;
-  height: 400px;
+  max-width: 580px;
+  min-height: 430px;
   background: var(--white);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 24px;
   font-family: var(--font-body);
   border: 2px solid var(--red);
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
@@ -2075,7 +2193,7 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .react-calendar__tile {
-  height: 42px;
+  height: 38px;
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -2100,13 +2218,13 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .react-calendar__tile--active {
-  background: #067cdddc !important;
+  background: var(--calendar-active) !important;
   color: white;
   font-weight: 600;
 }
 
 .react-calendar__month-view__days__day--neighboringMonth {
-  color: #ccc;
+  color: var(--calendar-disabled);
 }
 
 .dia-aceita::after,
@@ -2122,19 +2240,19 @@ SOLICITAÇÕES DE RESERVA
 
 /* cores */
 .dia-aceita::after {
-  background: #4CAF50;
+  background: var(--green);
 }
 
 .dia-pendente::after {
-  background: #FFC107;
+  background: var(--yellow);
 }
 
 .dia-cancelada::after {
-  background: #F44336;
+  background: var(--red);
 }
 
 .dia-selecionado {
-  background: #9E9E9E !important;
+  background: var(--gray-500) !important;
   color: white;
 }
 
@@ -2174,7 +2292,7 @@ SOLICITAÇÕES DE RESERVA
     margin-right: 5px;
 }
 
-.verde { background: #4CAF50; }
+.verde { background: var(--green); }
 .amarelo { background: var(--yellow); }
 .vermelho { background: var(--red); }
 .cinza { background: #9E9E9E; }
@@ -2373,7 +2491,8 @@ SOLICITAÇÕES DE RESERVA
 .modal-espacos {
   width: min(560px, 100%);
   max-height: 90vh;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: #f5f3f3;
   border: 2px solid #b30000;
   border-radius: 30px;
@@ -2490,6 +2609,9 @@ SOLICITAÇÕES DE RESERVA
 /* mobile */
 @media (max-width: 480px) {
   .modal-espacos {
+      max-height: 80vh;
+      overflow-y: auto;
+      overflow-x: hidden;
       padding: 20px 16px 16px;
       border-radius: 22px;
   }
@@ -2717,6 +2839,12 @@ SOLICITAÇÕES DE RESERVA
   justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
+  position: relative;
+  padding-top: 25px;
+}
+
+.card-reserva.recorrente {
+  border-left: 6px solid var(--blue);
 }
 
 .card-reserva:hover {
@@ -2725,18 +2853,23 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .card-reserva[data-status="Aceita"] {
-  border-left: 6px solid #4CAF50;
+  border-left: 6px solid var(--green);
   font-family: var(--font-main);
 }
 
 .card-reserva[data-status="Pendente"] {
-  border-left: 6px solid #FFC107;
+  border-left: 6px solid var(--yellow);
+  font-family: var(--font-main);
+}
+
+.card-reserva[data-status="Ativa"] {
+  border-left: 6px solid var(--green);
   font-family: var(--font-main);
 }
 
 .card-reserva[data-status="Cancelada"] {
-  border-left: 6px solid #F44336;
-  opacity: 0.7;
+  border-left: 6px solid var(--red);
+  opacity: 0.95;
   font-family: var(--font-main);
 }
 
@@ -2773,18 +2906,23 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .valor.aceita {
-  color: #4CAF50;
+  color: var(--green);
+  font-weight: 600;
+}
+
+.valor.ativa {
+  color: var(--green);
   font-weight: 600;
 }
 
 .valor.pendente {
-  color: #FFC107;
+  color: var(--yellow);
   font-weight: 600;
 }
 
 .valor.cancelada,
 .valor.recusada {
-  color: #F44336;
+  color: var(--red);
   font-weight: 600;
 }
 
@@ -2837,7 +2975,7 @@ SOLICITAÇÕES DE RESERVA
 
 .btn-salvar {
   margin-top: 8px;
-  background: #4CAF50;
+  background: var(--green);
   color: white;
   padding: 8px;
   border-radius: 6px;
@@ -2847,7 +2985,7 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .btn-salvar:hover {
-  background: #388E3C;
+  background: var(--green-dark);
 }
 
 /* Ações para aprovar/rejeitar */
@@ -2871,12 +3009,12 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .btn-aprovar {
-  background: #4CAF50;
+  background: var(--green);
   color: white;
 }
 
 .btn-aprovar:hover {
-  background: #45A049;
+  background: var(--green-dark);
 }
 
 .btn-rejeitar {
@@ -3360,6 +3498,121 @@ SOLICITAÇÕES DE RESERVA
   stroke-width: 2;
 }
 
+/* =============================================
+   ACESSIBILIDADE
+============================================= */
+
+/* Tamanho global da fonte */
+:root {
+  --user-font-size: 14px;
+}
+
+/* Aplicação global */
+body {
+  font-size: var(--user-font-size);
+}
+
+.container-acess{
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 24px 44px;
+  height: 600px
+}
+
+
+/* ── Card de acessibilidade ── */
+.accessibility-card {
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  margin-bottom: 22px;
+  box-shadow: var(--shadow-red);
+}
+
+.accessibility-card h3 {
+  font-family: var(--font-main);
+  font-size: 18px;
+  margin-bottom: 18px;
+  color: var(--gray-800);
+}
+
+.accessibility-option {
+  margin-bottom: 20px;
+}
+
+.accessibility-option label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: var(--user-font-size);
+  color: var(--gray-800);
+}
+
+/* ── Botão ── */
+.btn-accessibility {
+  border: none;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  background: var(--gray-200);
+  color: var(--gray-800);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-accessibility:hover {
+  transform: translateY(-1px);
+}
+
+.btn-accessibility.active {
+  background: var(--red);
+  color: var(--white);
+}
+
+/* ── Slider ── */
+.font-slider {
+  width: 100%;
+  appearance: none;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--gray-200);
+  outline: none;
+}
+
+/* Bolinha */
+.font-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--red);
+  cursor: pointer;
+  border: 3px solid var(--white);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.font-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--red);
+  cursor: pointer;
+  border: none;
+}
+
+button:focus,
+a:focus,
+input:focus {
+  outline: 3px solid #2563EB;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 /* ══════════════════════════════════════════
    PÁGINA DE RELATÓRIOS
 ══════════════════════════════════════════ */
@@ -3724,7 +3977,7 @@ HISTORICO
 }
 
 .card-reserva-completa.aceita {
-  border-left: 6px solid #4CAF50;
+  border-left: 6px solid var(--green);
   font-family: var(--font-main);
 }
 
@@ -3774,7 +4027,7 @@ HISTORICO
 }
 
 .valor-status.aceita {
-  color: #4CAF50;
+  color: var(--green);
   font-weight: 600;
 }
 
@@ -4369,9 +4622,9 @@ button {
   display: flex;
   justify-content: center;
   gap: 1rem;
-
-  /* ══════════════════════════════════════════
- CALENDÁRIO INTERATIVO COM TOOLTIP
+}
+/* ══════════════════════════════════════════
+CALENDÁRIO INTERATIVO COM TOOLTIP
 ══════════════════════════════════════════ */
 
   .calendar-header > div {
@@ -4594,11 +4847,11 @@ button {
       font-size: 9px;
     }
   }
-}
-.calendar-holiday { background: #880cc2 !important; color: #ffffff !important; }
-.legend-holiday { background: #880cc2; }
-.dia-feriado { background: #880cc2 !important; color: #ffffff !important; pointer-events: none;  }
-.box.laranja { background: #880cc2; }
+
+.calendar-holiday { background: var(--holiday) !important; color: var(--holiday-text) !important; }
+.legend-holiday { background: var(--holiday); }
+.dia-feriado { background: var(--holiday) !important; color: var(--holiday-text) !important; pointer-events: none; }
+.box.laranja { background: var(--holiday); }
 
 /* ══════════════════════════════════════════
    RESERVA RECORRENTE
@@ -4755,7 +5008,7 @@ button {
 }
 
 .box-calendario-recorrente .react-calendar__tile--active {
-  background: #067cdddc !important;
+  background: var(--calendar-active) !important;
   color: white;
   font-weight: 600;
 }
@@ -4773,7 +5026,7 @@ button {
 
 /* Dia recorrente — só cor, sem bolinha */
 .dia-recorrente {
-  background: #FFF0F0 !important;
+  background: var(--red-soft) !important;
   color: var(--red-dark) !important;
   font-weight: 700;
 }
@@ -5000,7 +5253,7 @@ button {
   display: block;
   margin-top: 18px;
   padding: 14px 20px;
-  background-color: var(--red);
+  background-color: var(--blue);
   color: var(--white);
   border: none;
   border-radius: var(--radius-md);
@@ -5014,7 +5267,7 @@ button {
 }
 
 .btn-recorrente:hover {
-  background-color: var(--red-dark);
+  background-color: var(--blue-dark);
   transform: translateY(-1px);
 }
 
@@ -5055,6 +5308,7 @@ button {
     flex: 0 0 calc(33.33% - 5px);
   }
 }
+<<<<<<< HEAD
 
 /* ══════════════════════════════════════════
    GRADE DE RESERVAS  — colar no app.css
@@ -5754,5 +6008,296 @@ button {
 
   .gr-slot-th__e {
     display: none;
+=======
+/* Cor para dias de avaliação (magenta) */
+.dia-avaliacao {
+    background-color: var(--magenta-soft) !important;
+    color: var(--gray-800) !important;
+    border-radius: 20%;
+}
+
+/* Legenda - box magenta */
+.legenda .box.magenta {
+    background-color: var(--magenta-soft-strong);
+    color: var(--gray-800);
+}
+.calendar-tooltip {
+  background: white !important;
+  border: 1px solid #ddd !important;
+  color: #222 !important;
+  box-shadow: 0 20px 30px -12px rgba(0,0,0,0.3) !important;
+}
+
+.calendar-tooltip .tooltip-item {
+  background: #f8f9fa !important;
+  border-left: 3px solid;
+}
+/* Filtros avançados */
+.filtros-avancados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f1f5f9;
+  border-radius: 12px;
+}
+.filtros-avancados input,
+.filtros-avancados select {
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  flex: 1 0 160px;
+}
+
+/* Grade */
+.grade-container { overflow-x: auto; padding: 1rem; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.grade-tabela-wrapper { max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+.grade-tabela { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 600px; }
+.grade-tabela th, .grade-tabela td { border: 1px solid #cbd5e1; padding: 8px 6px; text-align: center; }
+.grade-tabela th { background-color: #f1f5f9; position: sticky; top: 0; }
+.sala-col { position: sticky; left: 0; background-color: #f8fafc; }
+.sala-nome { font-weight: 500; text-align: left !important; background-color: #f8fafc; }
+.linha-selecionada .sala-nome { background-color: #dbeafe; }
+.periodo-cell { cursor: pointer; transition: 0.1s; }
+.periodo-cell.disponivel { background-color: #dcfce7; }
+.periodo-cell.disponivel:hover { background-color: #bbf7d0; transform: scale(1.02); }
+.periodo-cell.ocupado { background-color: #fee2e2; cursor: not-allowed; color: #b91c1c; }
+.periodo-cell.selecionado { background-color: #3b82f6; color: white; font-weight: bold; }
+.grade-placeholder, .grade-feriado, .grade-loading { text-align: center; padding: 2rem; background: #fef9c3; border-radius: 12px; }
+.grade-feriado { background: #fed7aa; color: #9a3412; }
+.grade-loading { background: #e0f2fe; }
+.form-reserva-grade { margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem; }
+/* Bloco unificado de filtros */
+.filtros-unificados {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.filtros-basicos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.filtros-basicos .input-busca,
+.filtros-basicos .select-status,
+.filtros-basicos .select-tipo {
+  flex: 1 0 180px;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.filtro-data-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.grupo-data {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  color: #1e293b;
+}
+
+.grupo-data label {
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.grupo-data input {
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.btn-toggle-advanced {
+  background: #e2e8f0;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+.btn-toggle-advanced:hover {
+  background: #cbd5e1;
+}
+
+.btn-red {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-red:hover {
+  background: #dc2626;
+}
+
+.filtros-avancados {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.filtros-avancados input,
+.filtros-avancados select {
+  flex: 1 0 160px;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+/* Ajuste responsivo */
+@media (max-width: 768px) {
+  .filtros-basicos, .filtro-data-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .grupo-data {
+    width: 100%;
+  }
+  .filtros-avancados {
+    flex-direction: column;
+  }
+}
+/* Garantir que o footer fique sempre no final da página */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* O conteúdo principal deve crescer para empurrar o footer */
+.layout-reservas, .content-solicitarReserva {
+  flex: 1;
+}
+
+/* Footer deve ter margin-top automática se necessário, mas já estará no final */
+footer, .Footer {
+  margin-top: auto;
+}
+
+/* Estilos dos filtros (mesmo padrão do TodasReservas) */
+.filtros-unificados {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.filtros-basicos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.filtros-basicos .input-busca,
+.filtros-basicos .select-status,
+.filtros-basicos .input-data {
+  flex: 1 0 160px;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.btn-toggle-advanced {
+  background: #e2e8f0;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-red {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.filtros-avancados {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.filtros-avancados input,
+.filtros-avancados select {
+  flex: 1 0 150px;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+/* Cards com mais campos */
+.info-reserva.completa {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.item-reserva {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-reserva .label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.item-reserva .valor {
+  font-size: 0.9rem;
+  color: #1e293b;
+  word-break: break-word;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .filtros-basicos {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filtros-avancados {
+    flex-direction: column;
+  }
+  .info-reserva.completa {
+    grid-template-columns: 1fr;
+>>>>>>> 1aba35064b4e80f1c0f5233879af116c7a9d5e28
   }
 }

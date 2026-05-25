@@ -35,12 +35,15 @@ public class ClassGroupService {
             case MORNING   -> "Manhã";
             case AFTERNOON -> "Tarde";
             case EVENING   -> "Noite";
+            case YEAR_1    -> "1º Ano";
+            case YEAR_2    -> "2º Ano";
         };
         return new ClassGroupDTO(
                 cg.getId(),
                 cg.getCourse().getId(),
                 cg.getCourse().getName(),
                 cg.getCourse().getAbbreviation(),
+                cg.getCourse().getIsAnnual() == 1,
                 cg.getCourseSemester(),
                 cg.getShift(),
                 shiftLabel,

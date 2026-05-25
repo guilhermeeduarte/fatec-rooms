@@ -5,6 +5,9 @@ import br.com.fatec.fatecrooms.model.*;
 import br.com.fatec.fatecrooms.model.Booking.Status;
 import br.com.fatec.fatecrooms.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +26,7 @@ public class BookingService {
     private final UserRepository                  userRepository;
     private final PeriodRepository                periodRepository;
     private final SystemConfigService             configService;
-    private final RecurringBookingRepository      recurringBookingRepository; // ← NOVO
+    private final RecurringBookingRepository      recurringBookingRepository;
 
     // ─────────────────────────────────────────────
     //  CONSULTAS ABERTAS
@@ -76,22 +79,36 @@ public class BookingService {
         User user = getUserOrThrow(username);
         Room room = getRoomOrThrow(request.getRoomId());
 
+        boolean isCoordinator = user.getAuthlevel() != null && user.getAuthlevel() == 1;
+
         if (room.getBookable() != 1) {
             throw new IllegalStateException("Sala não está disponível para reservas.");
+        }
+
+        // Professores (authlevel = 2) são bloqueados quando o sistema está suspenso.
+        // Coordenadores nunca são bloqueados — eles podem reservar livremente.
+        if (!isCoordinator && configService.isTeacherBookingSuspended()) {
+            throw new IllegalStateException(
+                    "O sistema de reservas está temporariamente suspenso para professores. "
+                            + "Entre em contato com a coordenação para mais informações."
+            );
         }
 
         if (!request.getBookingDate().isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("A data da reserva deve ser futura.");
         }
 
-        int minAdvanceDays = configService.getMinAdvanceDays();
-        if (minAdvanceDays > 0) {
-            LocalDate earliestAllowed = LocalDate.now().plusDays(minAdvanceDays);
-            if (request.getBookingDate().isBefore(earliestAllowed)) {
-                throw new IllegalArgumentException(
-                        "A reserva deve ser feita com no mínimo " + minAdvanceDays
-                                + " dia(s) de antecedência. Data mais próxima permitida: "
-                                + earliestAllowed + ".");
+        // Coordenador não está sujeito ao prazo mínimo de antecedência
+        if (!isCoordinator) {
+            int minAdvanceDays = configService.getMinAdvanceDays();
+            if (minAdvanceDays > 0) {
+                LocalDate earliestAllowed = LocalDate.now().plusDays(minAdvanceDays);
+                if (request.getBookingDate().isBefore(earliestAllowed)) {
+                    throw new IllegalArgumentException(
+                            "A reserva deve ser feita com no mínimo " + minAdvanceDays
+                                    + " dia(s) de antecedência. Data mais próxima permitida: "
+                                    + earliestAllowed + ".");
+                }
             }
         }
 
@@ -126,7 +143,7 @@ public class BookingService {
 
         validateNoTimeOverlap(room.getId(), request.getBookingDate(), selectedPeriods, null);
 
-        // ── Validação extra: conflito com reservas recorrentes ────────────────
+        // Validação extra: conflito com reservas recorrentes
         validateNoRecurringConflict(room.getId(), request.getBookingDate(), selectedPeriods);
 
         Booking booking = new Booking();
@@ -136,7 +153,15 @@ public class BookingService {
         booking.setBookingDate(request.getBookingDate());
         booking.setSubject(request.getSubject());
         booking.setNotes(request.getNotes());
-        booking.setStatus(Status.PENDING);
+
+        // Reservas criadas por coordenador são automaticamente aprovadas
+        if (isCoordinator) {
+            booking.setStatus(Status.APPROVED);
+            booking.setReviewedBy(user);
+            booking.setReviewedAt(LocalDateTime.now());
+        } else {
+            booking.setStatus(Status.PENDING);
+        }
 
         return toDTO(bookingRepository.save(booking));
     }
@@ -366,6 +391,33 @@ public class BookingService {
                 b.getRejectReason(),
                 b.getCreatedAt(),
                 b.getUpdatedAt()
+        );
+    }
+
+    public PagedResponseDTO<BookingDTO> listAllPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Booking> result = bookingRepository.findAllWithDetailsPaged(pageable);
+        return toPagedResponse(result);
+    }
+
+    public PagedResponseDTO<BookingDTO> listByStatusPaged(Status status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Booking> result = bookingRepository.findByStatusPaged(status, pageable);
+        return toPagedResponse(result);
+    }
+
+    public PagedResponseDTO<BookingDTO> listByDatePaged(LocalDate date, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Booking> result = bookingRepository.findByDateWithDetailsPaged(date, pageable);
+        return toPagedResponse(result);
+    }
+
+    private PagedResponseDTO<BookingDTO> toPagedResponse(Page<Booking> page) {
+        return new PagedResponseDTO<>(
+                page.getContent().stream().map(this::toDTO).toList(),
+                page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages(),
+                page.isLast()
         );
     }
 }

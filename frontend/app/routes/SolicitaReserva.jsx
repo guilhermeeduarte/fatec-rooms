@@ -3,7 +3,40 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
+import Popup from "../components/Popup";
 import Calendar from "react-calendar";
+
+function formatDateTime(dateStr) {
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return dateStr || "";
+
+    const pad = (value) => String(value).padStart(2, "0");
+    const day = pad(date.getDate());
+    const month = pad(date.getMonth() + 1);
+    const year = date.getFullYear();
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
+function isActiveBooking(booking) {
+    return !["CANCELLED", "REJECTED"].includes(booking.status);
+}
+
+function formatWeekdays(weekDays = []) {
+    const weekdayMap = {
+        MONDAY: "Seg",
+        TUESDAY: "Ter",
+        WEDNESDAY: "Qua",
+        THURSDAY: "Qui",
+        FRIDAY: "Sex",
+        SATURDAY: "Sáb",
+        SUNDAY: "Dom",
+    };
+    return weekDays.map((day) => weekdayMap[day] || day).join(", ");
+}
 
 export default function SolicitaReserva() {
     const navigate = useNavigate();
@@ -13,13 +46,23 @@ export default function SolicitaReserva() {
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [availability, setAvailability] = useState(null);
     const [myBookings, setMyBookings] = useState([]);
+    const [recurringBookings, setRecurringBookings] = useState([]);
     const [holidays, setHolidays] = useState([]);
+    const [examDatesSet, setExamDatesSet] = useState(new Set()); // ← armazena datas de semanas de avaliação
     const [date, setDate] = useState(new Date());
     const [loadingPage, setLoadingPage] = useState(true);
     const [loadingAvailability, setLoadingAvailability] = useState(false);
     const [loadingSubmit, setLoadingSubmit] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [showPopup, setShowPopup] = useState(false);
+    const [showErrorPopup, setShowErrorPopup] = useState(false);
+
+    useEffect(() => {
+        if (error) {
+            setShowErrorPopup(true);
+        }
+    }, [error]);
 
     const [form, setForm] = useState({
         data: "", dataISO: "", espaco: "", roomId: null, motivo: "", curso: "", naoSeAplica: false,
@@ -35,21 +78,75 @@ export default function SolicitaReserva() {
             try {
                 setLoadingPage(true);
                 setError(null);
-                const [roomsRes, bookingsRes, holidaysRes] = await Promise.all([
-                    fetch("/api/rooms", { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }),
-                    fetch("/api/bookings/my", { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }),
-                    fetch("/api/holidays", { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }),
+                
+                const headers = { Authorization: `Bearer ${token}` };
+                const [roomsRes, bookingsRes, holidaysRes, semestersRes] = await Promise.all([
+                    fetch("/api/rooms", { headers }),
+                    fetch("/api/bookings/my", { headers }),
+                    fetch("/api/holidays", { headers }),
+                    fetch("/api/semesters", { headers }), // apenas ativos
                 ]);
+
                 if (!roomsRes.ok) throw new Error("Falha ao carregar salas.");
                 if (!bookingsRes.ok) throw new Error("Falha ao carregar suas reservas.");
+
                 setSalas(await roomsRes.json() || []);
                 setMyBookings(await bookingsRes.json() || []);
+                
                 if (holidaysRes.ok) {
                     const data = await holidaysRes.json();
                     setHolidays(Array.isArray(data) ? data : []);
                 }
+
+                // Carrega reservas recorrentes ativas para exibição no histórico abaixo do calendário.
+                try {
+                    const recurringRes = await fetch("/api/recurring-bookings", { headers });
+                    if (recurringRes.ok) {
+                        const data = await recurringRes.json(); // ← retorna PagedResponseDTO agora
+                        setRecurringBookings(data.content ?? data ?? []);
+                    }
+                } catch (err) {
+                    console.warn("Não foi possível carregar reservas recorrentes.", err);
+                }
+
+                // Carregar semanas de avaliação dos semestres ativos
+                if (semestersRes.ok) {
+                    const semestersData = await semestersRes.json();
+                    const activeSemesters = Array.isArray(semestersData) ? semestersData : (semestersData.content || []);
+                    const examDates = new Set();
+
+                    // Para cada semestre ativo, buscar suas exam-weeks
+                    await Promise.all(
+                        activeSemesters.map(async (semester) => {
+                            if (semester.active !== 1) return; // apenas ativos
+                            try {
+                                const examRes = await fetch(`/api/semesters/${semester.id}/exam-weeks`, {
+                                    headers: { Authorization: `Bearer ${token}` }
+                                });
+                                if (examRes.ok) {
+                                    const weeks = await examRes.json();
+                                    weeks.forEach(week => {
+                                        // Gera todas as datas entre startDate e endDate (inclusive)
+                                        const start = new Date(week.startDate);
+                                        const end = new Date(week.endDate);
+                                        const current = new Date(start);
+                                        while (current <= end) {
+                                            const iso = current.toISOString().split('T')[0];
+                                            examDates.add(iso);
+                                            current.setDate(current.getDate() + 1);
+                                        }
+                                    });
+                                }
+                            } catch (err) {
+                                console.error(`Erro ao carregar exam-weeks do semestre ${semester.id}`, err);
+                            }
+                        })
+                    );
+                    setExamDatesSet(examDates);
+                }
             } catch (err) {
                 setError(err.message || "Erro ao carregar a página.");
+                setShowErrorPopup(true);
             } finally {
                 setLoadingPage(false);
             }
@@ -74,6 +171,7 @@ export default function SolicitaReserva() {
             setAvailability(await res.json());
         } catch (err) {
             setError(err.message || "Erro ao buscar disponibilidade.");
+            setShowErrorPopup(true);
             setAvailability(null);
         } finally {
             setLoadingAvailability(false);
@@ -113,8 +211,11 @@ export default function SolicitaReserva() {
         return acc;
     }, {});
 
+    const activeBookings = myBookings.filter(isActiveBooking);
+    const activeRecurringBookings = recurringBookings.filter((booking) => booking.status === "ACTIVE");
+
     function handleRoomSelect(room) {
-        if (!form.dataISO) { setError("Selecione uma data antes de escolher uma sala."); return; }
+        if (!form.dataISO) { setError("Selecione uma data antes de escolher uma sala."); setShowErrorPopup(true); return; }
         setSelectedRoom(room);
         setForm(prev => ({ ...prev, espaco: room.name, roomId: room.id }));
         setSelectedPeriodIds([]);
@@ -139,11 +240,13 @@ export default function SolicitaReserva() {
 
         if (!form.roomId || selectedPeriodIds.length === 0 || !form.dataISO || !form.motivo) {
             setError("Preencha a data, sala, ao menos um período e o motivo.");
+            setShowErrorPopup(true);
             return;
         }
         if (isHolidayDate(form.dataISO)) {
             const h = holidayByDate[form.dataISO];
             setError(`Não é possível reservar em feriados. "${h?.name || "Feriado"}" — ${form.data}.`);
+            setShowErrorPopup(true);
             return;
         }
 
@@ -171,10 +274,11 @@ export default function SolicitaReserva() {
                 throw new Error(parseBackendError(errorText) || errorText || "Falha ao solicitar a reserva.");
             }
             const totalPeriods = selectedPeriodIds.length;
-            setSuccess(totalPeriods === 1
+            const successMessage = totalPeriods === 1
                 ? "Reserva solicitada com sucesso. Aguarde aprovação."
-                : `Reserva com ${totalPeriods} períodos solicitada com sucesso. Aguarde aprovação.`
-            );
+                : `Reserva com ${totalPeriods} períodos solicitada com sucesso. Aguarde aprovação.`;
+            setSuccess(successMessage);
+            setShowPopup(true);
             setSelectedRoom(null);
             setAvailability(null);
             setSelectedPeriodIds([]);
@@ -184,6 +288,7 @@ export default function SolicitaReserva() {
             if (updatedRes.ok) setMyBookings(await updatedRes.json() || []);
         } catch (err) {
             setError(err.message || "Erro ao enviar a solicitação.");
+            setShowErrorPopup(true);
         } finally {
             setLoadingSubmit(false);
         }
@@ -222,6 +327,7 @@ export default function SolicitaReserva() {
                             const isoDate = getISOFromDate(value);
                             if (isHolidayDate(isoDate)) {
                                 setError(`Este dia é feriado: "${holidayByDate[isoDate]?.name || "Feriado"}". Selecione outra data.`);
+                                setShowErrorPopup(true);
                                 return;
                             }
                             setError(null);
@@ -242,6 +348,7 @@ export default function SolicitaReserva() {
                             if (view !== "month") return null;
                             const iso = getISOFromDate(d);
                             if (isHolidayDate(iso)) return "dia-feriado";
+                            if (examDatesSet.has(iso)) return "dia-avaliacao"; // ← classe para avaliação
                             if (iso === form.dataISO) return "dia-selecionado";
                             const st = roomStatusMap[iso];
                             if (st === "APPROVED") return "dia-aceita";
@@ -269,21 +376,40 @@ export default function SolicitaReserva() {
                         <div><span className="box vermelho"></span> Cancelada</div>
                         <div><span className="box cinza"></span> Selecionado</div>
                         <div><span className="box laranja"></span> Feriado</div>
+                        <div><span className="box magenta"></span> Avaliação</div> {/* ← nova legenda */}
                     </div>
 
                     <div className="reservas-feitas">
                         <h4>Horários Reservados:</h4>
                         <div className="lista-horarios">
-                            {myBookings.length === 0 && <p>Nenhuma reserva encontrada.</p>}
-                            {myBookings.map(booking => {
+                            {activeBookings.length === 0 && activeRecurringBookings.length === 0 && (
+                                <p>Nenhuma reserva encontrada.</p>
+                            )}
+
+                            {activeBookings.map((booking) => {
                                 const periods = booking.periods || [];
                                 const first = periods[0];
                                 const last = periods[periods.length - 1];
                                 return (
-                                    <p key={booking.id}>
+                                    <p key={`booking-${booking.id}`}>
                                         <span className="hora">
-                                            {booking.bookingDate} • {first?.periodStart?.slice(0, 5) || "--:--"} - {last?.periodEnd?.slice(0, 5) || "--:--"}
+                                            {formatDateTime(booking.bookingDate)} • {first?.periodStart?.slice(0, 5) || "--:--"} - {last?.periodEnd?.slice(0, 5) || "--:--"}
                                             {periods.length > 1 && ` (${periods.length} períodos)`}
+                                        </span>
+                                        <span className="prof">{booking.roomName}</span>
+                                    </p>
+                                );
+                            })}
+
+                            {activeRecurringBookings.map((booking) => {
+                                const periods = booking.periods || [];
+                                const first = periods[0];
+                                const last = periods[periods.length - 1];
+                                return (
+                                    <p key={`recurring-${booking.id}`}>
+                                        <span className="hora">
+                                            Reserva recorrente • {formatWeekdays(booking.weekDays)} • {first?.periodStart?.slice(0, 5) || "--:--"} - {last?.periodEnd?.slice(0, 5) || "--:--"}
+                                            {booking.activeInstances != null && booking.activeInstances > 0 && ` (${booking.activeInstances} instância${booking.activeInstances > 1 ? "s" : ""} ativa${booking.activeInstances > 1 ? "s" : ""})`}
                                         </span>
                                         <span className="prof">{booking.roomName}</span>
                                     </p>
@@ -317,8 +443,6 @@ export default function SolicitaReserva() {
 
                 <div className="div-forms-reserva">
                     <form onSubmit={handleSubmit}>
-                        {error && <div className="form-title" style={{ color: "#b91c1c" }}>{error}</div>}
-                        {success && <div className="form-title" style={{ color: "#166534" }}>{success}</div>}
 
                         <div className="form-group-reserva">
                             <label>Data e espaço selecionado:</label>
@@ -410,6 +534,9 @@ export default function SolicitaReserva() {
                     </form>
                 </div>
             </div>
+
+            {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
+            {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
 
             <Footer />
         </>

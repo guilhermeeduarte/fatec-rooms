@@ -13,11 +13,8 @@ import java.time.LocalDateTime;
         uniqueConstraints = @UniqueConstraint(columnNames = {"course_id", "course_semester", "shift"}))
 public class ClassGroup {
 
-    /**
-     * Se has_saturday = 1, a turma também tem aula aos sábados (dia adicional).
-     */
     public enum Shift {
-        MORNING, AFTERNOON, EVENING
+        MORNING, AFTERNOON, EVENING, YEAR_1, YEAR_2
     }
 
     @Id
@@ -28,6 +25,11 @@ public class ClassGroup {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
+
+    /**
+     * Para cursos normais: semestres .
+     * Para is_annual=true: 1 = 1º Ano, 2 = 2º Ano.
+     */
 
     @Column(name = "course_semester", nullable = false)
     private Byte courseSemester;

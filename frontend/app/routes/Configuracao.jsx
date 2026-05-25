@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
+import Popup from "../components/Popup";
 import {
   CalendarCheck,
   Clock,
@@ -15,6 +16,8 @@ import {
   Edit,
   X,
   Download,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 
 const API_URL = "/api";
@@ -33,6 +36,12 @@ const EMPTY_HOLIDAY = {
   description: "",
 };
 
+const EMPTY_SEMESTER = {
+  name: "",
+  startDate: "",
+  endDate: "",
+};
+
 export default function Configuracao() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -41,6 +50,14 @@ export default function Configuracao() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      setShowErrorPopup(true);
+    }
+  }, [error]);
 
   // Prazo
   const [prazo, setPrazo] = useState(7);
@@ -48,9 +65,18 @@ export default function Configuracao() {
   const [valorTempPrazo, setValorTempPrazo] = useState(7);
   const [savingPrazo, setSavingPrazo] = useState(false);
 
-  // Semestres
+  // Semestres (ativos para o seletor)
   const [semestres, setSemestres] = useState([]);
   const [semesterSelecionado, setSemesterSelecionado] = useState("");
+
+  // CRUD Semestres
+  const [allSemestres, setAllSemestres] = useState([]);
+  const [showSemesterModal, setShowSemesterModal] = useState(false);
+  const [editingSemesterId, setEditingSemesterId] = useState(null);
+  const [currentSemester, setCurrentSemester] = useState(EMPTY_SEMESTER);
+  const [savingSemester, setSavingSemester] = useState(false);
+  const [loadingSemesters, setLoadingSemesters] = useState(false);
+  const [semestersAbertos, setSemestersAbertos] = useState(false);
 
   // Semanas de avaliação
   const [examWeeks, setExamWeeks] = useState([]);
@@ -76,6 +102,7 @@ export default function Configuracao() {
   useEffect(() => {
     if (authlevel !== "1") { navigate("/"); return; }
     carregarInicial();
+    carregarTodosSemestres();
   }, []);
 
   useEffect(() => {
@@ -86,10 +113,21 @@ export default function Configuracao() {
     }
   }, [semesterSelecionado]);
 
-  // Feriados são globais, não por semestre
   useEffect(() => {
     carregarFeriados();
   }, []);
+
+  // Bloqueia scroll da página quando modal está aberto
+  useEffect(() => {
+    if (showExamWeekForm || showSemesterModal || showHolidayForm || showPreview) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showExamWeekForm, showSemesterModal, showHolidayForm, showPreview]);
 
   async function carregarInicial() {
     try {
@@ -111,7 +149,7 @@ export default function Configuracao() {
       const lista = Array.isArray(semData) ? semData : semData.content || [];
       setSemestres(lista);
 
-      if (lista.length > 0) {
+      if (lista.length > 0 && (!semesterSelecionado || !lista.find(s => s.id === semesterSelecionado))) {
         const ativo = lista.find((s) => s.active === 1);
         const primeiro = ativo || lista[0];
         if (primeiro?.id) setSemesterSelecionado(primeiro.id);
@@ -120,6 +158,145 @@ export default function Configuracao() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function carregarTodosSemestres() {
+    setLoadingSemesters(true);
+    try {
+      const resp = await fetch(`${API_URL}/semesters/all`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!resp.ok) throw new Error("Erro ao carregar todos os semestres");
+      const data = await resp.json();
+      const lista = Array.isArray(data) ? data : [];
+      setAllSemestres(lista);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoadingSemesters(false);
+    }
+  }
+
+  // ── Semestres CRUD ──────────────────────────────────────────
+  function handleOpenSemesterModal(semester = null) {
+    if (semester) {
+      setEditingSemesterId(semester.id);
+      setCurrentSemester({
+        name: semester.name,
+        startDate: semester.startDate || "",
+        endDate: semester.endDate || "",
+      });
+    } else {
+      setEditingSemesterId(null);
+      setCurrentSemester(EMPTY_SEMESTER);
+    }
+    setShowSemesterModal(true);
+  }
+
+  function handleCloseSemesterModal() {
+    setShowSemesterModal(false);
+    setCurrentSemester(EMPTY_SEMESTER);
+    setEditingSemesterId(null);
+    setError(null);
+  }
+
+  async function salvarSemester(e) {
+    e.preventDefault();
+    const { name, startDate, endDate } = currentSemester;
+    if (!name || !startDate || !endDate) {
+      setError("Preencha todos os campos obrigatórios.");
+      setShowErrorPopup(true);
+      return;
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+      setError("A data de início não pode ser posterior à data de fim.");
+      setShowErrorPopup(true);
+      return;
+    }
+
+    setSavingSemester(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      let resp;
+      if (editingSemesterId) {
+        resp = await fetch(`${API_URL}/semesters/${editingSemesterId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ name, startDate, endDate }),
+        });
+      } else {
+        resp = await fetch(`${API_URL}/semesters`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ name, startDate, endDate }),
+        });
+      }
+
+      if (!resp.ok) {
+        const errData = await resp.json();
+        throw new Error(errData.message || "Erro ao salvar semestre");
+      }
+
+      setSuccess(editingSemesterId ? "Semestre atualizado com sucesso!" : "Semestre criado com sucesso!");
+      setShowPopup(true);
+      handleCloseSemesterModal();
+      await carregarTodosSemestres();
+      await carregarInicial(); // atualiza lista de ativos para o seletor
+
+      // Se estava editando e o semestre selecionado era o editado, mantém; se criou novo, não muda seleção
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingSemester(false);
+    }
+  }
+
+  async function deletarSemester(id, name) {
+    if (!window.confirm(`Tem certeza que deseja excluir o semestre "${name}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      const resp = await fetch(`${API_URL}/semesters/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!resp.ok) throw new Error("Erro ao excluir semestre");
+      setSuccess(`Semestre "${name}" excluído.`);
+      setShowPopup(true);
+      await carregarTodosSemestres();
+      await carregarInicial();
+
+      // Se o semestre excluído era o selecionado, limpa ou seleciona outro
+      if (semesterSelecionado === id) {
+        const novosAtivos = semestres.filter(s => s.id !== id);
+        if (novosAtivos.length > 0) setSemesterSelecionado(novosAtivos[0].id);
+        else setSemesterSelecionado("");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function toggleSemesterActive(id, currentActive) {
+    try {
+      const resp = await fetch(`${API_URL}/semesters/${id}/toggle`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!resp.ok) throw new Error("Erro ao alterar status do semestre");
+      const updated = await resp.json();
+      setSuccess(`Semestre ${updated.active ? "ativado" : "desativado"} com sucesso.`);
+      setShowPopup(true);
+      await carregarTodosSemestres();
+      await carregarInicial();
+
+      // Se o semestre desativado era o selecionado, troca para outro ativo
+      if (!updated.active && semesterSelecionado === id) {
+        const novosAtivos = semestres.filter(s => s.id !== id);
+        if (novosAtivos.length > 0) setSemesterSelecionado(novosAtivos[0].id);
+        else setSemesterSelecionado("");
+      }
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -139,6 +316,7 @@ export default function Configuracao() {
       setPrazo(data.days);
       setEditandoPrazo(false);
       setSuccess("Prazo de antecedência atualizado com sucesso!");
+      setShowPopup(true);
     } catch (err) { setError(err.message); }
     finally { setSavingPrazo(false); }
   }
@@ -191,6 +369,7 @@ export default function Configuracao() {
       });
       if (!resp.ok) { const e = await resp.json(); throw new Error(e.message || "Erro ao salvar"); }
       setSuccess(editingExamWeekId ? "Semana atualizada!" : "Semana criada!");
+      setShowPopup(true);
       handleCloseExamWeekForm();
       await carregarExamWeeks(semesterSelecionado);
     } catch (err) { setError(err.message); }
@@ -203,6 +382,7 @@ export default function Configuracao() {
       const resp = await fetch(`${API_URL}/semesters/${semesterSelecionado}/exam-weeks/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
       if (!resp.ok) throw new Error("Erro ao remover");
       setSuccess(`Semana de ${examType} removida.`);
+      setShowPopup(true);
       await carregarExamWeeks(semesterSelecionado);
     } catch (err) { setError(err.message); }
   }
@@ -232,6 +412,7 @@ export default function Configuracao() {
       });
       if (!resp.ok) { const e = await resp.json(); throw new Error(e.message || "Erro ao criar feriado"); }
       setSuccess("Feriado criado com sucesso!");
+      setShowPopup(true);
       setShowHolidayForm(false);
       setCurrentHoliday(EMPTY_HOLIDAY);
       await carregarFeriados();
@@ -246,6 +427,7 @@ export default function Configuracao() {
       const resp = await fetch(`${API_URL}/holidays/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
       if (!resp.ok) throw new Error("Erro ao remover feriado");
       setSuccess(`"${name}" removido.`);
+      setShowPopup(true);
       await carregarFeriados();
     } catch (err) { setError(err.message); }
   }
@@ -273,6 +455,7 @@ export default function Configuracao() {
       if (!resp.ok) throw new Error("Erro ao importar");
       const data = await resp.json();
       setSuccess(`${data.length} feriados nacionais de ${nationalYear} importados!`);
+      setShowPopup(true);
       setShowPreview(false);
       await carregarFeriados();
     } catch (err) { setError(err.message); }
@@ -280,20 +463,27 @@ export default function Configuracao() {
   }
 
   function traduzirTipo(type) {
-  switch (type) {
-    case "NATIONAL": return "Nacional";
-    case "LOCAL": return "Local";
-    default: return type;
+    switch (type) {
+      case "NATIONAL": return "Nacional";
+      case "CUSTOM": return "Local";
+      default: return type;
+    }
   }
-}
 
   function tipoCor(type) {
-  switch (type) {
-    case "NATIONAL": return { background: "#dbeafe", color: "#1d4ed8" };
-    case "LOCAL": return { background: "#fef9c3", color: "#854d0e" };
-    default: return { background: "#f3f4f6", color: "#374151" };
+    switch (type) {
+      case "NATIONAL": return { background: "#dbeafe", color: "#1d4ed8" };
+      case "CUSTOM": return { background: "#fef9c3", color: "#854d0e" };
+      default: return { background: "#f3f4f6", color: "#374151" };
+    }
   }
-}
+
+  function formatDateBR(dateStr) {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
 
   if (loading) return (
     <>
@@ -313,8 +503,6 @@ export default function Configuracao() {
       />
 
       <div className="content-config">
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
 
         {/* ── PRAZO ── */}
         <h2 className="secao-titulo">Reservas</h2>
@@ -485,7 +673,7 @@ export default function Configuracao() {
               style={{ padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }}
               >
               <option value="NATIONAL">Nacional</option>
-              <option value="LOCAL">Local</option>
+              <option value="CUSTOM">Local</option>
               </select>
               </div>
               <input
@@ -587,6 +775,122 @@ export default function Configuracao() {
           </>
         )}
 
+        {/* ── CRIAÇÃO DE SEMESTRES (NOVO) ── */}
+        <h2 className="secao-titulo">Gerenciamento de Semestres</h2>
+        <div className="card" style={{ flexDirection: "column", alignItems: "stretch", gap: "0.75rem" }}>
+          <div
+            onClick={() => setSemestersAbertos(prev => !prev)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", userSelect: "none" }}
+          >
+            <strong style={{ fontSize: "0.95rem" }}>
+              {allSemestres.length} semestre{allSemestres.length !== 1 ? "s" : ""} cadastrado{allSemestres.length !== 1 ? "s" : ""}
+            </strong>
+            <span style={{ fontSize: "0.85rem", color: "#888" }}>
+              {semestersAbertos ? "▲ Recolher" : "▼ Expandir"}
+            </span>
+          </div>
+
+          {semestersAbertos && (
+            <>
+              {loadingSemesters ? (
+                <p>Carregando semestres...</p>
+              ) : allSemestres.length === 0 ? (
+                <p style={{ color: "#888" }}>Nenhum semestre cadastrado. Clique em "Adicionar semestre" para começar.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {allSemestres.map((sem) => (
+                    <div
+                      key={sem.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "12px 16px",
+                        background: "#f9f9f9",
+                        borderRadius: "12px",
+                        border: "1px solid #eee",
+                        flexWrap: "wrap",
+                        gap: "8px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                        <strong style={{ minWidth: "180px" }}>{sem.name}</strong>
+                        <span style={{ color: "#555", fontSize: "0.85rem" }}>
+                          {formatDateBR(sem.startDate)} → {formatDateBR(sem.endDate)}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "0.7rem",
+                            fontWeight: "bold",
+                            padding: "2px 8px",
+                            borderRadius: "20px",
+                            background: sem.active === 1 ? "#c8e6c9" : "#ffcdd2",
+                            color: sem.active === 1 ? "#2e7d32" : "#c62828",
+                          }}
+                        >
+                          {sem.active === 1 ? "ATIVO" : "INATIVO"}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        <button
+                          onClick={() => toggleSemesterActive(sem.id, sem.active)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: sem.active === 1 ? "#f39c12" : "#2ecc71",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            fontSize: "0.8rem",
+                          }}
+                          title={sem.active === 1 ? "Desativar" : "Ativar"}
+                        >
+                          {sem.active === 1 ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+                          {sem.active === 1 ? "Desativar" : "Ativar"}
+                        </button>
+                        <button
+                          onClick={() => handleOpenSemesterModal(sem)}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "#2196F3" }}
+                          title="Editar"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => deletarSemester(sem.id, sem.name)}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "#e74c3c" }}
+                          title="Excluir"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          <button
+            onClick={() => handleOpenSemesterModal()}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginTop: "8px",
+              background: "none",
+              border: "1px dashed #aaa",
+              borderRadius: "12px",
+              padding: "10px 16px",
+              cursor: "pointer",
+              width: "fit-content",
+              color: "#555",
+            }}
+          >
+            <Plus size={18} /> Adicionar semestre
+          </button>
+        </div>
+
         {/* ── OUTRAS CONFIGURAÇÕES ── */}
         <h2 className="secao-titulo">Outras configurações</h2>
         <div className="outras-config">
@@ -608,6 +912,54 @@ export default function Configuracao() {
           </div>
         </div>
       </div>
+
+      {/* Modal Semestre */}
+      {showSemesterModal && (
+        <div className="modal-overlay" onClick={handleCloseSemesterModal}>
+          <div className="modal-espacos" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-topo">
+              <h2>{editingSemesterId ? "Editar Semestre" : "Novo Semestre"}</h2>
+              <button className="btn-close-modal" onClick={handleCloseSemesterModal}><X size={20} /></button>
+            </div>
+            <form onSubmit={salvarSemester}>
+              <div className="form-group-reserva">
+                <label>Nome do semestre *</label>
+                <input
+                  type="text"
+                  value={currentSemester.name}
+                  onChange={(e) => setCurrentSemester({ ...currentSemester, name: e.target.value })}
+                  placeholder="Ex.: 2025/1 - Sistemas de Informação"
+                  required
+                />
+              </div>
+              <div className="form-group-reserva">
+                <label>Data início *</label>
+                <input
+                  type="date"
+                  value={currentSemester.startDate}
+                  onChange={(e) => setCurrentSemester({ ...currentSemester, startDate: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group-reserva">
+                <label>Data fim *</label>
+                <input
+                  type="date"
+                  value={currentSemester.endDate}
+                  onChange={(e) => setCurrentSemester({ ...currentSemester, endDate: e.target.value })}
+                  required
+                />
+              </div>
+              <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
+                <button type="submit" className="btn-submit-reserva" disabled={savingSemester}>
+                  {savingSemester ? "Salvando..." : editingSemesterId ? "Atualizar" : "Criar"}
+                </button>
+                <button type="button" className="btn-cancelar" onClick={handleCloseSemesterModal}>Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal Exam Week */}
       {showExamWeekForm && (
@@ -648,6 +1000,9 @@ export default function Configuracao() {
           </div>
         </div>
       )}
+
+      {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
+      {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
 
       <Footer />
     </>

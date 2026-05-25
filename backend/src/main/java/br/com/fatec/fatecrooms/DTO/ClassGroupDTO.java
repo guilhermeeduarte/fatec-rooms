@@ -11,10 +11,11 @@ public class ClassGroupDTO {
     private Integer courseId;
     private String  courseName;
     private String  courseAbbreviation;
-    private int     courseSemester;
+    private boolean courseIsAnnual;
+    private int     courseSemester;   // para AMS: 1 = 1º Ano, 2 = 2º Ano
     private ClassGroup.Shift shift;
-    private String  shiftLabel;      // "Manhã", "Tarde", "Noite"
+    private String  shiftLabel;       // "Manhã", "Tarde", "Noite", "1º Ano", "2º Ano"
     private boolean hasSaturday;
-    private String  label;           // Ex: "3º ADS Manhã"
+    private String  label;
     private boolean active;
 }

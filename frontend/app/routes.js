@@ -24,6 +24,11 @@ export default [
   route("esqueci-senha", "routes/EsqueciSenha.jsx"),
   route("gerenciar-usuarios", "routes/GerenciarUsuario.jsx"),
   route("reserva-recorrente", "routes/ReservaRecorrente.jsx"),
+<<<<<<< HEAD
   route("visualizacao-reservas", "routes/ViewHorarios.jsx"),
 
+=======
+  route("acessibilidade", "routes/Acessibilidade.jsx"),
+  route("solicita-reserva-coordenador", "routes/SolicitaReservaCoordenador.jsx"),
+>>>>>>> 1aba35064b4e80f1c0f5233879af116c7a9d5e28
 ];

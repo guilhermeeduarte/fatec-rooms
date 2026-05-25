@@ -43,11 +43,12 @@ export default function Navbar({ activePage }) {
         <span />
       </button>
 
-      <Link className="navbar__logo" to="/">
+      <Link className="navbar__logo" to={token ? userAreaPath : "/"}>
         F<span>R</span>
       </Link>
 
       <div className="navbar__actions">
+
         {token ? (
           <div className="navbar__user">
             <button
@@ -66,6 +67,7 @@ export default function Navbar({ activePage }) {
             </button>
 
             <div className={`navbar__user-menu ${userMenuOpen ? "open" : ""}`}>
+
               <Link to="/perfil" onClick={() => setUserMenuOpen(false)}>
                 Meu Perfil
               </Link>

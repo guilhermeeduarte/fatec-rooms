@@ -7,6 +7,10 @@ export default function CoordenadorSolicitacoes() {
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 20;
 
   // Modal para rejeitar
   const [rejeitandoId, setRejeitandoId] = useState(null);
@@ -34,58 +38,49 @@ export default function CoordenadorSolicitacoes() {
     }
   }
 
-  useEffect(() => {
-    async function loadReservas() {
-      const token = localStorage.getItem("token");
+  async function loadReservas(pageNum = 0, append = false) {
+    const token = localStorage.getItem("token");
+    try {
+      if (pageNum === 0) setLoading(true);
+      else setLoadingMore(true);
+      setError(null);
 
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetch("/api/bookings/admin/all", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+      const response = await fetch(
+          `/api/bookings/admin/by-status?status=PENDING&page=${pageNum}&size=${PAGE_SIZE}`,
+          { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+      );
+      if (!response.ok) throw new Error("Falha ao carregar as solicitações.");
 
-        if (!response.ok) {
-          throw new Error("Falha ao carregar as solicitações.");
-        }
+      const data = await response.json(); // PagedResponseDTO
+      const mapped = (data.content || []).map((reserva) => {
+        const periods = reserva.periods || [];
+        const first = periods[0];
+        const last = periods[periods.length - 1];
+        const createdAt = reserva.createdAt?.split("T")[0] || "";
+        return {
+          id: reserva.id,
+          data: reserva.bookingDate?.split("-").reverse().join("/") || "",
+          dataSolicitacao: createdAt ? createdAt.split("-").reverse().join("/") : "",
+          espaco: reserva.roomName,
+          professor: reserva.userDisplayName || reserva.username || "Desconhecido",
+          horaInicio: first?.periodStart?.slice(0, 5) || "--:--",
+          horaFim: last?.periodEnd?.slice(0, 5) || "--:--",
+          motivo: reserva.subject || reserva.notes || "",
+          status: "Pendente",
+        };
+      });
 
-        const data = await response.json();
-
-        // Filtra apenas as solicitações PENDENTES
-        setReservas(
-          data
-            .filter((reserva) => traduzirStatus(reserva.status) === "Pendente")
-            .map((reserva) => {
-              const periods = reserva.periods || [];
-              const first = periods[0];
-              const last = periods[periods.length - 1];
-              const createdAt = reserva.createdAt?.split("T")[0] || "";
-
-              return {
-                id: reserva.id,
-                data: reserva.bookingDate?.split("-").reverse().join("/") || "",
-                dataSolicitacao: createdAt ? createdAt.split("-").reverse().join("/") : "",
-                espaco: reserva.roomName,
-                professor: reserva.userDisplayName || reserva.username || "Desconhecido",
-                horaInicio: first?.periodStart?.slice(0, 5) || "--:--",
-                horaFim: last?.periodEnd?.slice(0, 5) || "--:--",
-                motivo: reserva.subject || reserva.notes || "",
-                status: "Pendente",
-              };
-            })
-        );
-      } catch (err) {
-        setError(err.message || "Erro ao carregar solicitações.");
-      } finally {
-        setLoading(false);
-      }
+      setReservas(prev => append ? [...prev, ...mapped] : mapped);
+      setHasMore(!data.last);
+    } catch (err) {
+      setError(err.message || "Erro ao carregar solicitações.");
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
+  }
 
-    loadReservas();
-  }, []);
+  useEffect(() => { loadReservas(0); }, []);
 
   async function aprovarReserva(id) {
     const token = localStorage.getItem("token");
@@ -274,7 +269,13 @@ export default function CoordenadorSolicitacoes() {
 
         </div>
       </div>
-
+      {hasMore && (
+          <div style={{ textAlign: "center", margin: "20px 0" }}>
+            <button className="btn-submit" onClick={() => { const next = page + 1; setPage(next); loadReservas(next, true); }} disabled={loadingMore} style={{ width: "200px" }}>
+              {loadingMore ? "Carregando..." : "Carregar mais"}
+            </button>
+          </div>
+      )}
       <Footer />
     </>
   );

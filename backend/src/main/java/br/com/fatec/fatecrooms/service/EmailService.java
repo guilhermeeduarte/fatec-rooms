@@ -20,18 +20,6 @@ public class EmailService {
     @Value("${app.frontend.url:http://localhost:5173}")
     private String frontendUrl;
 
-    @Value("${spring.mail.username}")
-    private String username;
-
-    @Value("${spring.mail.password}")
-    private String password;
-
-    /**
-     * Envia e-mail com link/token para redefinição de senha.
-     *
-     * @param toEmail   destinatário
-     * @param token     token seguro gerado para o reset
-     */
     public void sendPasswordResetEmail(String toEmail, String token) {
         String resetLink = frontendUrl + "/redefinir-senha?token=" + token;
 
@@ -50,18 +38,11 @@ public class EmailService {
                         "Equipe Fatec Rooms"
         );
 
-        log.info("Username: {}", username);
-        log.info("Password: {}", password);
-        log.info("Reset link gerado: {}", resetLink);
-        log.info("Loaded username: {}", username);
-        log.info("Loaded password: {}", password != null ? "******" : "null");
-
         try {
             mailSender.send(message);
             log.info("E-mail de redefinição de senha enviado para: {}", toEmail);
         } catch (Exception e) {
             log.error("Falha ao enviar e-mail de redefinição para {}: {}", toEmail, e.getMessage());
-            // Não propaga a exceção para não vazar se o e-mail existe ou não
             throw new IllegalStateException("Não foi possível enviar o e-mail de redefinição. Tente novamente mais tarde.");
         }
     }

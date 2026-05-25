@@ -1,5 +1,6 @@
 package br.com.fatec.fatecrooms.controller;
 
+import br.com.fatec.fatecrooms.DTO.RecurringBookingReportDTO;
 import br.com.fatec.fatecrooms.DTO.RoomReportDTO;
 import br.com.fatec.fatecrooms.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,21 @@ public class ReportController {
 
     /**
      * GET /api/reports/rooms
-     * Retorna métricas de uso por sala — apenas coordenadores.
+     * Retorna métricas de uso por sala (avulsas + recorrentes) — apenas coordenadores.
      */
     @GetMapping("/rooms")
     @PreAuthorize("hasRole('COORDINATOR')")
     public ResponseEntity<List<RoomReportDTO>> getRoomsReport() {
         return ResponseEntity.ok(reportService.getRoomsReport());
+    }
+
+    /**
+     * GET /api/reports/recurring
+     * Retorna relatório específico de reservas recorrentes — apenas coordenadores.
+     */
+    @GetMapping("/recurring")
+    @PreAuthorize("hasRole('COORDINATOR')")
+    public ResponseEntity<List<RecurringBookingReportDTO>> getRecurringReport() {
+        return ResponseEntity.ok(reportService.getRecurringBookingsReport());
     }
 }

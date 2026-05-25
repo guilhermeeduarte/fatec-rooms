@@ -2,6 +2,8 @@ package br.com.fatec.fatecrooms.repository;
 
 import br.com.fatec.fatecrooms.model.Period;
 import br.com.fatec.fatecrooms.model.RecurringBooking;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -77,4 +79,45 @@ public interface RecurringBookingRepository extends JpaRepository<RecurringBooki
             @Param("roomId") Integer roomId,
             @Param("date")   LocalDate date
     );
+
+    @Query(
+            value = """
+    SELECT DISTINCT rb FROM RecurringBooking rb
+    JOIN FETCH rb.semester
+    JOIN FETCH rb.room
+    JOIN FETCH rb.classGroup cg
+    JOIN FETCH cg.course
+    JOIN FETCH rb.createdBy
+    LEFT JOIN FETCH rb.periods
+    LEFT JOIN FETCH rb.instances
+    ORDER BY rb.createdAt DESC
+    """,
+            countQuery = """
+    SELECT COUNT(DISTINCT rb) FROM RecurringBooking rb
+    """
+    )
+    Page<RecurringBooking> findAllWithDetailsPaged(Pageable pageable);
+
+    @Query(
+            value = """
+    SELECT DISTINCT rb FROM RecurringBooking rb
+    JOIN FETCH rb.semester
+    JOIN FETCH rb.room
+    JOIN FETCH rb.classGroup cg
+    JOIN FETCH cg.course
+    JOIN FETCH rb.createdBy
+    LEFT JOIN FETCH rb.periods
+    LEFT JOIN FETCH rb.instances
+    WHERE rb.semester.id = :semesterId
+    ORDER BY rb.createdAt DESC
+    """,
+            countQuery = """
+    SELECT COUNT(DISTINCT rb)
+    FROM RecurringBooking rb
+    WHERE rb.semester.id = :semesterId
+    """
+    )
+    Page<RecurringBooking> findBySemesterWithDetailsPaged(
+            @Param("semesterId") Integer semesterId,
+            Pageable pageable);
 }

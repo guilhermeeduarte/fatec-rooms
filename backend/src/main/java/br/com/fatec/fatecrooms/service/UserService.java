@@ -26,31 +26,24 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final UserRepository               userRepository;
     private final PasswordResetTokenRepository tokenRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
+    private final PasswordEncoder              passwordEncoder;
+    private final EmailService                 emailService;
 
     private static final int TOKEN_EXPIRY_MINUTES = 30;
 
     // ─────────────────────────────────────────────
-    //  ATUALIZAÇÃO DE PERFIL (nome, email)
+    //  ATUALIZAÇÃO DE PERFIL
     // ─────────────────────────────────────────────
 
-    /**
-     * Atualiza firstname, lastname, email e displayname do próprio usuário.
-     * A senha NÃO é alterada aqui — use o fluxo de reset por e-mail.
-     */
     @Transactional
     public UserSummaryDTO updateProfile(String username, UpdateProfileRequest request) {
         User user = getUserByUsernameOrThrow(username);
 
-        // Verifica se o novo e-mail já está em uso por outro usuário
-        if (!user.getEmail().equalsIgnoreCase(request.getEmail())) {
-            boolean emailTaken = userRepository.existsByEmail(request.getEmail());
-            if (emailTaken) {
-                throw new BusinessException("Este e-mail já está em uso por outra conta.");
-            }
+        if (!user.getEmail().equalsIgnoreCase(request.getEmail())
+                && userRepository.existsByEmail(request.getEmail())) {
+            throw new BusinessException("Este e-mail já está em uso por outra conta.");
         }
 
         user.setFirstname(request.getFirstname().trim());
@@ -67,18 +60,13 @@ public class UserService {
     }
 
     // ─────────────────────────────────────────────
-    //  RESET DE SENHA POR E-MAIL
+    //  RESET DE SENHA
     // ─────────────────────────────────────────────
 
-    /**
-     * Passo 1 — Usuário solicita reset.
-     * Gera token seguro, persiste e dispara e-mail.
-     * Sempre retorna sucesso (evita enumeração de e-mails).
-     */
     @Transactional
     public void requestPasswordReset(PasswordChangeRequestDTO request) {
         userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
-            // Remove tokens anteriores do usuário para evitar acúmulo
+            // Remove tokens anteriores — invalida qualquer reset pendente
             tokenRepository.deleteAllByUserId(user.getId());
 
             String rawToken = generateSecureToken();
@@ -92,68 +80,56 @@ public class UserService {
 
             emailService.sendPasswordResetEmail(user.getEmail(), rawToken);
         });
-        // Se o e-mail não existir, retorna silenciosamente (segurança)
     }
 
-    /**
-     * Passo 2 — Usuário confirma com token + nova senha.
-     */
     @Transactional
     public void confirmPasswordReset(PasswordChangeConfirmDTO request) {
         PasswordResetToken resetToken = tokenRepository.findByToken(request.getToken())
                 .orElseThrow(() -> new BusinessException("Token inválido ou expirado."));
 
-        if (resetToken.isUsed()) {
+        if (resetToken.isUsed())
             throw new BusinessException("Este token já foi utilizado.");
-        }
 
-        if (resetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (resetToken.getExpiresAt().isBefore(LocalDateTime.now()))
             throw new BusinessException("Token expirado. Solicite um novo link de redefinição.");
-        }
 
         User user = resetToken.getUser();
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
-        resetToken.setUsed(true);
-        tokenRepository.save(resetToken);
+        // Invalida TODOS os tokens do usuário após reset bem-sucedido
+        tokenRepository.deleteAllByUserId(user.getId());
 
         log.info("Senha redefinida com sucesso para o usuário: {}", user.getUsername());
     }
 
     // ─────────────────────────────────────────────
-    //  ALTERAÇÃO DE AUTHLEVEL (apenas coordenador)
+    //  ALTERAÇÃO DE AUTHLEVEL
     // ─────────────────────────────────────────────
 
-    /**
-     * Coordenador altera o nível de acesso de qualquer usuário ativo.
-     * Não é possível alterar o próprio authlevel (evita auto-promoção/rebaixamento).
-     */
     @Transactional
-    public UserSummaryDTO updateAuthLevel(String coordinatorUsername, Integer targetUserId, UpdateAuthLevelRequest request) {
+    public UserSummaryDTO updateAuthLevel(String coordinatorUsername, Integer targetUserId,
+                                          UpdateAuthLevelRequest request) {
         User coordinator = getUserByUsernameOrThrow(coordinatorUsername);
         User target = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado: " + targetUserId));
 
-        if (coordinator.getId().equals(target.getId())) {
+        if (coordinator.getId().equals(target.getId()))
             throw new BusinessException("Você não pode alterar o seu próprio nível de acesso.");
-        }
 
-        if (target.getEnabled() == 0) {
+        if (target.getEnabled() == 0)
             throw new BusinessException("Não é possível alterar o authlevel de um usuário desabilitado ou pendente.");
-        }
 
         byte newLevel = request.getAuthlevel();
-        if (newLevel != 1 && newLevel != 2) {
+        if (newLevel != 1 && newLevel != 2)
             throw new BusinessException("Nível de acesso inválido. Use 1 (coordenador) ou 2 (professor).");
-        }
 
         target.setAuthlevel(newLevel);
         userRepository.save(target);
 
-        String role = newLevel == 1 ? "Coordenador" : "Professor";
         log.info("Authlevel do usuário '{}' alterado para {} pelo coordenador '{}'",
-                target.getUsername(), role, coordinator.getUsername());
+                target.getUsername(), newLevel == 1 ? "Coordenador" : "Professor",
+                coordinator.getUsername());
 
         return toSummary(target);
     }

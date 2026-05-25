@@ -51,6 +51,13 @@ function formatTime(timeStr) {
   return timeStr.length > 5 ? timeStr.slice(0, 5) : timeStr;
 }
 
+const statusColorMap = {
+  APPROVED: { bg: "#DCFCE7", text: "#166534", border: "#22C55E" },
+  PENDING: { bg: "#FEF3C7", text: "#92400E", border: "#F59E0B" },
+  CANCELLED: { bg: "#FEE2E2", text: "#991B1B", border: "#EF4444" },
+  REJECTED: { bg: "#FEE2E2", text: "#991B1B", border: "#EF4444" },
+};
+
 export default function Professor() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -58,6 +65,8 @@ export default function Professor() {
   const [rooms, setRooms] = useState([]);
   const [periods, setPeriods] = useState([]);
   const [holidays, setHolidays] = useState([]);
+  const [examDatesSet, setExamDatesSet] = useState(new Set());
+  const [examInfoByDate, setExamInfoByDate] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -77,12 +86,13 @@ export default function Professor() {
       const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
       try {
-        const [userResponse, bookingsResponse, roomsResponse, periodsResponse, holidaysResponse] = await Promise.all([
+        const [userResponse, bookingsResponse, roomsResponse, periodsResponse, holidaysResponse, semestersResponse] = await Promise.all([
           fetch("/api/users/me", { headers }),
           fetch("/api/bookings/my", { headers }),
           fetch("/api/rooms", { headers }),
           fetch("/api/periods", { headers }),
           fetch("/api/holidays", { headers }),
+          fetch("/api/semesters", { headers }),
         ]);
 
         if (!userResponse.ok) throw new Error("Falha ao obter dados do usuário.");
@@ -95,6 +105,7 @@ export default function Professor() {
         const roomsData = await roomsResponse.json();
         const periodsData = await periodsResponse.json();
         const holidaysData = holidaysResponse.ok ? await holidaysResponse.json() : [];
+        const semestersData = semestersResponse.ok ? await semestersResponse.json() : [];
 
         bookingsData.sort((a, b) => {
           const dateA = new Date(a.bookingDate).getTime();
@@ -102,6 +113,45 @@ export default function Professor() {
           if (dateA !== dateB) return dateA - dateB;
           return (a.periodStart || "").localeCompare(b.periodStart || "");
         });
+
+        // --- semanas de avaliação ---
+        const examDates = new Set();
+        const examDetails = {};
+        const activeSemesters = Array.isArray(semestersData) ? semestersData : (semestersData.content || []);
+        await Promise.all(
+          activeSemesters.map(async (semester) => {
+            if (semester.active !== 1) return;
+            try {
+              const examRes = await fetch(`/api/semesters/${semester.id}/exam-weeks`, { headers });
+              if (examRes.ok) {
+                const weeks = await examRes.json();
+                weeks.forEach(week => {
+                  const start = new Date(week.startDate);
+                  const end = new Date(week.endDate);
+                  const current = new Date(start);
+                  while (current <= end) {
+                    const iso = current.toISOString().split('T')[0];
+                    examDates.add(iso);
+                    if (!examDetails[iso]) examDetails[iso] = new Set();
+                    examDetails[iso].add(week.examType);
+                    current.setDate(current.getDate() + 1);
+                  }
+                });
+              }
+            } catch (err) {
+              console.error(`Erro ao carregar exam-weeks do semestre ${semester.id}`, err);
+            }
+          })
+        );
+
+        const examInfo = {};
+        Object.keys(examDetails).forEach(date => {
+          examInfo[date] = Array.from(examDetails[date]).sort().join(", ");
+        });
+
+        setExamDatesSet(examDates);
+        setExamInfoByDate(examInfo);
+        // ------------------------------------
 
         setUser(userData);
         setBookings(bookingsData);
@@ -126,18 +176,6 @@ export default function Professor() {
     return { totalReservations, pendingReservations, uniqueRooms, totalRooms: rooms.length, latestBooking };
   }, [bookings, rooms.length]);
 
-  // Set de datas de feriado (YYYY-MM-DD)
-  const holidayDates = useMemo(() => {
-    return new Set(holidays.map((h) => h.holidayDate));
-  }, [holidays]);
-
-  // Map de feriado por data para tooltip
-  const holidayByDate = useMemo(() => {
-    const map = {};
-    holidays.forEach((h) => { map[h.holidayDate] = h; });
-    return map;
-  }, [holidays]);
-
   const changeMonth = (delta) => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + delta, 1));
     setHoveredDay(null);
@@ -150,6 +188,7 @@ export default function Professor() {
     setTooltipData(null);
   };
 
+  // 🔥 CORREÇÃO: busca o feriado diretamente no array holidays, garantindo que o objeto holiday fique disponível
   const calendarData = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -175,42 +214,57 @@ export default function Professor() {
       });
     });
 
-    const cells = Array.from({ length: startOffset }, () => ({ date: "", status: "empty", bookings: [], isHoliday: false, holiday: null }))
-      .concat(
-        Array.from({ length: daysInMonth }, (_, index) => {
-          const day = index + 1;
-          const dayBookingsList = dayBookings[day] || [];
+    const emptyCell = { date: "", status: "empty", bookings: [], isHoliday: false, holiday: null, isExam: false, examTypes: "" };
 
-          // Verificar se é feriado
-          const mm = String(month + 1).padStart(2, "0");
-          const dd = String(day).padStart(2, "0");
-          const isoDate = `${year}-${mm}-${dd}`;
-          const isHoliday = holidayDates.has(isoDate);
-          const holiday = holidayByDate[isoDate] || null;
+    const cells = Array.from({ length: startOffset }, () => ({ ...emptyCell })).concat(
+      Array.from({ length: daysInMonth }, (_, index) => {
+        const day = index + 1;
+        const dayBookingsList = dayBookings[day] || [];
 
-          let status = "none";
-          if (isHoliday) {
-            status = "holiday";
-          } else if (dayBookingsList.length > 0) {
-            const hasApproved = dayBookingsList.some(b => b.status === "APPROVED");
-            const hasPending = dayBookingsList.some(b => b.status === "PENDING");
-            if (hasApproved) status = "confirmed";
-            else if (hasPending) status = "pending";
-            else status = "cancelled";
-          }
+        const mm = String(month + 1).padStart(2, "0");
+        const dd = String(day).padStart(2, "0");
+        const isoDate = `${year}-${mm}-${dd}`;
 
-          return { date: day, status, bookings: dayBookingsList, isHoliday, holiday };
-        })
-      );
+        // ✅ busca direta do feriado
+        const holidayObj = holidays.find(h => h.holidayDate === isoDate);
+        const isHoliday = !!holidayObj;
+
+        const isExam = examDatesSet.has(isoDate);
+        const examTypes = examInfoByDate[isoDate] || "";
+
+        let status = "none";
+        if (isHoliday) {
+          status = "holiday";
+        } else if (isExam) {
+          status = "exam";
+        } else if (dayBookingsList.length > 0) {
+          const hasApproved = dayBookingsList.some(b => b.status === "APPROVED");
+          const hasPending = dayBookingsList.some(b => b.status === "PENDING");
+          if (hasApproved) status = "confirmed";
+          else if (hasPending) status = "pending";
+          else status = "cancelled";
+        }
+
+        return {
+          date: day,
+          status,
+          bookings: dayBookingsList,
+          isHoliday,
+          holiday: holidayObj,
+          isExam,
+          examTypes,
+        };
+      })
+    );
 
     return { monthName, cells, year, month };
-  }, [bookings, currentDate, holidayDates, holidayByDate]);
+  }, [bookings, currentDate, holidays, examDatesSet, examInfoByDate]);
 
   const handleMouseEnter = (event, cell) => {
     if (!cell.date) return;
-    if (cell.bookings.length === 0 && !cell.isHoliday) return;
+    if (cell.bookings.length === 0 && !cell.isHoliday && !cell.isExam) return;
     setHoveredDay(cell.date);
-    setTooltipData({ bookings: cell.bookings, holiday: cell.holiday });
+    setTooltipData({ bookings: cell.bookings, holiday: cell.holiday, isExam: cell.isExam, examTypes: cell.examTypes });
     setTooltipPosition({ x: event.clientX, y: event.clientY });
   };
 
@@ -221,6 +275,17 @@ export default function Professor() {
 
   const handleMouseMove = (event) => {
     if (tooltipData) setTooltipPosition({ x: event.clientX, y: event.clientY });
+  };
+
+  const getCellClassName = (status) => {
+    switch(status) {
+      case "confirmed": return "calendar-confirmed";
+      case "pending":   return "calendar-pending";
+      case "cancelled": return "calendar-cancelled";
+      case "holiday":   return "dia-feriado";
+      case "exam":      return "dia-avaliacao";
+      default:          return "";
+    }
   };
 
   if (loading) return (
@@ -353,69 +418,114 @@ export default function Professor() {
                 {weekDays.map((day) => (
                   <div key={day} className="calendar-day-name">{day}</div>
                 ))}
-                {calendarData.cells.map((cell, index) => (
-                  <div
-                    key={`${cell.date}-${index}`}
-                    className={`calendar-cell ${cell.status !== "none" ? `calendar-${cell.status}` : ""}`}
-                    onMouseEnter={(e) => handleMouseEnter(e, cell)}
-                    onMouseLeave={handleMouseLeave}
-                    onMouseMove={handleMouseMove}
-                    title={cell.isHoliday ? cell.holiday?.name : undefined}
-                  >
-                    {cell.date || ""}
-                  </div>
-                ))}
+                {calendarData.cells.map((cell, index) => {
+                  const className = `calendar-cell ${cell.status !== "none" ? getCellClassName(cell.status) : ""}`;
+                  return (
+                    <div
+                      key={`${cell.date}-${index}`}
+                      className={className}
+                      onMouseEnter={(e) => handleMouseEnter(e, cell)}
+                      onMouseLeave={handleMouseLeave}
+                      onMouseMove={handleMouseMove}
+                      title={cell.isHoliday ? cell.holiday?.name : (cell.isExam ? `Avaliação: ${cell.examTypes}` : undefined)}
+                    >
+                      {cell.date || ""}
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="calendar-legend">
-                <div className="legend-item"><span className="legend-badge legend-confirmed" /> Confirmadas</div>
-                <div className="legend-item"><span className="legend-badge legend-pending" /> Pendentes</div>
-                <div className="legend-item"><span className="legend-badge legend-cancelled" /> Canceladas</div>
-                <div className="legend-item"><span className="legend-badge legend-holiday" /> Feriados</div>
+                <div className="legend-item"><span className="legend-badge legend-confirmed"></span> Confirmadas</div>
+                <div className="legend-item"><span className="legend-badge legend-pending"></span> Pendentes</div>
+                <div className="legend-item"><span className="legend-badge legend-cancelled"></span> Canceladas</div>
+                <div className="legend-item"><span className="box roxo"></span> Feriados</div>
+                <div className="legend-item"><span className="box magenta"></span> Avaliações</div>
               </div>
             </div>
           </aside>
         </div>
       </main>
 
-      {/* Tooltip */}
+      {/* TOOLTIP – com feriado (roxo), avaliação (magenta) e reservas */}
       {tooltipData && hoveredDay && (
         <div
-          className="calendar-tooltip"
-          style={{ position: "fixed", left: tooltipPosition.x + 15, top: tooltipPosition.y - 10, zIndex: 1000 }}
+          style={{
+            position: "fixed",
+            left: tooltipPosition.x + 15,
+            top: tooltipPosition.y - 10,
+            zIndex: 1000,
+            backgroundColor: "#FFFFFF",
+            borderRadius: "16px",
+            boxShadow: "0 20px 35px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.05)",
+            padding: "12px 16px",
+            minWidth: "260px",
+            maxWidth: "340px",
+            maxHeight: "400px",
+            overflowY: "auto",
+            fontFamily: "'Inter', system-ui, sans-serif",
+            fontSize: "0.85rem",
+            color: "#1F2937",
+            lineHeight: 1.4,
+          }}
         >
+          <div style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: "10px", borderBottom: "1px solid #E5E7EB", paddingBottom: "6px", display: "flex", justifyContent: "space-between" }}>
+            <span>📅 Dia {hoveredDay}</span>
+            <span style={{ background: "#F3F4F6", padding: "2px 10px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: "500" }}>
+              {tooltipData.bookings.length} reserva(s)
+            </span>
+          </div>
+
+          {tooltipData.isExam && (
+            <div style={{ marginBottom: "10px", padding: "8px", background: "#FDF2F8", borderRadius: "12px", borderLeft: "4px solid #E83E8C" }}>
+              <div style={{ fontWeight: 700, color: "#E83E8C", fontSize: "0.75rem", textTransform: "uppercase", marginBottom: "4px" }}>📖 Semana de Avaliação</div>
+              <div style={{ fontSize: "0.85rem", fontWeight: 500 }}>Provas: {tooltipData.examTypes}</div>
+            </div>
+          )}
+
           {tooltipData.holiday && (
-            <div style={{ marginBottom: tooltipData.bookings.length > 0 ? "8px" : 0, padding: "4px 0", borderBottom: tooltipData.bookings.length > 0 ? "1px solid #eee" : "none" }}>
-              <div style={{ fontWeight: 700, color: "#880cc2", fontSize: "0.85rem" }}>🎉 Feriado</div>
-              <div style={{ fontSize: "0.9rem" }}>{tooltipData.holiday.name}</div>
+            <div style={{ marginBottom: "10px", padding: "8px", background: "#F3E8FF", borderRadius: "12px", borderLeft: "4px solid #A855F7" }}>
+              <div style={{ fontWeight: 700, color: "#6D28D9", fontSize: "0.75rem", textTransform: "uppercase", marginBottom: "4px" }}>🎉 Feriado</div>
+              <div style={{ fontSize: "0.85rem", fontWeight: 500 }}>{tooltipData.holiday.name}</div>
               {tooltipData.holiday.description && (
-                <div style={{ fontSize: "0.8rem", color: "#888" }}>{tooltipData.holiday.description}</div>
+                <div style={{ fontSize: "0.7rem", color: "#6B7280", marginTop: "4px" }}>{tooltipData.holiday.description}</div>
               )}
             </div>
           )}
+
           {tooltipData.bookings.length > 0 && (
-            <>
-              <div className="tooltip-header">
-                <strong>Dia {hoveredDay}</strong>
-                <span>{tooltipData.bookings.length} reserva(s)</span>
-              </div>
-              <div className="tooltip-list">
-                {tooltipData.bookings.map((booking, idx) => (
-                  <div key={idx} className="tooltip-item">
-                    <div className="tooltip-time">
-                      {booking.periods && booking.periods.length > 0
-                        ? `${formatTime(booking.periods[0].periodStart)} - ${formatTime(booking.periods[booking.periods.length - 1].periodEnd)}`
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {tooltipData.bookings.map((booking) => {
+                const statusKey = booking.status;
+                const colors = statusColorMap[statusKey] || statusColorMap.PENDING;
+                return (
+                  <div
+                    key={booking.id}
+                    style={{
+                      background: colors.bg,
+                      borderLeft: `4px solid ${colors.border}`,
+                      borderRadius: "12px",
+                      padding: "10px 12px",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: "0.8rem", color: colors.text, marginBottom: "6px" }}>
+                      {statusLabels[statusKey] || statusKey}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "#1F2937" }}>
+                      ⏱️ {booking.periods && booking.periods.length > 0
+                        ? `${formatTime(booking.periods[0].periodStart)} – ${formatTime(booking.periods[booking.periods.length - 1].periodEnd)}`
                         : "Horário não definido"}
                     </div>
-                    <div className="tooltip-room">{booking.roomName}</div>
-                    <div className="tooltip-subject">{booking.subject || "Sem assunto"}</div>
-                    <div className={`tooltip-status ${statusClasses[booking.status] || "status-ok"}`}>
-                      {statusLabels[booking.status] || booking.status}
+                    <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#374151", marginTop: "4px" }}>
+                      🪑 {booking.roomName}
+                    </div>
+                    <div style={{ fontSize: "0.7rem", color: "#6B7280", marginTop: "2px" }}>
+                      📋 {booking.subject || "Sem assunto"}
                     </div>
                   </div>
-                ))}
-              </div>
-            </>
+                );
+              })}
+            </div>
           )}
         </div>
       )}

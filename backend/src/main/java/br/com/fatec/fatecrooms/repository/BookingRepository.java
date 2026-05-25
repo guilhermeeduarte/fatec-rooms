@@ -3,6 +3,8 @@ package br.com.fatec.fatecrooms.repository;
 import br.com.fatec.fatecrooms.model.Booking;
 import br.com.fatec.fatecrooms.model.Booking.Status;
 import br.com.fatec.fatecrooms.model.Period;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,17 +36,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     );
 
     // ── Períodos já ocupados com seus horários (para detecção de sobreposição) ──
-    /**
-     * Retorna todos os objetos Period vinculados a reservas ativas
-     * (PENDING ou APPROVED) para a sala e data informadas.
-     *
-     * Usado pelo BookingService para checar sobreposição de horário mesmo
-     * quando os IDs dos períodos são distintos (ex.: futuros períodos com
-     * intervalos sobrepostos como 10:30-11:30 e 11:20-12:00).
-     *
-     * @param excludeBookingId reserva a ignorar (útil em re-validações de edição;
-     *                         passe null para não excluir nenhuma)
-     */
+
     @Query("""
         SELECT DISTINCT p FROM Booking b
         JOIN b.periods p
@@ -127,4 +119,57 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             @Param("start")  LocalDate start,
             @Param("end")    LocalDate end
     );
+
+    @Query(
+            value = """
+    SELECT DISTINCT b FROM Booking b
+    JOIN FETCH b.room
+    JOIN FETCH b.user
+    LEFT JOIN FETCH b.periods
+    ORDER BY b.bookingDate DESC, b.createdAt DESC
+    """,
+            countQuery = """
+    SELECT COUNT(DISTINCT b)
+    FROM Booking b
+    """
+    )
+    Page<Booking> findAllWithDetailsPaged(Pageable pageable);
+
+    @Query(
+            value = """
+    SELECT DISTINCT b FROM Booking b
+    LEFT JOIN FETCH b.periods
+    WHERE b.status = :status
+    ORDER BY b.bookingDate ASC, b.createdAt ASC
+    """,
+            countQuery = """
+    SELECT COUNT(DISTINCT b)
+    FROM Booking b
+    WHERE b.status = :status
+    """
+    )
+    Page<Booking> findByStatusPaged(
+            @Param("status") Status status,
+            Pageable pageable);
+
+    @Query(
+            value = """
+    SELECT DISTINCT b FROM Booking b
+    JOIN FETCH b.room
+    JOIN FETCH b.user
+    LEFT JOIN FETCH b.periods
+    WHERE b.bookingDate = :date
+      AND b.status IN ('PENDING', 'APPROVED')
+    ORDER BY b.bookingDate
+    """,
+            countQuery = """
+    SELECT COUNT(DISTINCT b)
+    FROM Booking b
+    WHERE b.bookingDate = :date
+      AND b.status IN ('PENDING', 'APPROVED')
+    """
+    )
+    Page<Booking> findByDateWithDetailsPaged(
+            @Param("date") LocalDate date,
+            Pageable pageable);
 }

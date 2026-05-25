@@ -1,5 +1,6 @@
 package br.com.fatec.fatecrooms.service;
 
+import br.com.fatec.fatecrooms.DTO.PagedResponseDTO;
 import br.com.fatec.fatecrooms.DTO.RecurringBookingDTO;
 import br.com.fatec.fatecrooms.DTO.RecurringBookingInstanceDTO;
 import br.com.fatec.fatecrooms.DTO.RecurringBookingRequest;
@@ -9,6 +10,9 @@ import br.com.fatec.fatecrooms.model.*;
 import br.com.fatec.fatecrooms.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,28 +63,20 @@ public class RecurringBookingService {
 
     @Transactional
     public RecurringBookingDTO create(String coordinatorUsername, RecurringBookingRequest request) {
-        User      coordinator = getUserOrThrow(coordinatorUsername);
-        Semester  semester    = getSemesterOrThrow(request.getSemesterId());
-        Room      room        = getRoomOrThrow(request.getRoomId());
-        ClassGroup cg         = getClassGroupOrThrow(request.getClassGroupId());
+        User       coordinator = getUserOrThrow(coordinatorUsername);
+        Semester   semester    = getSemesterOrThrow(request.getSemesterId());
+        Room       room        = getRoomOrThrow(request.getRoomId());
+        ClassGroup cg          = getClassGroupOrThrow(request.getClassGroupId());
 
         if (room.getBookable() != 1)
             throw new BusinessException("Sala não está disponível para reservas.");
 
         List<String> normalizedDays = validateAndNormalizeDays(request.getWeekDays(), cg);
-
-        List<Period> periods = request.getPeriodIds().stream()
-                .map(this::getPeriodOrThrow).toList();
-
+        List<Period> periods = request.getPeriodIds().stream().map(this::getPeriodOrThrow).toList();
         validatePeriods(periods);
-
         validateNoRecurringOverlap(
-                request.getRoomId(),
-                request.getSemesterId(),
-                request.getClassGroupId(),
-                normalizedDays,
-                periods.stream().map(Period::getId).toList(),
-                null
+                request.getRoomId(), request.getSemesterId(), request.getClassGroupId(),
+                normalizedDays, periods.stream().map(Period::getId).toList(), null
         );
 
         RecurringBooking rb = new RecurringBooking();
@@ -95,7 +91,10 @@ public class RecurringBookingService {
         rb.setPeriods(new LinkedHashSet<>(periods));
 
         RecurringBooking saved = recurringBookingRepository.save(rb);
-        int generated = generateInstances(saved, semester, normalizedDays, periods);
+
+        // Carrega feriados UMA vez e passa para a geração de instâncias
+        Set<LocalDate> holidays = loadHolidayDates();
+        int generated = generateInstances(saved, semester, normalizedDays, periods, holidays);
         log.info("Reserva recorrente #{} criada: {} instâncias ativas.", saved.getId(), generated);
 
         return toDTO(getOrThrow(saved.getId()));
@@ -111,7 +110,7 @@ public class RecurringBookingService {
 
         rb.setStatus(RecurringBooking.Status.CANCELLED);
         int cancelled = instanceRepository.cancelFutureInstances(
-                id, LocalDate.now(), "Reserva recorrente cancelada pelo coordenador.");
+                id, LocalDate.now(), "Recurring booking cancelled by coordinator.");
         recurringBookingRepository.save(rb);
         log.info("Reserva recorrente #{} cancelada. {} instâncias canceladas.", id, cancelled);
         return toDTO(getOrThrow(id));
@@ -130,18 +129,18 @@ public class RecurringBookingService {
             throw new BusinessException("Instância já está cancelada.");
 
         inst.setStatus(RecurringBookingInstance.Status.CANCELLED);
-        inst.setSkipReason(reason != null && !reason.isBlank() ? reason : "Cancelada manualmente.");
+        inst.setSkipReason(reason != null && !reason.isBlank() ? reason : "Cancelled manually.");
         return instanceToDTO(instanceRepository.save(inst));
     }
 
     // ── Geração de instâncias ─────────────────────────────────────────────────
 
     private int generateInstances(RecurringBooking rb, Semester semester,
-                                  List<String> weekDays, List<Period> periods) {
-        Set<LocalDate>  holidays   = loadHolidayDates();
-        Set<DayOfWeek>  targetDays = weekDays.stream()
+                                  List<String> weekDays, List<Period> periods,
+                                  Set<LocalDate> holidays) {
+        Set<DayOfWeek> targetDays = weekDays.stream()
                 .map(DayOfWeek::valueOf).collect(Collectors.toSet());
-        List<Integer>   periodIds  = periods.stream().map(Period::getId).toList();
+        List<Integer> periodIds = periods.stream().map(Period::getId).toList();
 
         LocalDate cursor  = semester.getStartDate();
         LocalDate endDate = semester.getEndDate();
@@ -156,10 +155,10 @@ public class RecurringBookingService {
 
                 if (holidays.contains(cursor)) {
                     inst.setStatus(RecurringBookingInstance.Status.SKIPPED);
-                    inst.setSkipReason("Feriado.");
+                    inst.setSkipReason("Holiday.");
                 } else if (hasConflict(rb.getRoom().getId(), cursor, periodIds, null)) {
                     inst.setStatus(RecurringBookingInstance.Status.SKIPPED);
-                    inst.setSkipReason("Conflito com reserva existente nesta data.");
+                    inst.setSkipReason("Conflict with existing booking on this date.");
                 } else {
                     inst.setStatus(RecurringBookingInstance.Status.ACTIVE);
                     count++;
@@ -174,31 +173,20 @@ public class RecurringBookingService {
 
     // ── Validações ────────────────────────────────────────────────────────────
 
-    /**
-     * SATURDAY é permitido apenas se a turma tiver has_saturday = 1.
-     * Turmas com has_saturday = 1 têm aula nos dias úteis E sábado —
-     * não existe turma exclusivamente de sábado.
-     */
     private List<String> validateAndNormalizeDays(List<String> rawDays, ClassGroup cg) {
         Set<String> valid = Set.of("MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY");
-
-        List<String> normalized = rawDays.stream()
-                .map(String::toUpperCase).distinct().toList();
+        List<String> normalized = rawDays.stream().map(String::toUpperCase).distinct().toList();
 
         for (String day : normalized) {
             if (!valid.contains(day))
                 throw new BusinessException("Dia da semana inválido: " + day);
         }
 
-        boolean hasSaturday = cg.getHasSaturday() == 1;
-
-        if (normalized.contains("SATURDAY") && !hasSaturday)
+        if (normalized.contains("SATURDAY") && cg.getHasSaturday() != 1)
             throw new BusinessException(
                     "Esta turma não possui aulas de sábado. Remova SATURDAY da seleção.");
 
-        // Deve ter pelo menos um dia útil (turmas não são só de sábado)
-        boolean hasWeekday = normalized.stream()
-                .anyMatch(d -> !d.equals("SATURDAY"));
+        boolean hasWeekday = normalized.stream().anyMatch(d -> !d.equals("SATURDAY"));
         if (!hasWeekday)
             throw new BusinessException(
                     "Selecione ao menos um dia útil (Seg–Sex). Sábado é um dia adicional.");
@@ -216,24 +204,18 @@ public class RecurringBookingService {
     private void validateNoRecurringOverlap(Integer roomId, Integer semesterId,
                                             Integer classGroupId, List<String> weekDays,
                                             List<Integer> periodIds, Integer excludeId) {
-        List<RecurringBooking> existing = recurringBookingRepository
-                .findBySemesterWithDetails(semesterId);
+        List<RecurringBooking> existing = recurringBookingRepository.findBySemesterWithDetails(semesterId);
 
         for (RecurringBooking rb : existing) {
             if (rb.getStatus() == RecurringBooking.Status.CANCELLED) continue;
             if (rb.getId().equals(excludeId)) continue;
             if (!rb.getRoom().getId().equals(roomId)) continue;
 
-            // Verifica sobreposição de dias da semana
-            boolean dayOverlap = rb.getWeekDays().stream()
-                    .anyMatch(weekDays::contains);
+            boolean dayOverlap = rb.getWeekDays().stream().anyMatch(weekDays::contains);
             if (!dayOverlap) continue;
 
-            // Verifica sobreposição de períodos
-            List<Integer> existingPeriodIds = rb.getPeriods().stream()
-                    .map(Period::getId).toList();
-            boolean periodOverlap = existingPeriodIds.stream()
-                    .anyMatch(periodIds::contains);
+            List<Integer> existingPeriodIds = rb.getPeriods().stream().map(Period::getId).toList();
+            boolean periodOverlap = existingPeriodIds.stream().anyMatch(periodIds::contains);
             if (!periodOverlap) continue;
 
             throw new BusinessException(
@@ -320,6 +302,27 @@ public class RecurringBookingService {
                 inst.getSkipReason(),
                 inst.getCreatedAt(),
                 inst.getUpdatedAt()
+        );
+    }
+
+    public PagedResponseDTO<RecurringBookingDTO> listAllPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<RecurringBooking> result = recurringBookingRepository.findAllWithDetailsPaged(pageable);
+        return toPagedResponse(result);
+    }
+
+    public PagedResponseDTO<RecurringBookingDTO> listBySemesterPaged(Integer semesterId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<RecurringBooking> result = recurringBookingRepository.findBySemesterWithDetailsPaged(semesterId, pageable);
+        return toPagedResponse(result);
+    }
+
+    private PagedResponseDTO<RecurringBookingDTO> toPagedResponse(Page<RecurringBooking> page) {
+        return new PagedResponseDTO<>(
+                page.getContent().stream().map(this::toDTO).toList(),
+                page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages(),
+                page.isLast()
         );
     }
 }
