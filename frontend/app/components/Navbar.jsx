@@ -1,9 +1,23 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-const menuLinks = [
-  { label: "Reservar Sala", href: "/" },
+const menuLinksPublic = [
+  { label: "Entrar", href: "/" },
   { label: "Contato", href: "/contato" },
+];
+
+const menuLinksTeacher = [
+  { label: "Reservar Sala", href: "/solicitar-reserva" },
+  { label: "Minhas Reservas", href: "/minhas-reservas" },
+  { label: "Contato", href: "/contato" },
+];
+
+const menuLinksCoordinator = [
+  { label: "Grade de Reservas", href: "/visualizacao-reservas" },
+  { label: "Solicitações", href: "/coordenador-solicitacoes" },
+  { label: "Todas as Reservas", href: "/todas-reservas" },
+  { label: "Reserva Recorrente", href: "/reserva-recorrente" },
+  { label: "Configurações", href: "/configuracao" },
 ];
 
 export default function Navbar({ activePage }) {
@@ -15,6 +29,12 @@ export default function Navbar({ activePage }) {
   const authlevel = typeof window !== "undefined" ? localStorage.getItem("authlevel") : null;
   const userAreaPath = authlevel === "1" ? "/coordenador" : "/professor";
   const userAreaLabel = authlevel === "1" ? "Área do Coordenador" : "Área do Professor";
+
+  const menuLinks = !token
+    ? menuLinksPublic
+    : authlevel === "1"
+    ? menuLinksCoordinator
+    : menuLinksTeacher;
 
   function handleLogout() {
     if (typeof window !== "undefined") {

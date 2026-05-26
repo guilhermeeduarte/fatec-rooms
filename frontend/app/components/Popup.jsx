@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import './Popup.css';
 
-const Popup = ({ message, onClose, duration = 3000, type = 'success' }) => {
+const Popup = ({ message, onClose, duration, type = 'success' }) => {
+  const defaultDuration = type === 'error' ? 8000 : 3000;
+  duration = duration ?? defaultDuration;
     useEffect(() => {
         const timer = setTimeout(() => {
             onClose();

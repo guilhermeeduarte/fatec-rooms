@@ -61,11 +61,11 @@ body {
 /* =============================================
    Acessibilidade
 ============================================= */
-button:focus,
-a:focus,
-input:focus {
-  outline: 3px solid #2563EB;
-  outline-offset: 3px;
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgba(0,0,0,0.2);
+  outline-offset: 2px;
 }
 
 /*----daltonismo---*/
@@ -3600,11 +3600,11 @@ body {
   border: none;
 }
 
-button:focus,
-a:focus,
-input:focus {
-  outline: 3px solid #2563EB;
-  outline-offset: 3px;
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgba(0,0,0,0.2);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -6007,7 +6007,14 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
 
   .gr-slot-th__e {
     display: none;
+    
+.dia-avaliacao {
+    background-color: var(--magenta-soft) !important;
+    color: var(--gray-800) !important;
+    border-radius: 20%;
+}
 /* Cor para dias de avaliação (magenta) */
+
 .dia-avaliacao {
     background-color: var(--magenta-soft) !important;
     color: var(--gray-800) !important;
@@ -6537,7 +6544,7 @@ footer, .Footer {
 .tr-card--recusada { border-left-color: #ef4444; opacity: .88; }
 
 /* destaque extra para recorrentes */
-.tr-card--recorrente { border-top: 2px solid #3b82f6; }
+
 
 /* ── Badge de tipo ───────────────────────── */
 .tr-badge {

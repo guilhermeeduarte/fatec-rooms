@@ -243,6 +243,13 @@ export default function SolicitaReserva() {
             setShowErrorPopup(true);
             return;
         }
+        const selectedDate = new Date(form.dataISO + "T00:00:00");
+        const today = new Date(); today.setHours(0,0,0,0);
+        if (selectedDate < today) {
+            setError("Não é possível fazer reservas em datas passadas.");
+            setShowErrorPopup(true);
+            return;
+        }
         if (isHolidayDate(form.dataISO)) {
             const h = holidayByDate[form.dataISO];
             setError(`Não é possível reservar em feriados. "${h?.name || "Feriado"}" — ${form.data}.`);
@@ -325,6 +332,12 @@ export default function SolicitaReserva() {
                     <Calendar
                         onChange={value => {
                             const isoDate = getISOFromDate(value);
+                            const today = new Date(); today.setHours(0,0,0,0);
+                            if (value < today) {
+                                setError("Não é possível fazer reservas em datas passadas.");
+                                setShowErrorPopup(true);
+                                return;
+                            }
                             if (isHolidayDate(isoDate)) {
                                 setError(`Este dia é feriado: "${holidayByDate[isoDate]?.name || "Feriado"}". Selecione outra data.`);
                                 setShowErrorPopup(true);

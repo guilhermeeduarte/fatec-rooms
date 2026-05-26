@@ -255,7 +255,7 @@ export default function TodasReservas() {
           <div className="tr-filters__row">
             <input
               type="text"
-              placeholder="🔍  Buscar por sala, motivo, professor ou status…"
+              placeholder="🔍  Buscar por sala, motivo, solicitante ou status…"
               value={busca}
               onChange={e => setBusca(e.target.value)}
               className="tr-filters__search"
@@ -300,7 +300,7 @@ export default function TodasReservas() {
             <div className="tr-filters__advanced">
               <input
                 type="text"
-                placeholder="Professor / pessoa"
+                placeholder="Solicitante"
                 value={filtrosAvancados.pessoa}
                 onChange={e => setFiltrosAvancados({ ...filtrosAvancados, pessoa: e.target.value })}
               />
@@ -372,7 +372,7 @@ export default function TodasReservas() {
                   <span className="tr-field__value">{reserva.periodo || "—"}</span>
                 </div>
                 <div className="tr-field">
-                  <span className="tr-field__label">Professor</span>
+                  <span className="tr-field__label">Solicitante</span>
                   <span className="tr-field__value">{reserva.professor}</span>
                 </div>
                 <div className="tr-field">

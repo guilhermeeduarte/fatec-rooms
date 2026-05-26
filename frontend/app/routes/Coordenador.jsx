@@ -5,25 +5,6 @@ import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 
 const menuActions = [
-
-  {
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
-    title: "Configurações",
-    desc: "Configure o sistema",
-    to: "/configuracao",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
-    title: "Gerenciar Salas",
-    desc: "Adicionar, editar ou desativar salas",
-    to: "/gerenciar-salas",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
-    title: "Professores",
-    desc: "Cadastrar e gerenciar acesso",
-    to: "/confirmar",
-  },
   {
     icon: <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M11 20H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2v10" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>,
     title: "Solicitações de Reserva",
@@ -32,15 +13,15 @@ const menuActions = [
   },
   {
     icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
-    title: "Todas as Reservas",
-    desc: "Visualize todas as reservas",
-    to: "/todas-reservas",
+    title: "Grade de Reservas",
+    desc: "Visualize a grade completa do dia",
+    to: "/grade-reservas",
   },
   {
-    icon: <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
-    title: "Relatórios",
-    desc: "Uso de salas e estatísticas",
-    to: "/relatorio-reservas",
+    icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
+    title: "Todas as Reservas",
+    desc: "Visualize e gerencie todas as reservas",
+    to: "/todas-reservas",
   },
   {
     icon: <svg viewBox="0 0 24 24">
@@ -53,11 +34,17 @@ const menuActions = [
     desc: "Crie reservas que se repetem semanalmente",
     to: "/reserva-recorrente",
   },
-    {
+  {
     icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
     title: "Reservar Sala",
-    desc: "Reserva com aprovação imediata (coordenador)",
+    desc: "Reserva com aprovação imediata",
     to: "/solicita-reserva-coordenador",
+  },
+  {
+    icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
+    title: "Gerenciar Salas",
+    desc: "Adicionar, editar ou desativar salas",
+    to: "/gerenciar-salas",
   },
   {
     icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
@@ -65,10 +52,29 @@ const menuActions = [
     desc: "Cadastrar e gerenciar acesso",
     to: "/gerenciar-usuarios",
   },
+  {
+    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
+    title: "Professores",
+    desc: "Aprovar cadastros pendentes",
+    to: "/confirmar",
+  },
+  {
+    icon: <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
+    title: "Relatórios",
+    desc: "Uso de salas e estatísticas",
+    to: "/relatorio-reservas",
+  },
+  {
+    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
+    title: "Configurações",
+    desc: "Configure o sistema",
+    to: "/configuracao",
+  },
 ];
 
 const statusLabels = {
   APPROVED: "Confirmada",
+  ACTIVE: "Ativa",
   PENDING: "Pendente",
   CANCELLED: "Cancelada",
   REJECTED: "Recusada",
@@ -76,9 +82,15 @@ const statusLabels = {
 
 const statusClasses = {
   APPROVED: "status-ok",
+  ACTIVE: "status-ok",
   PENDING: "status-pend",
   CANCELLED: "status-cancel",
   REJECTED: "status-cancel",
+};
+
+const WEEKDAY_LABELS = {
+  MONDAY: "Seg", TUESDAY: "Ter", WEDNESDAY: "Qua",
+  THURSDAY: "Qui", FRIDAY: "Sex", SATURDAY: "Sáb",
 };
 
 function formatDate(isoDate) {
@@ -100,6 +112,7 @@ export default function Coordenador() {
   const [todayBookings, setTodayBookings] = useState([]);
   const [pendingBookings, setPendingBookings] = useState([]);
   const [recentBookings, setRecentBookings] = useState([]);
+  const [recentRecurring, setRecentRecurring] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -120,12 +133,13 @@ export default function Coordenador() {
       const today = new Date().toISOString().slice(0, 10);
 
       try {
-        const [roomsResp, usersResp, todayResp, recentResp, pendingResp] = await Promise.all([
+        const [roomsResp, usersResp, todayResp, recentResp, pendingResp, recurringResp] = await Promise.all([
           fetch('/api/rooms', { headers }),
           fetch('/api/admin/users', { headers }),
           fetch(`/api/bookings/admin/by-date?date=${today}`, { headers }),
           fetch('/api/bookings/admin/all?page=0&size=5', { headers }),
           fetch('/api/bookings/admin/pending?page=0&size=50', { headers }),
+          fetch('/api/recurring-bookings?page=0&size=5', { headers }),
         ]);
 
         if (!roomsResp.ok) throw new Error('Falha ao buscar salas');
@@ -139,12 +153,14 @@ export default function Coordenador() {
         const todayData = await todayResp.json();
         const recentData = await recentResp.json();
         const pendingData = await pendingResp.json();
+        const recurringData = recurringResp.ok ? await recurringResp.json() : { content: [] };
 
         setRooms(roomsData || []);
         setProfessors((usersData || []).filter((user) => user.authlevel === 2));
         setTodayBookings(todayData.content ?? todayData);
         setRecentBookings(recentData.content ?? recentData);
         setPendingBookings(pendingData.content ?? pendingData);
+        setRecentRecurring(recurringData.content ?? recurringData ?? []);
       } catch (err) {
         setError(err.message || 'Erro ao carregar painel do coordenador.');
       } finally {
@@ -199,6 +215,12 @@ export default function Coordenador() {
     );
   }
 
+  // Combine reservas simples + recorrentes recentes (até 5 total)
+  const allRecent = [
+    ...recentBookings.map((b) => ({ ...b, _type: "simple" })),
+    ...recentRecurring.map((b) => ({ ...b, _type: "recurring" })),
+  ].slice(0, 5);
+
   return (
     <>
       <Navbar activePage="Área do Coordenador" />
@@ -211,113 +233,118 @@ export default function Coordenador() {
       />
 
       <main className="content dashboard-page">
-        <div className="dashboard-top-grid">
 
-          {/* Coluna principal */}
-          <div>
-            {/* Estatísticas */}
-            <div className="stats-row">
-              {stats.map((s) => (
-                <div key={s.label} className={`stat-card ${s.highlight ? "highlight" : ""}`}>
-                  <div className="stat-icon">{s.icon}</div>
-                  <div className="stat-number">{s.number}</div>
-                  <div className="stat-label">{s.label}</div>
-                </div>
-              ))}
+        {/* Estatísticas */}
+        <div className="stats-row">
+          {stats.map((s) => (
+            <div key={s.label} className={`stat-card ${s.highlight ? "highlight" : ""}`}>
+              <div className="stat-icon">{s.icon}</div>
+              <div className="stat-number">{s.number}</div>
+              <div className="stat-label">{s.label}</div>
             </div>
-            {/* alerta de reservas pendentes */}
-            {pendingBookings.length > 0 && (
-              <div className="alert-card">
-                <div className="alert-icon">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                    <line x1="12" y1="9" x2="12" y2="13" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                </div>
-                <div className="alert-text">
-                  <h4>{pendingBookings.length} reservas aguardando aprovação</h4>
-                  <p>Professores estão aguardando sua confirmação.</p>
-                </div>
+          ))}
+        </div>
+
+        {/* alerta de reservas pendentes */}
+        {pendingBookings.length > 0 && (
+          <div className="alert-card">
+            <div className="alert-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </div>
+            <div className="alert-text">
+              <h4>{pendingBookings.length} reservas aguardando aprovação</h4>
+              <p>Professores estão aguardando sua confirmação.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Menu de ações */}
+        <div className="section-title">Ações rápidas</div>
+        <div className="menu-grid">
+          {menuActions.map((action) => (
+            <Link key={action.title} className="menu-card" to={action.to}>
+              <div className="menu-icon">{action.icon}</div>
+              <h3>{action.title}</h3>
+              <p>{action.desc}</p>
+            </Link>
+          ))}
+        </div>
+
+        {/* Reservas recentes */}
+        <div className="section-title section-title--top-space">
+          Reservas recentes
+          <Link className="see-all" to="/todas-reservas">Ver todas</Link>
+        </div>
+
+        <div className="reservas-list">
+          {allRecent.length === 0 ? (
+            <div className="reserva-item">
+              <div className="reserva-info">
+                <div className="reserva-sala">Nenhuma reserva recente encontrada.</div>
               </div>
-            )}
-
-            {/* Menu de ações */}
-            <div className="section-title">Ações rápidas</div>
-            <div className="menu-grid">
-              {menuActions.map((action) => (
-                <Link key={action.title} className="menu-card" to={action.to}>
-                  <div className="menu-icon">{action.icon}</div>
-                  <h3>{action.title}</h3>
-                  <p>{action.desc}</p>
-                </Link>
-              ))}
             </div>
+          ) : (
+            allRecent.map((booking) => {
+              const isRecurring = booking._type === "recurring";
+              const statusKey = isRecurring ? (booking.status || "ACTIVE") : booking.status;
+              const professor = booking.userDisplayName || booking.username || booking.createdByUsername || "—";
 
-            {/* Reservas recentes */}
-            <div className="section-title section-title--top-space">
-              Reservas recentes
-              <Link className="see-all" to="/todas-reservas">Ver todas</Link>
-            </div>
-
-            <div className="reservas-list">
-              {recentBookings.length === 0 ? (
-                <div className="reserva-item">
-                  <div className="reserva-info">
-                    <div className="reserva-sala">Nenhuma reserva recente encontrada.</div>
-                  </div>
-                </div>
-              ) : (
-                recentBookings.map((booking) => (
-                  <div key={booking.id} className="reserva-item">
-                    <div className={`reserva-dot ${statusClasses[booking.status] || "dot-green"}`} />
+              if (isRecurring) {
+                const days = (booking.weekDays || []).map((d) => WEEKDAY_LABELS[d] || d).join(", ");
+                const firstPeriod = (booking.periods || [])[0];
+                const lastPeriod = (booking.periods || [])[(booking.periods || []).length - 1];
+                return (
+                  <div key={`rec-${booking.id}`} className="reserva-item">
+                    <div className={`reserva-dot ${statusClasses[statusKey] || "dot-green"}`} />
                     <div className="reserva-info">
-                      <div className="reserva-sala">{booking.roomName} — {booking.roomLocation}</div>
-                      <div className="reserva-prof">{booking.userDisplayName || booking.username}</div>
+                      <div className="reserva-sala">
+                        {booking.roomName}
+                        {booking.roomLocation ? ` — ${booking.roomLocation}` : ""}
+                        <span style={{ marginLeft: 8, fontSize: "0.72rem", background: "#f3e8ff", color: "#7c3aed", borderRadius: 6, padding: "1px 7px", fontWeight: 600 }}>Recorrente</span>
+                      </div>
+                      <div className="reserva-prof">{professor} · {days}</div>
                     </div>
                     <div className="reserva-time">
-                      {formatDate(booking.bookingDate)}<br />
-                      {booking.periods && booking.periods.length > 0 ? (
-                        <>
-                          {formatTime(booking.periods[0].periodStart)}–{formatTime(booking.periods[booking.periods.length - 1].periodEnd)}
-                        </>
-                      ) : (
-                        "--:-- – --:--"
-                      )}
-                      <div className={`reserva-status ${statusClasses[booking.status] || "status-ok"}`}>
-                        {statusLabels[booking.status] || booking.status}
+                      {days || "Recorrente"}<br />
+                      {firstPeriod
+                        ? <>{formatTime(firstPeriod.periodStart)}–{formatTime(lastPeriod?.periodEnd)}</>
+                        : "--:-- – --:--"}
+                      <div className={`reserva-status ${statusClasses[statusKey] || "status-ok"}`}>
+                        {statusLabels[statusKey] || statusKey}
                       </div>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
+                );
+              }
 
-          {/* Sidebar */}
-          <aside className="dashboard-sidebar">
-            <div className="dashboard-panel summary-card">
-              <h3>Resumo rápido</h3>
-              <div className="summary-grid">
-                <div>
-                  <span>Salas ativas</span>
-                  <strong>{rooms.length}</strong>
+              return (
+                <div key={`bk-${booking.id}`} className="reserva-item">
+                  <div className={`reserva-dot ${statusClasses[statusKey] || "dot-green"}`} />
+                  <div className="reserva-info">
+                    <div className="reserva-sala">{booking.roomName} — {booking.roomLocation}</div>
+                    <div className="reserva-prof">{professor}</div>
+                  </div>
+                  <div className="reserva-time">
+                    {formatDate(booking.bookingDate)}<br />
+                    {booking.periods && booking.periods.length > 0 ? (
+                      <>
+                        {formatTime(booking.periods[0].periodStart)}–{formatTime(booking.periods[booking.periods.length - 1].periodEnd)}
+                      </>
+                    ) : (
+                      "--:-- – --:--"
+                    )}
+                    <div className={`reserva-status ${statusClasses[statusKey] || "status-ok"}`}>
+                      {statusLabels[statusKey] || statusKey}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span>Reservas hoje</span>
-                  <strong>{todayBookings.length}</strong>
-                </div>
-                <div>
-                  <span>Professores cadastrados</span>
-                  <strong>{professors.length}</strong>
-                </div>
-                <div>
-                  <span>Reservas pendentes</span>
-                  <strong>{pendingBookings.length}</strong>
-                </div>
-              </div>
-            </div>
-          </aside>
+              );
+            })
+          )}
         </div>
       </main>
 

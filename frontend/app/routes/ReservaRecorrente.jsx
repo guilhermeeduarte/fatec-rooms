@@ -136,7 +136,7 @@ export default function ReservaRecorrente() {
     });
   }, [selectedClassGroup, activePeriods]);
 
-  // Auto-seleciona períodos quando a turma muda
+  // Auto-seleciona períodos E dias da semana quando a turma muda
   useEffect(() => {
     if (!selectedClassGroup) {
       setAutoSelectedPeriodIds([]);
@@ -144,8 +144,18 @@ export default function ReservaRecorrente() {
     }
     const ids = shiftPeriods.map((p) => p.id);
     setAutoSelectedPeriodIds(ids);
+
+    // Auto-seleciona dias da semana baseado no turno
+    // Manhã/Tarde/Noite → Seg–Sex por padrão; Sábado só se hasSaturday
+    const shift = selectedClassGroup.shift;
+    const defaultDays = ["SEG", "TER", "QUA", "QUI", "SEX"];
+    const autoWeekDays = selectedClassGroup.hasSaturday
+      ? [...defaultDays, "SAB"]
+      : defaultDays;
+
     setForm((prev) => ({
       ...prev,
+      weekDays: autoWeekDays,
       // mantém sábados já marcados manualmente, substitui os do turno
       periodIds: [
         ...ids,
@@ -363,8 +373,13 @@ export default function ReservaRecorrente() {
   function selectAllShiftPeriods() {
     const ids = shiftPeriods.map((p) => p.id);
     setAutoSelectedPeriodIds(ids);
+    const defaultDays = ["SEG", "TER", "QUA", "QUI", "SEX"];
+    const autoWeekDays = selectedClassGroup?.hasSaturday
+      ? [...defaultDays, "SAB"]
+      : defaultDays;
     setForm((prev) => ({
       ...prev,
+      weekDays: autoWeekDays,
       periodIds: [
         ...ids,
         ...prev.periodIds.filter((id) => {
@@ -550,7 +565,7 @@ export default function ReservaRecorrente() {
                     recurringBookings.map((item) => (
                         <p key={item.id}>
                     <span className="hora">
-                      {item.courseAbbreviation} • {item.classGroupLabel} • {item.weekDays.map((d) => d.substring(0, 3)).join(", ")}
+                      {item.courseName || item.courseAbbreviation} • {item.classGroupLabel} • {item.weekDays.map((d) => d.substring(0, 3)).join(", ")}
                     </span>
                           <span className="prof">
                       {item.roomName} • {item.periods.map((p) => p.periodName).join(", ")}
@@ -683,7 +698,7 @@ export default function ReservaRecorrente() {
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "0.8rem", color: "#1d4ed8" }}>
-                      ✓ Períodos do turno <strong>{shiftLabel}</strong> pré-selecionados automaticamente.
+                      ✓ Períodos e dias da semana do turno <strong>{shiftLabel}</strong> pré-selecionados automaticamente.
                     </span>
                       </div>
                       <button
@@ -712,7 +727,14 @@ export default function ReservaRecorrente() {
                     <button
                         type="button"
                         style={{ fontSize: 12, padding: "2px 8px", borderRadius: 6, border: "1px solid #ccc", cursor: "pointer", background: "white" }}
-                        onClick={() => setForm((prev) => ({ ...prev, periodIds: filteredPeriods.map((p) => p.id) }))}
+                        onClick={() => {
+                          // Selecionar todos respeita o turno: só períodos do turno + sábados se SAB selecionado
+                          const shiftIds = shiftPeriods.map((p) => p.id);
+                          const satIds = form.weekDays.includes("SAB")
+                            ? activePeriods.filter(isSaturdayOnlyPeriod).map((p) => p.id)
+                            : [];
+                          setForm((prev) => ({ ...prev, periodIds: [...new Set([...shiftIds, ...satIds])] }));
+                        }}
                     >
                       Selecionar todos
                     </button>
@@ -725,25 +747,22 @@ export default function ReservaRecorrente() {
                     </button>
                   </div>
 
-                  {filteredPeriods.length === 0 && (
+                  {/* Aviso quando nenhuma turma selecionada */}
+                  {!selectedClassGroup && (
                       <div style={{ padding: "0.5rem", textAlign: "center", color: "#888" }}>
-                        {!form.weekDays.includes("SAB")
-                            ? "Nenhum período disponível."
-                            : "Nenhum período encontrado."}
+                        Selecione uma turma para ver os períodos disponíveis.
                       </div>
                   )}
 
-                  {/* Períodos normais (não sábado) */}
-                  {filteredPeriods.filter((p) => !isSaturdayOnlyPeriod(p)).length > 0 && (
+                  {/* Períodos normais (não sábado), filtrados pelo turno da turma */}
+                  {selectedClassGroup && shiftPeriods.length > 0 && (
                       <div>
-                        {selectedClassGroup && shiftLabel && (
+                        {shiftLabel && (
                             <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                               Turno {shiftLabel}
                             </div>
                         )}
-                        {filteredPeriods
-                            .filter((p) => !isSaturdayOnlyPeriod(p))
-                            .map((period) => {
+                        {shiftPeriods.map((period) => {
                               const isChecked = form.periodIds.includes(period.id);
                               const isAuto = autoSelectedPeriodIds.includes(period.id);
                               return (
