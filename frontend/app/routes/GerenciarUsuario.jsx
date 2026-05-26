@@ -18,6 +18,11 @@ export default function GerenciarUsuario() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // --- Filtros ---
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filterTipo, setFilterTipo] = useState("todos");
+    const [filterStatus, setFilterStatus] = useState("todos");
+
     useEffect(() => {
         const authlevel = localStorage.getItem("authlevel");
         if (authlevel !== "1") {
@@ -84,6 +89,39 @@ export default function GerenciarUsuario() {
         loadUsers();
     }, [navigate]);
 
+    // --- Lógica de filtro ---
+    const usuariosSemSi = usuarios.filter((u) => currentUserId !== u.id);
+
+    const usuariosFiltrados = usuariosSemSi
+        .filter((u) => {
+            const query = searchQuery.trim().toLowerCase();
+            if (query === "") return true;
+            return (
+                u.nome.toLowerCase().includes(query) ||
+                u.email.toLowerCase().includes(query)
+            );
+        })
+        .filter((u) => {
+            if (filterTipo === "todos") return true;
+            return u.tipo === filterTipo;
+        })
+        .filter((u) => {
+            if (filterStatus === "todos") return true;
+            return filterStatus === "ativo" ? u.status === 1 : u.status === 0;
+        });
+
+    function clearFilters() {
+        setSearchQuery("");
+        setFilterTipo("todos");
+        setFilterStatus("todos");
+    }
+
+    const hasActiveFilters =
+        searchQuery.trim() !== "" ||
+        filterTipo !== "todos" ||
+        filterStatus !== "todos";
+
+    // --- Helpers de status ---
     function getStatusLabel(status) {
         return status === 1 ? "Ativo" : "Desativado";
     }
@@ -92,6 +130,7 @@ export default function GerenciarUsuario() {
         return status === 1 ? "status-ok" : "status-cancel";
     }
 
+    // --- Handlers de modal ---
     function handleOpenModal(usuario) {
         setSelectedUser(usuario);
         setShowModal(true);
@@ -213,61 +252,108 @@ export default function GerenciarUsuario() {
                     <h3>Usuários cadastrados</h3>
                 </div>
 
+                {/* Barra de busca e filtros — usa classes já existentes no app.css */}
+                <div className="filtros">
+                    <input
+                        type="text"
+                        placeholder="Buscar por nome ou e-mail..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+
+                    <select
+                        value={filterTipo}
+                        onChange={(e) => setFilterTipo(e.target.value)}
+                    >
+                        <option value="todos">Todos os tipos</option>
+                        <option value="Coordenador">Coordenador</option>
+                        <option value="Professor">Professor</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                    >
+                        <option value="todos">Todos os status</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="desativado">Desativado</option>
+                    </select>
+
+                    {hasActiveFilters && (
+                        <button
+                            className="btn-action btn-secondary"
+                            onClick={clearFilters}
+                        >
+                            Limpar filtros
+                        </button>
+                    )}
+                </div>
+
                 {error ? (
                     <div className="error-message">Erro: {error}</div>
-                ) : usuarios.length === 0 ? (
-                    <div className="empty-state">Nenhum usuário encontrado.</div>
-                ) : (
-                    <div className="reservas-list">
-                        {usuarios
-                            .filter((usuario) => currentUserId !== usuario.id)
-                            .map((usuario) => (
-                            <div key={usuario.id} className="reserva-item">
-                                <div className="usuario-info">
-                                    <div className="reserva-sala-user">{usuario.nome}</div>
-                                    <div className="usuario-detalhes">
-                                        <div className="usuario-box">
-                                            <span className="usuario-label">E-mail</span>
-                                            <span className="usuario-value">{usuario.email}</span>
-                                        </div>
-                                        <div className="usuario-box">
-                                            <span className="usuario-label">Tipo</span>
-                                            <span className="usuario-value">{usuario.tipo}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="room-actions">
-                                    <div className={`reserva-status ${getStatusClass(usuario.status)}`}>
-                                        {getStatusLabel(usuario.status)}
-                                    </div>
-                                    <div className="reserva-buttons">
-                                        <button
-                                            className="btn-action btn-secondary"
-                                            onClick={() => openEditModal(usuario)}
-                                        >
-                                            Editar
-                                        </button>
-                                        {usuario.status === 1 ? (
-                                            <button
-                                                className="btn-action btn-danger"
-                                                onClick={() => handleOpenModal(usuario)}
-                                            >
-                                                Desativar
-                                            </button>
-                                        ) : (
-                                            <button className="btn-action btn-secondary" disabled>
-                                                Desativado
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                ) : usuariosFiltrados.length === 0 ? (
+                    <div className="empty-state">
+                        {hasActiveFilters
+                            ? "Nenhum usuário corresponde aos filtros aplicados."
+                            : "Nenhum usuário encontrado."}
                     </div>
+                ) : (
+                    <>
+                        <p className="usuarios-count">
+                            {usuariosFiltrados.length} usuário{usuariosFiltrados.length !== 1 ? "s" : ""} encontrado{usuariosFiltrados.length !== 1 ? "s" : ""}
+                            {hasActiveFilters && " com os filtros aplicados"}
+                        </p>
+                        <div className="reservas-list">
+                            {usuariosFiltrados.map((usuario) => (
+                                <div key={usuario.id} className="reserva-item">
+                                    <div className="usuario-info">
+                                        <div className="reserva-sala-user">{usuario.nome}</div>
+                                        <div className="usuario-detalhes">
+                                            <div className="usuario-box">
+                                                <span className="usuario-label">E-mail</span>
+                                                <span className="usuario-value">{usuario.email}</span>
+                                            </div>
+                                            <div className="usuario-box">
+                                                <span className="usuario-label">Tipo</span>
+                                                <span className="usuario-value">{usuario.tipo}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="room-actions">
+                                        <div className={`reserva-status ${getStatusClass(usuario.status)}`}>
+                                            {getStatusLabel(usuario.status)}
+                                        </div>
+                                        <div className="reserva-buttons">
+                                            <button
+                                                className="btn-action btn-secondary"
+                                                onClick={() => openEditModal(usuario)}
+                                            >
+                                                Editar
+                                            </button>
+                                            {usuario.status === 1 ? (
+                                                <button
+                                                    className="btn-action btn-danger"
+                                                    onClick={() => handleOpenModal(usuario)}
+                                                >
+                                                    Desativar
+                                                </button>
+                                            ) : (
+                                                <button className="btn-action btn-secondary" disabled>
+                                                    Desativado
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
 
+            {/* Modal: desativar */}
             {showModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -293,6 +379,7 @@ export default function GerenciarUsuario() {
                 </div>
             )}
 
+            {/* Modal: editar */}
             {showEditModal && editingUser && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -355,6 +442,7 @@ export default function GerenciarUsuario() {
                 </div>
             )}
 
+            {/* Modal: confirmação de desativação */}
             {showConfirmModal && (
                 <div className="modal-overlay">
                     <div className="confirm-modal">
