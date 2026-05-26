@@ -5308,7 +5308,6 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
     flex: 0 0 calc(33.33% - 5px);
   }
 }
-<<<<<<< HEAD
 
 /* ══════════════════════════════════════════
    GRADE DE RESERVAS  — colar no app.css
@@ -6008,7 +6007,6 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
 
   .gr-slot-th__e {
     display: none;
-=======
 /* Cor para dias de avaliação (magenta) */
 .dia-avaliacao {
     background-color: var(--magenta-soft) !important;
@@ -6298,6 +6296,966 @@ footer, .Footer {
   }
   .info-reserva.completa {
     grid-template-columns: 1fr;
->>>>>>> 1aba35064b4e80f1c0f5233879af116c7a9d5e28
   }
+}
+  }
+}
+/* ═══════════════════════════════════════════
+   TODAS AS RESERVAS — TodasReservas.css
+   Prefixo: tr-   (evita colisão com app.css)
+═══════════════════════════════════════════ */
+
+/* ── Estrutura da página ─────────────────── */
+.tr-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--gray-50);
+}
+
+.tr-main {
+  flex: 1;                      /* empurra o footer para o final */
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Contador ────────────────────────────── */
+.tr-count {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-family: var(--font-main);
+  font-weight: 500;
+}
+
+/* ── Erro ────────────────────────────────── */
+.tr-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+/* ── Vazio ───────────────────────────────── */
+.tr-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  background: white;
+  border-radius: 14px;
+  border: 1.5px dashed #e2e8f0;
+}
+
+/* ═══════════════════════════════════════════
+   FILTROS
+═══════════════════════════════════════════ */
+.tr-filters {
+  background: white;
+  border-radius: 14px;
+  border: 1.5px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* linha de controles */
+.tr-filters__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: flex-end;
+}
+
+.tr-filters__row--dates {
+  align-items: flex-end;
+}
+
+/* campo de busca — cresce */
+.tr-filters__search {
+  flex: 1 1 260px;
+  min-width: 200px;
+  padding: 0.5rem 0.85rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #374151;
+  background: #f9fafb;
+  outline: none;
+  transition: border-color .15s;
+}
+.tr-filters__search:focus { border-color: var(--red); background: white; }
+
+/* selects */
+.tr-filters__select {
+  flex: 0 1 180px;
+  min-width: 140px;
+  padding: 0.5rem 0.85rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #374151;
+  background: #f9fafb;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.tr-filters__select:focus { border-color: var(--red); background: white; }
+
+/* grupos de data */
+.tr-filters__date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tr-filters__date-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  font-family: var(--font-main);
+}
+
+.tr-filters__date-group input[type="date"] {
+  padding: 0.45rem 0.75rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #374151;
+  background: #f9fafb;
+  outline: none;
+  transition: border-color .15s;
+}
+.tr-filters__date-group input[type="date"]:focus { border-color: var(--red); background: white; }
+
+/* botões de ação nos filtros */
+.tr-filters__actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
+.tr-filters__btn-toggle {
+  padding: 0.5rem 1rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.tr-filters__btn-toggle:hover { background: #f3f4f6; }
+
+.tr-filters__btn-clear {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--red);
+  color: white;
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.tr-filters__btn-clear:hover { background: var(--red-dark); }
+
+/* filtros avançados (colapsável) */
+.tr-filters__advanced {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.tr-filters__advanced input,
+.tr-filters__advanced select {
+  flex: 1 1 160px;
+  min-width: 130px;
+  padding: 0.5rem 0.85rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #374151;
+  background: #f9fafb;
+  outline: none;
+  transition: border-color .15s;
+}
+.tr-filters__advanced input:focus,
+.tr-filters__advanced select:focus { border-color: var(--red); background: white; }
+
+/* ═══════════════════════════════════════════
+   LISTA DE RESERVAS
+═══════════════════════════════════════════ */
+.tr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* ── Card ────────────────────────────────── */
+.tr-card {
+  position: relative;
+  background: white;
+  border-radius: 14px;
+  border: 1.5px solid #e5e7eb;
+  border-left: 5px solid #d1d5db;
+  padding: 1.1rem 1.25rem 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  transition: transform .18s, box-shadow .18s;
+  animation: fadeUp .35s ease both;
+}
+
+.tr-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.08);
+}
+
+/* cores da borda esquerda por status */
+.tr-card--ativa    { border-left-color: #22c55e; }
+.tr-card--pendente { border-left-color: #f59e0b; }
+.tr-card--cancelada{ border-left-color: #ef4444; opacity: .88; }
+.tr-card--recusada { border-left-color: #ef4444; opacity: .88; }
+
+/* destaque extra para recorrentes */
+.tr-card--recorrente { border-top: 2px solid #3b82f6; }
+
+/* ── Badge de tipo ───────────────────────── */
+.tr-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-bottom: 0.65rem;
+}
+
+.tr-badge--comum      { background: #fef9c3; color: #78350f; }
+.tr-badge--recorrente { background: #dbeafe; color: #1e40af; }
+
+/* ── Grid de campos ──────────────────────── */
+.tr-card__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.65rem 1.25rem;
+  align-items: start;
+}
+
+/* campo individual */
+.tr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tr-field--wide {
+  grid-column: span 2;
+}
+
+.tr-field--action {
+  display: flex;
+  align-items: flex-end;
+}
+
+.tr-field__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  font-family: var(--font-main);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.tr-field__value {
+  font-size: 0.875rem;
+  color: #1e293b;
+  font-family: var(--font-body);
+  word-break: break-word;
+}
+
+/* ── Badge de status ─────────────────────── */
+.tr-status {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.tr-status--ativa     { background: #dcfce7; color: #166534; }
+.tr-status--pendente  { background: #fef9c3; color: #92400e; }
+.tr-status--cancelada { background: #fee2e2; color: #991b1b; }
+.tr-status--recusada  { background: #fee2e2; color: #991b1b; }
+
+/* ── Botão cancelar ──────────────────────── */
+.tr-btn-cancel {
+  padding: 0.45rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #ef4444;
+  color: white;
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.tr-btn-cancel:hover    { background: #dc2626; }
+.tr-btn-cancel:disabled { background: #d1d5db; cursor: not-allowed; }
+
+/* ═══════════════════════════════════════════
+   CARREGAR MAIS
+═══════════════════════════════════════════ */
+.tr-loadmore {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0 1rem;
+}
+
+.tr-loadmore__btn {
+  padding: 0.65rem 2.5rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--red);
+  color: white;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, transform .15s;
+}
+.tr-loadmore__btn:hover    { background: var(--red-dark); transform: translateY(-1px); }
+.tr-loadmore__btn:disabled { background: #d1d5db; cursor: not-allowed; transform: none; }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVO
+═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .tr-main {
+    padding: 1rem 1rem 2.5rem;
+  }
+
+  .tr-filters__actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .tr-filters__btn-toggle,
+  .tr-filters__btn-clear {
+    flex: 1;
+    text-align: center;
+  }
+
+  .tr-card__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tr-field--wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .tr-card__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tr-field--wide {
+    grid-column: span 1;
+  }
+
+  .tr-filters__date-group {
+    width: 100%;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   GRADE DE RESERVAS  —  gr-*
+   Referência visual: imagem do WhatsApp (grade com salas × períodos)
+══════════════════════════════════════════════════════════════════ */
+
+/* ── Página ──────────────────────────────────────────────────── */
+.gr-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+.gr-main {
+  flex: 1;
+  padding: 1.5rem 2rem 3rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Breadcrumb ───────────────────────────────────────────────── */
+.gr-breadcrumb {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  margin-bottom: 1.25rem;
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+.gr-breadcrumb__sep { color: #d1d5db; }
+.gr-breadcrumb__active { color: #374151; font-weight: 500; }
+
+/* ── Card ─────────────────────────────────────────────────────── */
+.gr-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  overflow: hidden;
+}
+
+/* ── Topo do card ─────────────────────────────────────────────── */
+.gr-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.gr-card__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.15rem;
+  line-height: 1.2;
+}
+.gr-card__subtitle {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  margin: 0;
+  text-transform: capitalize;
+}
+.gr-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* ── Botões ───────────────────────────────────────────────────── */
+.gr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  padding: 0.42rem 0.9rem;
+  line-height: 1;
+}
+.gr-btn--outline {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+.gr-btn--outline:hover { background: #f9fafb; }
+.gr-btn--icon {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 0.42rem 0.65rem;
+  font-size: 1rem;
+}
+.gr-btn--icon:hover { background: #f9fafb; }
+.gr-btn--red {
+  background: #dc2626;
+  border: none;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.48rem 1.1rem;
+}
+.gr-btn--red:hover { background: #b91c1c; }
+.gr-btn--red:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+
+/* ── Barra de filtros ─────────────────────────────────────────── */
+.gr-filterbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 1.5rem;
+  border-top: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+.gr-filterbar__date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.gr-filterbar__sep {
+  width: 1px;
+  height: 24px;
+  background: #e5e7eb;
+  flex-shrink: 0;
+  margin: 0 0.1rem;
+}
+
+/* Botões de navegação de data */
+.gr-nav-btn {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #374151;
+  transition: background 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+.gr-nav-btn:hover { background: #f3f4f6; }
+
+.gr-nav-date-btn {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.28rem 0.75rem;
+  height: 28px;
+  font-size: 0.82rem;
+  color: #374151;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.gr-nav-date-btn:hover { background: #f3f4f6; }
+
+.gr-select {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0 0.65rem;
+  height: 28px;
+  font-size: 0.82rem;
+  color: #374151;
+  background: #ffffff;
+  cursor: pointer;
+}
+.gr-search {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0 0.75rem;
+  height: 28px;
+  background: #ffffff;
+  flex: 1;
+  min-width: 180px;
+  box-sizing: border-box;
+}
+.gr-search input {
+  border: none;
+  outline: none;
+  font-size: 0.82rem;
+  width: 100%;
+  background: transparent;
+}
+
+/* ── Legenda ──────────────────────────────────────────────────── */
+.gr-legend {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.79rem;
+  color: #6b7280;
+  padding: 0.55rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+.gr-legend__title { font-weight: 700; color: #374151; font-size: 0.77rem; letter-spacing: 0.03em; }
+.gr-legend__item { display: flex; align-items: center; gap: 0.4rem; }
+.gr-legend__dot {
+  width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex-shrink: 0;
+}
+.gr-legend__dot--recurring { background: #a855f7; }
+.gr-legend__dot--simple    { background: #f59e0b; }
+.gr-legend__dot--holiday   { background: #d1d5db; }
+
+/* ── Banners ──────────────────────────────────────────────────── */
+.gr-banner {
+  margin: 0.75rem 1.5rem;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+.gr-banner--holiday { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+.gr-banner--success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+
+/* ── Corpo (tabela) ───────────────────────────────────────────── */
+.gr-card__body { overflow-x: auto; }
+
+/* ── Rodapé ───────────────────────────────────────────────────── */
+.gr-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TABELA
+══════════════════════════════════════════════════════════════════ */
+.gr-table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+.gr-table {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
+}
+
+/* ── Cabeçalho linha 1: grupos Manhã / Tarde / Noite ──────────── */
+.gr-thead-group { background: #ffffff; }
+
+/* Célula sala no cabeçalho */
+.gr-th-sala {
+  width: 120px;
+  min-width: 120px;
+  background: #ffffff;
+  border: none;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Células de grupo */
+.gr-th-group {
+  text-align: center;
+  padding: 8px 4px 7px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  background: #ffffff;
+  border: none;
+  /* underline colorida via border-bottom */
+  border-bottom: 3px solid transparent;
+  border-right: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+/* Última célula de grupo sem separador */
+.gr-th-group:last-child { border-right: none; }
+
+/* Manhã — laranja */
+.gr-th-group--manham {
+  color: #f97316;
+  border-bottom-color: #f97316;
+}
+/* Tarde — azul */
+.gr-th-group--tarde {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+/* Noite — roxo/índigo */
+.gr-th-group--noite {
+  color: #6366f1;
+  border-bottom-color: #6366f1;
+}
+
+/* ── Cabeçalho linha 2: horários individuais ──────────────────── */
+.gr-thead-slots { background: #fafafa; }
+.gr-th-slot {
+  min-width: 74px;
+  width: 74px;
+  text-align: center;
+  padding: 5px 2px 6px;
+  background: #fafafa;
+  border: 1px solid #e9ecef;
+  border-top: none;
+  vertical-align: middle;
+}
+.gr-th-slot__h {
+  display: block;
+  font-weight: 700;
+  font-size: 0.76rem;
+  color: #374151;
+  line-height: 1.25;
+}
+.gr-th-slot__e {
+  display: block;
+  font-size: 0.67rem;
+  color: #9ca3af;
+  line-height: 1.1;
+}
+
+/* ── Linhas do corpo ──────────────────────────────────────────── */
+.gr-tr { border-bottom: 1px solid #f3f4f6; }
+.gr-tr:last-child { border-bottom: none; }
+
+/*/* Célula sala — para sobrescrever qualquer estilo global */
+.gr-td-sala {
+  width: 120px;
+  min-width: 120px;
+  max-width: 140px;
+  padding: 0 0.75rem;
+  height: 54px;
+  vertical-align: middle;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #f3f4f6;
+  background: #ffffff !important;
+}
+.gr-td-sala:hover {
+  background: #ffffff !important;
+  cursor: default;
+}
+.gr-sala__nome {
+  display: block;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #1f2937;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gr-sala__loc {
+  display: block;
+  font-size: 0.7rem;
+  /* mesma cor azul-claro da imagem */
+  color: #60a5fa;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Células de dados */
+.gr-td {
+  height: 54px;
+  padding: 3px 4px;
+  border: 1px dashed #e9ecef;
+  vertical-align: middle;
+}
+.gr-td--free { background: #ffffff; }
+.gr-td--free:hover { background: #f8fafc; cursor: pointer; }
+.gr-td--recurring,
+.gr-td--simple { padding: 3px 4px; }
+
+/* ── Blocos de reserva ────────────────────────────────────────── */
+.gr-block {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  min-height: 46px;
+  padding: 0 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+/* Recorrente → roxo */
+.gr-block--recurring { background: #a855f7; }
+/* Avulso → âmbar */
+.gr-block--simple    { background: #f59e0b; }
+/* Feriado */
+.gr-block--holiday {
+  background: #f3f4f6;
+  border: 1px dashed #d1d5db;
+  justify-content: center;
+}
+.gr-block__label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.gr-block--holiday .gr-block__label { color: #6b7280; }
+
+/* ── Estado vazio / loading / erro ────────────────────────────── */
+.gr-state {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+.gr-state--error { color: #b91c1c; }
+.gr-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+.gr-loading__spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #a855f7;
+  border-radius: 50%;
+  animation: gr-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes gr-spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════════════════════════════════
+   TOOLTIP
+══════════════════════════════════════════════════════════════════ */
+.gr-tip {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
+  min-width: 160px;
+  max-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 4px solid #a855f7;
+}
+.gr-tip--simple  { border-left-color: #f59e0b; }
+.gr-tip--holiday { border-left-color: #d1d5db; }
+.gr-tip strong   { font-size: 0.85rem; color: #111827; }
+.gr-tip__badge {
+  display: inline-block;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: fit-content;
+}
+.gr-tip__badge--recurring { background: #f3e8ff; color: #7c3aed; }
+.gr-tip__badge--simple    { background: #fef3c7; color: #92400e; }
+.gr-tip__badge--holiday   { background: #f3f4f6; color: #6b7280; }
+.gr-tip__hora  { font-size: 0.75rem; color: #6b7280; }
+.gr-tip__turma { font-size: 0.82rem; color: #374151; font-weight: 600; }
+
+/* ══════════════════════════════════════════════════════════════════
+   MINI CALENDÁRIO
+══════════════════════════════════════════════════════════════════ */
+.gr-minical {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 200;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,.12);
+  width: 240px;
+}
+.gr-minical__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.gr-minical__nav button {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.1rem; color: #374151; padding: 0.2rem 0.5rem;
+}
+.gr-minical__nav span {
+  font-size: 0.88rem; font-weight: 600; color: #111827; text-transform: capitalize;
+}
+.gr-minical__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.gr-minical__wd {
+  text-align: center; font-size: 0.68rem; color: #9ca3af;
+  font-weight: 600; padding: 2px 0;
+}
+.gr-minical__day {
+  background: none; border: none; border-radius: 50%;
+  width: 30px; height: 30px; cursor: pointer; font-size: 0.78rem;
+  color: #374151; transition: background 0.15s;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto;
+}
+.gr-minical__day:hover:not(:disabled) { background: #fee2e2; color: #dc2626; }
+.gr-minical__day--today { background: #dc2626; color: #fff; font-weight: 700; }
+.gr-minical__day--empty { visibility: hidden; cursor: default; }
+.gr-minical__day:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════════════════════════════
+   FULLSCREEN
+══════════════════════════════════════════════════════════════════ */
+.gr-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+.gr-fullscreen__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-shrink: 0;
+}
+.gr-fullscreen__title { font-weight: 700; font-size: 1rem; color: #111827; }
+.gr-fullscreen__body { flex: 1; overflow: auto; padding: 1rem; }
+
+/* ══════════════════════════════════════════════════════════════════
+   PRINT
+══════════════════════════════════════════════════════════════════ */
+@media print {
+  .gr-filterbar, .gr-card__actions, .gr-card__footer,
+  .gr-legend, .gr-breadcrumb, .gr-banner { display: none; }
+  .gr-card { border: none; box-shadow: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVO
+══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .gr-main { padding: 1rem; }
+  .gr-card__top { flex-direction: column; }
+  .gr-filterbar { gap: 0.4rem; }
+  .gr-search { min-width: 140px; }
+  .gr-th-slot { min-width: 56px; width: 56px; }
+  .gr-td-sala, .gr-th-sala { width: 90px; min-width: 90px; max-width: 90px; }
 }

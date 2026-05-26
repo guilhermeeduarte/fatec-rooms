@@ -1,163 +1,92 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 import "../styles/app.css";
 
-const TIME_SLOTS = [
-  { id: "t1",  label: "07:30", end: "08:20", period: "Manhã" },
-  { id: "t2",  label: "08:20", end: "09:10", period: "Manhã" },
-  { id: "t3",  label: "09:10", end: "10:00", period: "Manhã" },
-  { id: "t4",  label: "10:10", end: "11:00", period: "Manhã" },
-  { id: "t5",  label: "11:00", end: "11:50", period: "Manhã" },
-  { id: "t6",  label: "13:00", end: "13:50", period: "Tarde" },
-  { id: "t7",  label: "13:50", end: "14:40", period: "Tarde" },
-  { id: "t8",  label: "14:50", end: "15:40", period: "Tarde" },
-  { id: "t9",  label: "15:40", end: "16:30", period: "Tarde" },
-  { id: "t10", label: "16:40", end: "17:30", period: "Tarde" },
-  { id: "t11", label: "19:20", end: "20:10", period: "Noite" },
-  { id: "t12", label: "20:10", end: "21:00", period: "Noite" },
-  { id: "t13", label: "21:10", end: "22:00", period: "Noite" },
-  { id: "t14", label: "22:00", end: "22:50", period: "Noite" },
+// ─────────────────────────────────────────────────────────────────────────
+// PERÍODOS PADRÃO — usados como fallback enquanto a API não retorna
+// (evita tabela em branco; serão substituídos pelos dados reais da API)
+// ─────────────────────────────────────────────────────────────────────────
+const DEFAULT_PERIODS = [
+  { periodId: 1,  periodName: "1º",  startTime: "07:30", endTime: "08:20" },
+  { periodId: 2,  periodName: "2º",  startTime: "08:20", endTime: "09:10" },
+  { periodId: 3,  periodName: "3º",  startTime: "09:10", endTime: "10:00" },
+  { periodId: 4,  periodName: "4º",  startTime: "10:10", endTime: "11:00" },
+  { periodId: 5,  periodName: "5º",  startTime: "11:00", endTime: "11:50" },
+  { periodId: 6,  periodName: "6º",  startTime: "13:00", endTime: "13:50" },
+  { periodId: 7,  periodName: "7º",  startTime: "13:50", endTime: "14:40" },
+  { periodId: 8,  periodName: "8º",  startTime: "14:50", endTime: "15:40" },
+  { periodId: 9,  periodName: "9º",  startTime: "15:40", endTime: "16:30" },
+  { periodId: 10, periodName: "10º", startTime: "16:40", endTime: "17:30" },
+  { periodId: 11, periodName: "11º", startTime: "19:20", endTime: "20:10" },
+  { periodId: 12, periodName: "12º", startTime: "20:10", endTime: "21:00" },
+  { periodId: 13, periodName: "13º", startTime: "21:10", endTime: "22:00" },
+  { periodId: 14, periodName: "14º", startTime: "22:00", endTime: "22:50" },
 ];
 
-const ROOMS = [
-  { id: "r1",  name: "Lab 111",         capacity: 30 },
-  { id: "r2",  name: "Lab 112",         capacity: 30 },
-  { id: "r3",  name: "Laboratório 101", capacity: 35 },
-  { id: "r4",  name: "Laboratório 102", capacity: 35 },
-  { id: "r5",  name: "Laboratório 103", capacity: 35 },
-  { id: "r6",  name: "Laboratório 201", capacity: 40 },
-  { id: "r7",  name: "Laboratório 202", capacity: 40 },
-  { id: "r8",  name: "Laboratório 203", capacity: 40 },
-  { id: "r9",  name: "T01",             capacity: 45 },
-  { id: "r10", name: "T02",             capacity: 45 },
-];
-
-const RESERVATIONS = [
-  { id:"res1",  roomId:"r1",  slotId:"t1",  span:5, class:"1º RH",               professor:"Prof. Ana Lima",       color:"recurring" },
-  { id:"res2",  roomId:"r1",  slotId:"t11", span:4, class:"1º AMS ADS",         professor:"Prof. Carlos Souza",   color:"recurring" },
-  { id:"res3",  roomId:"r2",  slotId:"t1",  span:5, class:"1º GE",              professor:"Prof. Maria Oliveira", color:"simple" },
-  { id:"res4",  roomId:"r2",  slotId:"t11", span:4, class:"2º AMS ADS",         professor:"Prof. João Silva",     color:"recurring" },
-  { id:"res5",  roomId:"r3",  slotId:"t1",  span:5, class:"4º DSM",             professor:"Prof. Rafael Costa",   color:"recurring" },
-  { id:"res8",  roomId:"r4",  slotId:"t1",  span:5, class:"2º DSM",             professor:"Prof. Lucas Ferreira", color:"recurring" },
-  { id:"res9",  roomId:"r4",  slotId:"t6",  span:4, class:"1º ADS Tarde",       professor:"Prof. Sandra Rocha",   color:"simple" },
-  { id:"res10", roomId:"r4",  slotId:"t11", span:3, class:"5º ADS Noite",       professor:"Prof. Paulo Mendes",   color:"recurring" },
-  { id:"res11", roomId:"r5",  slotId:"t1",  span:5, class:"6º DSM",             professor:"Prof. Carla Dias",     color:"recurring" },
-  { id:"res13", roomId:"r5",  slotId:"t11", span:3, class:"Luís Sasaki",        professor:"Prof. Luís Sasaki",    color:"recurring" },
-  { id:"res14", roomId:"r6",  slotId:"t1",  span:5, class:"3º Log",             professor:"Prof. Fátima Torres",  color:"recurring" },
-  { id:"res15", roomId:"r6",  slotId:"t6",  span:4, class:"3º ADS Tarde",       professor:"Prof. Eduardo Lopes",  color:"simple" },
-  { id:"res17", roomId:"r7",  slotId:"t1",  span:5, class:"1º DSM",             professor:"Prof. Vera Santos",    color:"recurring" },
-  { id:"res19", roomId:"r7",  slotId:"t11", span:3, class:"4º ADS Noite",       professor:"Prof. Tânia Braga",    color:"recurring" },
-  { id:"res20", roomId:"r8",  slotId:"t6",  span:4, class:"Josue Mario",        professor:"Prof. Josue Mario",    color:"simple" },
-  { id:"res21", roomId:"r9",  slotId:"t1",  span:5, class:"1º Log",             professor:"Prof. Rita Campos",    color:"recurring" },
-  { id:"res22", roomId:"r9",  slotId:"t11", span:4, class:"1º ADS Noite",       professor:"Prof. Nelson Vieira",  color:"recurring" },
-  { id:"res23", roomId:"r10", slotId:"t1",  span:5, class:"4º Log",             professor:"Prof. Helena Cruz",    color:"recurring" },
-  { id:"res24", roomId:"r10", slotId:"t6",  span:4, class:"4º COMEX Tarde",     professor:"Prof. Jorge Alves",    color:"simple" },
-];
-
-const COLOR_LABEL = {
-  recurring: "Recorrente",
-  simple: "Simples",
-};
-
-function getSlotIndex(id) {
-  return TIME_SLOTS.findIndex((s) => s.id === id);
+// ─────────────────────────────────────────────────────────────────────────
+// UTILITÁRIOS
+// ─────────────────────────────────────────────────────────────────────────
+function getISOFromDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
 }
 
-function Tooltip({ res, roomName, x, y }) {
-  if (!res) return null;
-
-  const start = TIME_SLOTS.find((s) => s.id === res.slotId);
-  const end = TIME_SLOTS[getSlotIndex(res.slotId) + res.span - 1];
-
-  return (
-    <div
-      className={`gr-tip gr-tip--${res.color}`}
-      style={{ left: x + 14, top: y - 8 }}
-    >
-      <strong>{roomName}</strong>
-
-      <span className={`gr-tip__badge gr-tip__badge--${res.color}`}>
-        {COLOR_LABEL[res.color]}
-      </span>
-
-      <span className="gr-tip__hora">
-        {start?.label} – {end?.end}
-      </span>
-
-      <span className="gr-tip__turma">{res.class}</span>
-    </div>
-  );
+function addDays(d, n) {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
 }
 
-/* ─── mini calendário ───────────────────────────────────────────────────── */
+function periodGroup(startTime) {
+  if (!startTime) return "Outro";
+  const h = parseInt(startTime.split(":")[0], 10);
+  if (h < 12) return "Manhã";
+  if (h < 18) return "Tarde";
+  return "Noite";
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// MINI CALENDÁRIO
+// ─────────────────────────────────────────────────────────────────────────
 function MiniCalendar({ onSelect, onClose }) {
-  const today = new Date(2026, 4, 25);
-
-  const [cur, setCur] = useState(
-    new Date(today.getFullYear(), today.getMonth(), 1)
-  );
-
+  const today = new Date();
+  const [cur, setCur] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const year = cur.getFullYear();
   const month = cur.getMonth();
-
-  const monthName = cur.toLocaleDateString("pt-BR", {
-    month: "long",
-    year: "numeric",
-  });
-
+  const monthName = cur.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  const cells = Array(firstDay)
-    .fill(null)
-    .concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
-
-  const weeks = [];
-
-  for (let i = 0; i < cells.length; i += 7) {
-    weeks.push(cells.slice(i, i + 7));
-  }
+  const cells = Array(firstDay).fill(null).concat(
+    Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  );
 
   return (
     <div className="gr-minical">
       <div className="gr-minical__nav">
-        <button onClick={() => setCur(new Date(year, month - 1, 1))}>
-          ‹
-        </button>
-
+        <button onClick={() => setCur(new Date(year, month - 1, 1))}>‹</button>
         <span>{monthName}</span>
-
-        <button onClick={() => setCur(new Date(year, month + 1, 1))}>
-          ›
-        </button>
+        <button onClick={() => setCur(new Date(year, month + 1, 1))}>›</button>
       </div>
-
       <div className="gr-minical__grid">
-        {["D", "S", "T", "Q", "Q", "S", "S"].map((d, i) => (
-          <span key={i} className="gr-minical__wd">
-            {d}
-          </span>
+        {["D","S","T","Q","Q","S","S"].map((d, i) => (
+          <span key={i} className="gr-minical__wd">{d}</span>
         ))}
-
-        {weeks.flat().map((day, i) => (
+        {cells.map((day, i) => (
           <button
             key={i}
-            className={`gr-minical__day${
-              day === today.getDate() &&
-              month === today.getMonth() &&
-              year === today.getFullYear()
-                ? " gr-minical__day--today"
-                : ""
-            }${!day ? " gr-minical__day--empty" : ""}`}
+            className={[
+              "gr-minical__day",
+              !day ? "gr-minical__day--empty" : "",
+              day && day === today.getDate() && month === today.getMonth() && year === today.getFullYear()
+                ? "gr-minical__day--today" : "",
+            ].join(" ")}
             disabled={!day}
-            onClick={() => {
-              if (day) {
-                onSelect(new Date(year, month, day));
-                onClose();
-              }
-            }}
+            onClick={() => { if (day) { onSelect(new Date(year, month, day)); onClose(); } }}
           >
             {day || ""}
           </button>
@@ -167,326 +96,589 @@ function MiniCalendar({ onSelect, onClose }) {
   );
 }
 
-function ScheduleGrid() {
-  const [tip, setTip] = useState({
-    res: null,
-    roomName: "",
-    x: 0,
-    y: 0,
-  });
+// ─────────────────────────────────────────────────────────────────────────
+// TOOLTIP
+// ─────────────────────────────────────────────────────────────────────────
+function Tooltip({ res, roomName, x, y }) {
+  if (!res) return null;
+  const isHoliday = res.status === "HOLIDAY";
+  const occ = res.occupant;
+  const type = occ?.type === "RECURRING" ? "recurring" : "simple";
+  return (
+    <div
+      className={`gr-tip gr-tip--${isHoliday ? "holiday" : type}`}
+      style={{ left: x + 14, top: y - 8 }}
+    >
+      <strong>{roomName}</strong>
+      {isHoliday && <span className="gr-tip__badge gr-tip__badge--holiday">🎉 Feriado</span>}
+      {occ && (
+        <>
+          <span className={`gr-tip__badge gr-tip__badge--${type}`}>
+            {occ.type === "RECURRING" ? "Recorrente" : "Avulsa"}
+          </span>
+          <span className="gr-tip__turma">{occ.userOrClass}</span>
+          {occ.subject && <span className="gr-tip__hora" style={{ fontStyle: "italic" }}>{occ.subject}</span>}
+        </>
+      )}
+      <span className="gr-tip__hora">{res.startTime?.slice(0,5)} – {res.endTime?.slice(0,5)}</span>
+    </div>
+  );
+}
 
-  const periods = ["Manhã", "Tarde", "Noite"];
+// ─────────────────────────────────────────────────────────────────────────
+// MODAL DE NOVA RESERVA
+// ─────────────────────────────────────────────────────────────────────────
+function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
+  const [roomId, setRoomId] = useState("");
+  const [selectedPeriods, setSelectedPeriods] = useState([]);
+  const [motivo, setMotivo] = useState("");
+  const [curso, setCurso] = useState("");
+  const [naoSeAplica, setNaoSeAplica] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const periodSlots = {
-    Manhã: TIME_SLOTS.filter((s) => s.period === "Manhã"),
-    Tarde: TIME_SLOTS.filter((s) => s.period === "Tarde"),
-    Noite: TIME_SLOTS.filter((s) => s.period === "Noite"),
-  };
-
-  function getRes(roomId, slotId) {
-    return RESERVATIONS.find(
-      (r) => r.roomId === roomId && r.slotId === slotId
+  function togglePeriod(id) {
+    setSelectedPeriods(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
     );
   }
 
-  function isCovered(roomId, slotId) {
-    const idx = getSlotIndex(slotId);
-
-    return RESERVATIONS.some((r) => {
-      if (r.roomId !== roomId) return false;
-
-      const s = getSlotIndex(r.slotId);
-
-      return idx > s && idx < s + r.span;
-    });
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!roomId || selectedPeriods.length === 0 || !motivo) {
+      setError("Preencha sala, períodos e motivo.");
+      return;
+    }
+    const token = localStorage.getItem("token");
+    const notes = naoSeAplica ? "Não se aplica" : `Curso: ${curso || "-"}`;
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId: Number(roomId),
+          periodIds: selectedPeriods.map(Number),
+          bookingDate: getISOFromDate(date),
+          subject: motivo,
+          notes,
+        }),
+      });
+      if (!res.ok) { const t = await res.text(); throw new Error(t || "Erro ao reservar."); }
+      onSuccess();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="gr-wrap">
-      {tip.res && (
-        <Tooltip
-          res={tip.res}
-          roomName={tip.roomName}
-          x={tip.x}
-          y={tip.y}
-        />
-      )}
-
-      {/* períodos */}
-      <div className="gr-head gr-head--period">
-        <div className="gr-sala-col" />
-
-        {periods.map((p) => (
-          <div
-            key={p}
-            className={`gr-period gr-period--${p.toLowerCase()}`}
-            style={{ gridColumn: `span ${periodSlots[p].length}` }}
-          >
-            {p}
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-espacos" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-topo">
+          <h2>Nova Reserva — {date.toLocaleDateString("pt-BR")}</h2>
+          <button className="btn-close-modal" onClick={onClose}>×</button>
+        </div>
+        {error && <div style={{ color: "#b91c1c", marginBottom: "0.75rem", fontSize: "0.9rem" }}>{error}</div>}
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <div className="form-group-reserva">
+            <label>Sala *</label>
+            <select value={roomId} onChange={e => setRoomId(e.target.value)} required>
+              <option value="">Selecione</option>
+              {rooms.map(r => <option key={r.roomId} value={r.roomId}>{r.roomName}</option>)}
+            </select>
           </div>
-        ))}
-      </div>
-
-      {/* horários */}
-      <div className="gr-head gr-head--slots">
-        <div className="gr-sala-col" />
-
-        {TIME_SLOTS.map((s) => (
-          <div key={s.id} className="gr-slot-th">
-            <span className="gr-slot-th__h">{s.label}</span>
-            <span className="gr-slot-th__e">{s.end}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* linhas */}
-      {ROOMS.map((room) => (
-        <div key={room.id} className="gr-row">
-          <div className="gr-sala-col">
-            <div className="gr-sala">
-              <span className="gr-sala__nome">{room.name}</span>
-              <span className="gr-sala__cap">
-                {room.capacity} lug.
-              </span>
+          <div className="form-group-reserva">
+            <label>Períodos *</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {periods.map(p => (
+                <label key={p.periodId} style={{
+                  border: selectedPeriods.includes(p.periodId) ? "2px solid #dc2626" : "1px solid #d1d5db",
+                  borderRadius: 6, padding: "4px 10px", cursor: "pointer",
+                  background: selectedPeriods.includes(p.periodId) ? "#fecaca" : "white",
+                }}>
+                  <input type="checkbox" checked={selectedPeriods.includes(p.periodId)}
+                    onChange={() => togglePeriod(p.periodId)} style={{ display: "none" }} />
+                  {p.periodName} <span style={{ fontSize: "0.75rem", color: "#666" }}>{p.startTime?.slice(0,5)}</span>
+                </label>
+              ))}
             </div>
           </div>
+          <div className="form-group-reserva">
+            <label>Motivo *</label>
+            <input type="text" value={motivo} onChange={e => setMotivo(e.target.value)}
+              placeholder="Descreva o motivo" required />
+          </div>
+          <div className="form-group-reserva">
+            <label>Curso</label>
+            <select value={curso} onChange={e => setCurso(e.target.value)}
+              required={!naoSeAplica} disabled={naoSeAplica}
+              style={{ backgroundColor: naoSeAplica ? "#cfcccc89" : "white" }}>
+              <option value="">Selecione</option>
+              <option value="dsm">Desenvolvimento de Software Multiplataforma</option>
+              <option value="admin">Administração</option>
+              <option value="rh">Recursos Humanos</option>
+              <option value="ads">Análise e Desenvolvimento de Sistemas</option>
+              <option value="comex">Comércio Exterior</option>
+            </select>
+          </div>
+          <div className="form-group-reserva-check">
+            <input type="checkbox" id="nsa2" checked={naoSeAplica} onChange={e => {
+              setNaoSeAplica(e.target.checked);
+              if (e.target.checked) setCurso("");
+            }} />
+            <label htmlFor="nsa2"> Não se aplica a um curso</label>
+          </div>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button type="submit" className="btn-submit-reserva" disabled={loading}>
+              {loading ? "Enviando..." : "Solicitar"}
+            </button>
+            <button type="button" className="btn-cancelar" onClick={onClose}>Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
-          {TIME_SLOTS.map((slot) => {
-            if (isCovered(room.id, slot.id)) return null;
+// ─────────────────────────────────────────────────────────────────────────
+// TABELA PRINCIPAL DA GRADE
+// Usa <table> real para colspan/rowspan corretos
+// visiblePeriods NUNCA está vazio — usa DEFAULT_PERIODS como fallback
+// ─────────────────────────────────────────────────────────────────────────
+function ScheduleTable({
+  rooms,
+  visiblePeriods,
+  loading,
+  error,
+  onMouseMove,
+  onCellEnter,
+  onCellLeave,
+}) {
+  // Grupos para cabeçalho linha 1
+  const groups = [
+    { key: "Manhã",  label: "MANHÃ",  cls: "manham" },
+    { key: "Tarde",  label: "TARDE",  cls: "tarde"  },
+    { key: "Noite",  label: "NOITE",  cls: "noite"  },
+  ].map(g => ({
+    ...g,
+    periods: visiblePeriods.filter(p => periodGroup(p.startTime) === g.key),
+  })).filter(g => g.periods.length > 0);
 
-            const res = getRes(room.id, slot.id);
+  // Agrupa slots consecutivos da mesma reserva para colspan
+  function getGroupedSlots(roomSlots) {
+    const slots = visiblePeriods.map(vp => {
+      const found = (roomSlots || []).find(s => s.periodId === vp.periodId);
+      return found || { periodId: vp.periodId, status: "FREE", occupant: null,
+                        startTime: vp.startTime, endTime: vp.endTime };
+    });
 
-            if (res) {
-              return (
-                <div
-                  key={slot.id}
-                  className={`gr-cell gr-block gr-block--${res.color}`}
-                  style={{ gridColumn: `span ${res.span}` }}
-                  onMouseEnter={(e) =>
-                    setTip({
-                      res,
-                      roomName: room.name,
-                      x: e.clientX,
-                      y: e.clientY,
-                    })
-                  }
-                  onMouseMove={(e) =>
-                    setTip((t) => ({
-                      ...t,
-                      x: e.clientX,
-                      y: e.clientY,
-                    }))
-                  }
-                  onMouseLeave={() =>
-                    setTip({
-                      res: null,
-                      roomName: "",
-                      x: 0,
-                      y: 0,
-                    })
-                  }
-                >
-                  <span className="gr-block__class">
-                    {res.class}
-                  </span>
+    const result = [];
+    let i = 0;
+    while (i < slots.length) {
+      const slot = slots[i];
+      const occ = slot.occupant;
+      if (!occ || slot.status === "FREE" || slot.status === "HOLIDAY") {
+        result.push({ slot, span: 1, type: slot.status === "HOLIDAY" ? "holiday" : "free" });
+        i++;
+      } else {
+        let j = i;
+        while (
+          j + 1 < slots.length &&
+          slots[j + 1].occupant?.id !== undefined &&
+          slots[j + 1].occupant?.id === occ.id
+        ) j++;
+        result.push({
+          slot: slots[i], span: j - i + 1, type: "reserved",
+          occupant: occ, startTime: slots[i].startTime, endTime: slots[j].endTime,
+        });
+        i = j + 1;
+      }
+    }
+    return result;
+  }
+
+  return (
+    <div className="gr-table-wrap" onMouseMove={onMouseMove}>
+      <table className="gr-table">
+        <thead>
+          {/* Linha 1 — Manhã / Tarde / Noite */}
+          <tr className="gr-thead-group">
+            <th className="gr-th-sala" rowSpan={2} />
+            {groups.map(g => (
+              <th
+                key={g.key}
+                colSpan={g.periods.length}
+                className={`gr-th-group gr-th-group--${g.cls}`}
+              >
+                {g.label}
+              </th>
+            ))}
+          </tr>
+          {/* Linha 2 — Horários individuais */}
+          <tr className="gr-thead-slots">
+            {visiblePeriods.map(p => (
+              <th key={p.periodId} className="gr-th-slot">
+                <span className="gr-th-slot__h">{p.startTime?.slice(0, 5)}</span>
+                <span className="gr-th-slot__e">{p.endTime?.slice(0, 5)}</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {/* Estado de carregamento: mostra salas com células skeleton */}
+          {loading && (
+            <tr>
+              <td colSpan={visiblePeriods.length + 1} className="gr-state">
+                <div className="gr-loading">
+                  <div className="gr-loading__spinner" />
+                  Carregando grade...
                 </div>
-              );
-            }
+              </td>
+            </tr>
+          )}
 
+          {/* Erro */}
+          {!loading && error && (
+            <tr>
+              <td colSpan={visiblePeriods.length + 1} className="gr-state gr-state--error">
+                {error}
+              </td>
+            </tr>
+          )}
+
+          {/* Sem salas */}
+          {!loading && !error && rooms.length === 0 && (
+            <tr>
+              <td colSpan={visiblePeriods.length + 1} className="gr-state">
+                Nenhuma sala encontrada para esta data.
+              </td>
+            </tr>
+          )}
+
+          {/* Linhas de salas */}
+          {!loading && !error && rooms.map(room => {
+            const grouped = getGroupedSlots(room.slots);
             return (
-              <div
-                key={slot.id}
-                className="gr-cell gr-cell--empty"
-              />
+              <tr key={room.roomId} className="gr-tr">
+                <td className="gr-td-sala">
+                  <span className="gr-sala__nome">{room.roomName}</span>
+                  <span className="gr-sala__loc">
+                    {room.roomLocation || (room.capacity ? `${room.capacity} lug.` : "")}
+                  </span>
+                </td>
+                {grouped.map((g, idx) => {
+                  if (g.type === "free") {
+                    return <td key={idx} colSpan={g.span} className="gr-td gr-td--free" />;
+                  }
+                  if (g.type === "holiday") {
+                    return (
+                      <td key={idx} colSpan={g.span} className="gr-td gr-td--free"
+                        onMouseEnter={e => onCellEnter(e, { status: "HOLIDAY", startTime: g.slot.startTime, endTime: g.slot.endTime }, room.roomName)}
+                        onMouseLeave={onCellLeave}>
+                        <div className="gr-block gr-block--holiday"><span className="gr-block__label">🎉</span></div>
+                      </td>
+                    );
+                  }
+                  const btype = g.occupant.type === "RECURRING" ? "recurring" : "simple";
+                  return (
+                    <td key={idx} colSpan={g.span} className={`gr-td gr-td--${btype}`}
+                      onMouseEnter={e => onCellEnter(e, {
+                        occupant: g.occupant,
+                        startTime: g.startTime,
+                        endTime: g.endTime,
+                        status: "OCCUPIED",
+                      }, room.roomName)}
+                      onMouseLeave={onCellLeave}>
+                      <div className={`gr-block gr-block--${btype}`}>
+                        <span className="gr-block__label">{g.occupant.userOrClass}</span>
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
             );
           })}
-        </div>
-      ))}
+        </tbody>
+      </table>
     </div>
   );
 }
 
-function FilterBar() {
+// ─────────────────────────────────────────────────────────────────────────
+// COMPONENTE PRINCIPAL
+// ─────────────────────────────────────────────────────────────────────────
+export default function GradeReservas() {
+  const navigate = useNavigate();
+  const [selDate, setSelDate] = useState(new Date());
+  const [schedule, setSchedule] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filterPeriod, setFilterPeriod] = useState("Todos");
+  const [filterRoom, setFilterRoom] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [successMsg, setSuccessMsg] = useState(null);
+  const [tip, setTip] = useState({ res: null, roomName: "", x: 0, y: 0 });
+  const [fullscreen, setFullscreen] = useState(false);
   const [showCal, setShowCal] = useState(false);
 
-  const [selDate, setSelDate] = useState(
-    new Date(2026, 4, 25)
-  );
+  const isoDate = getISOFromDate(selDate);
 
-  const fmt = selDate.toLocaleDateString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
+  const fetchSchedule = useCallback(async (date) => {
+    const token = localStorage.getItem("token");
+    const authlevel = localStorage.getItem("authlevel");
+    if (!token) { navigate("/"); return; }
+    if (authlevel !== "1") { navigate("/"); return; }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/schedule/daily?date=${date}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Falha ao carregar grade.");
+      const data = await res.json();
+      setSchedule(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
+
+  useEffect(() => { fetchSchedule(isoDate); }, [isoDate, fetchSchedule]);
+
+  const roomsList = useMemo(() => schedule?.rooms || [], [schedule]);
+
+  // Extrai períodos da API; fallback para DEFAULT_PERIODS se API ainda não respondeu
+  const allPeriods = useMemo(() => {
+    if (schedule?.rooms?.length) {
+      const slots = schedule.rooms[0].slots;
+      if (slots?.length) {
+        return slots.map(s => ({
+          periodId: s.periodId,
+          periodName: s.periodName,
+          startTime: s.startTime,
+          endTime: s.endTime,
+        }));
+      }
+    }
+    return DEFAULT_PERIODS;
+  }, [schedule]);
+
+  const visiblePeriods = useMemo(() => {
+    if (filterPeriod === "Todos") return allPeriods;
+    return allPeriods.filter(p => periodGroup(p.startTime) === filterPeriod);
+  }, [allPeriods, filterPeriod]);
+
+  const filteredRooms = useMemo(() => {
+    let rooms = roomsList;
+    if (filterRoom) rooms = rooms.filter(r => r.roomId === Number(filterRoom));
+    if (filterSearch) {
+      const q = filterSearch.toLowerCase();
+      rooms = rooms.filter(r =>
+        r.roomName.toLowerCase().includes(q) ||
+        r.slots?.some(s =>
+          s.occupant?.userOrClass?.toLowerCase().includes(q) ||
+          s.occupant?.subject?.toLowerCase().includes(q)
+        )
+      );
+    }
+    return rooms;
+  }, [roomsList, filterRoom, filterSearch]);
+
+  const isHolidayDay = useMemo(() => {
+    if (!schedule?.rooms?.length) return false;
+    return schedule.rooms[0]?.slots?.some(s => s.status === "HOLIDAY");
+  }, [schedule]);
+
+  const isSunday = selDate.getDay() === 0;
+
+  function handleMouseMove(e) {
+    if (tip.res) setTip(t => ({ ...t, x: e.clientX, y: e.clientY }));
+  }
+  function handleCellEnter(e, slot, roomName) {
+    if (!slot || slot.status === "FREE") return;
+    setTip({ res: slot, roomName, x: e.clientX, y: e.clientY });
+  }
+  function handleCellLeave() {
+    setTip({ res: null, roomName: "", x: 0, y: 0 });
+  }
+
+  function exportToCSV() {
+    if (!filteredRooms.length) return;
+    const headers = ["Sala", ...visiblePeriods.map(p => `${p.startTime?.slice(0,5)}-${p.endTime?.slice(0,5)}`)];
+    const rows = filteredRooms.map(room => {
+      const row = [room.roomName];
+      visiblePeriods.forEach(period => {
+        const slot = room.slots?.find(s => s.periodId === period.periodId);
+        row.push(slot?.occupant?.userOrClass || (slot?.status === "HOLIDAY" ? "FERIADO" : ""));
+      });
+      return row;
+    });
+    const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `grade_${isoDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  const fmtDate = selDate.toLocaleDateString("pt-BR", {
+    weekday: "long", day: "2-digit", month: "long", year: "numeric",
   });
+  const fmtDateCap = fmtDate.charAt(0).toUpperCase() + fmtDate.slice(1);
 
-  return (
-    <div className="gr-filters">
-      {/* data */}
-      <div
-        className="gr-filters__date"
-        style={{ position: "relative" }}
-      >
-        <button
-          className="gr-filters__nav"
-          onClick={() =>
-            setSelDate(
-              (d) =>
-                new Date(
-                  d.getFullYear(),
-                  d.getMonth(),
-                  d.getDate() - 1
-                )
-            )
-          }
-        >
-          ‹
-        </button>
-
-        <button
-          className="gr-filters__date-txt"
-          onClick={() => setShowCal((v) => !v)}
-        >
-          📅 {fmt}
-        </button>
-
-        <button
-          className="gr-filters__nav"
-          onClick={() =>
-            setSelDate(
-              (d) =>
-                new Date(
-                  d.getFullYear(),
-                  d.getMonth(),
-                  d.getDate() + 1
-                )
-            )
-          }
-        >
-          ›
-        </button>
-
-        {showCal && (
-          <MiniCalendar
-            onSelect={setSelDate}
-            onClose={() => setShowCal(false)}
-          />
-        )}
-      </div>
-
-      <div className="gr-filters__sep" />
-
-      {[
-        ["1º Semestre 2026", "2º Semestre 2026", "1º Semestre 2025"],
-        ["Todos os períodos", "Manhã", "Tarde", "Noite"],
-        ["Todos os cursos", "ADS", "DSM", "LOG", "RH"],
-        ["Todos os laboratórios", "Lab 111", "Lab 112", "Labs 100", "Labs 200"],
-      ].map((opts, i) => (
-        <select key={i} className="gr-filters__select">
-          {opts.map((o) => (
-            <option key={o}>{o}</option>
-          ))}
-        </select>
-      ))}
-
-      <div className="gr-filters__search">
-        <span>🔍</span>
-        <input placeholder="Pesquisar turma, professor..." />
-      </div>
-    </div>
+  const tableEl = (
+    <ScheduleTable
+      rooms={filteredRooms}
+      visiblePeriods={visiblePeriods}
+      loading={loading}
+      error={error}
+      onMouseMove={handleMouseMove}
+      onCellEnter={handleCellEnter}
+      onCellLeave={handleCellLeave}
+    />
   );
-}
-
-function Legend() {
-  return (
-    <div className="gr-legend">
-      <span className="gr-legend__title">LEGENDA:</span>
-
-      {[
-        { key: "recurring", label: "Recorrente" },
-        { key: "simple", label: "Simples" },
-      ].map(({ key, label }) => (
-        <span key={key} className="gr-legend__item">
-          <span
-            className={`gr-legend__dot gr-legend__dot--${key}`}
-          />
-          {label}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-export default function GradeReservas() {
-  const [fullscreen, setFullscreen] = useState(false);
 
   return (
     <div className="gr-page">
       <Navbar activePage="Reservas" />
-
       <PageHero
         tag="Grade Semanal"
         title="Grade de Reservas"
         description="Visualize e gerencie as reservas de salas e laboratórios."
       />
 
+      {tip.res && (
+        <Tooltip res={tip.res} roomName={tip.roomName} x={tip.x} y={tip.y} />
+      )}
+
       <main className="gr-main">
+        {/* Breadcrumb */}
         <div className="gr-breadcrumb">
           <span>Início</span>
-
           <span className="gr-breadcrumb__sep">›</span>
-
-          <span className="gr-breadcrumb__active">
-            Grade de Reservas
-          </span>
+          <span className="gr-breadcrumb__active">Grade de Reservas</span>
         </div>
 
-        <FilterBar />
-        <Legend />
-
+        {/* Card */}
         <div className="gr-card">
-          <div className="gr-card__hd">
-            <div>
-              <h2 className="gr-card__title">
-                Grade de Horários
-              </h2>
 
-              <p className="gr-card__sub">
-                Segunda-feira, 25 de Maio de 2026 ·
-                1º Semestre 2026
+          {/* Topo: título + botões */}
+          <div className="gr-card__top">
+            <div>
+              <h2 className="gr-card__title">Grade de Horários</h2>
+              <p className="gr-card__subtitle">
+                {fmtDateCap} · 1º Semestre {selDate.getFullYear()}
               </p>
             </div>
-
             <div className="gr-card__actions">
-              <button className="gr-card__btn">
+              <button className="gr-btn gr-btn--outline" onClick={exportToCSV}>
                 📤 Exportar
               </button>
-
-              <button className="gr-card__btn">
+              <button className="gr-btn gr-btn--outline" onClick={() => window.print()}>
                 🖨️ Imprimir
               </button>
-
-              <button
-                className="gr-card__btn"
-                onClick={() => setFullscreen(true)}
-                title="Tela cheia"
-              >
+              <button className="gr-btn gr-btn--icon" onClick={() => setFullscreen(true)} title="Tela cheia">
                 ⛶
               </button>
             </div>
           </div>
 
-          <div className="gr-card__body">
-            <ScheduleGrid />
+          {/* Barra de filtros */}
+          <div className="gr-filterbar">
+            {/* Navegação de data */}
+            <div className="gr-filterbar__date" style={{ position: "relative" }}>
+              <button className="gr-nav-btn" onClick={() => setSelDate(d => addDays(d, -1))}>‹</button>
+              <button className="gr-nav-date-btn" onClick={() => setShowCal(v => !v)}>
+                📅 {selDate.toLocaleDateString("pt-BR", {
+                  weekday: "short", day: "2-digit", month: "short", year: "numeric",
+                })}
+              </button>
+              <button className="gr-nav-btn" onClick={() => setSelDate(d => addDays(d, 1))}>›</button>
+              {showCal && (
+                <MiniCalendar
+                  onSelect={d => { setSelDate(d); setShowCal(false); }}
+                  onClose={() => setShowCal(false)}
+                />
+              )}
+            </div>
+
+            <div className="gr-filterbar__sep" />
+
+            <select className="gr-select" value={filterPeriod} onChange={e => setFilterPeriod(e.target.value)}>
+              <option value="Todos">Todos os períodos</option>
+              <option value="Manhã">Manhã</option>
+              <option value="Tarde">Tarde</option>
+              <option value="Noite">Noite</option>
+            </select>
+
+            <select className="gr-select" value={filterRoom} onChange={e => setFilterRoom(e.target.value)}>
+              <option value="">Todas as salas</option>
+              {roomsList.map(r => (
+                <option key={r.roomId} value={r.roomId}>{r.roomName}</option>
+              ))}
+            </select>
+
+            <div className="gr-search">
+              <span>🔍</span>
+              <input
+                placeholder="Pesquisar turma, professor..."
+                value={filterSearch}
+                onChange={e => setFilterSearch(e.target.value)}
+              />
+            </div>
           </div>
 
-          {/* footer */}
+          {/* Legenda */}
+          <div className="gr-legend">
+            <span className="gr-legend__title">LEGENDA:</span>
+            <span className="gr-legend__item">
+              <span className="gr-legend__dot gr-legend__dot--recurring" /> Recorrente
+            </span>
+            <span className="gr-legend__item">
+              <span className="gr-legend__dot gr-legend__dot--simple" /> Simples
+            </span>
+            <span className="gr-legend__item">
+              <span className="gr-legend__dot gr-legend__dot--holiday" /> Feriado
+            </span>
+          </div>
+
+          {/* Banners situacionais */}
+          {isHolidayDay && (
+            <div className="gr-banner gr-banner--holiday">
+              🎉 <strong>Feriado</strong> — Reservas indisponíveis nesta data.
+            </div>
+          )}
+          {isSunday && !isHolidayDay && (
+            <div className="gr-banner gr-banner--holiday">
+              Domingo — Reservas indisponíveis.
+            </div>
+          )}
+          {successMsg && (
+            <div className="gr-banner gr-banner--success">✅ {successMsg}</div>
+          )}
+
+          {/* Tabela */}
+          <div className="gr-card__body">
+            {tableEl}
+          </div>
+
+          {/* Rodapé */}
           <div className="gr-card__footer">
-            <button className="gr-filters__btn-outline">
+            <button className="gr-btn gr-btn--outline" onClick={() => navigate("/reserva-recorrente")}>
               🔄 Reserva Recorrente
             </button>
-
-            <button className="gr-filters__btn-red">
+            <button
+              className="gr-btn gr-btn--red"
+              onClick={() => { setSuccessMsg(null); setShowBookingModal(true); }}
+              disabled={isHolidayDay || isSunday}
+            >
               + Nova Reserva
             </button>
           </div>
@@ -495,26 +687,32 @@ export default function GradeReservas() {
 
       <Footer />
 
-      {/* fullscreen */}
+      {/* Fullscreen */}
       {fullscreen && (
         <div className="gr-fullscreen">
           <div className="gr-fullscreen__bar">
-            <span className="gr-fullscreen__bar-title">
-              🏛️ Grade de Horários
-            </span>
-
-            <button
-              className="gr-fullscreen__close"
-              onClick={() => setFullscreen(false)}
-            >
+            <span className="gr-fullscreen__title">🏛️ Grade de Horários — {fmtDateCap}</span>
+            <button className="gr-btn gr-btn--outline" onClick={() => setFullscreen(false)}>
               ✕ Fechar
             </button>
           </div>
-
-          <div className="gr-fullscreen__body">
-            <ScheduleGrid />
-          </div>
+          <div className="gr-fullscreen__body">{tableEl}</div>
         </div>
+      )}
+
+      {/* Modal nova reserva */}
+      {showBookingModal && (
+        <BookingModal
+          rooms={roomsList}
+          periods={allPeriods}
+          date={selDate}
+          onClose={() => setShowBookingModal(false)}
+          onSuccess={() => {
+            setShowBookingModal(false);
+            setSuccessMsg("Reserva solicitada com sucesso. Aguarde aprovação.");
+            fetchSchedule(isoDate);
+          }}
+        />
       )}
     </div>
   );
