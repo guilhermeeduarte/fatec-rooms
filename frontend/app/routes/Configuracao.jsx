@@ -99,6 +99,10 @@ export default function Configuracao() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [feriadosAbertos, setFeriadosAbertos] = useState(false);
 
+  // Suspensão de reservas
+  const [bookingSuspended, setBookingSuspended] = useState(false);
+  const [savingSuspension, setSavingSuspension] = useState(false);
+
   useEffect(() => {
     if (authlevel !== "1") { navigate("/"); return; }
     carregarInicial();
@@ -133,9 +137,10 @@ export default function Configuracao() {
     try {
       setLoading(true);
       setError(null);
-      const [configResp, semResp] = await Promise.all([
+      const [configResp, semResp, suspensionResp] = await Promise.all([
         fetch(`${API_URL}/config/booking/min-advance-days`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API_URL}/semesters`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/config/booking/suspend-teacher-bookings`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       if (!configResp.ok) throw new Error("Erro ao carregar prazo mínimo");
       if (!semResp.ok) throw new Error("Erro ao carregar semestres");
@@ -153,6 +158,11 @@ export default function Configuracao() {
         const ativo = lista.find((s) => s.active === 1);
         const primeiro = ativo || lista[0];
         if (primeiro?.id) setSemesterSelecionado(primeiro.id);
+      }
+
+      if (suspensionResp.ok) {
+        const suspData = await suspensionResp.json();
+        setBookingSuspended(suspData.suspended ?? false);
       }
     } catch (err) {
       setError(err.message);
@@ -242,9 +252,7 @@ export default function Configuracao() {
       setShowPopup(true);
       handleCloseSemesterModal();
       await carregarTodosSemestres();
-      await carregarInicial(); // atualiza lista de ativos para o seletor
-
-      // Se estava editando e o semestre selecionado era o editado, mantém; se criou novo, não muda seleção
+      await carregarInicial();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -265,7 +273,6 @@ export default function Configuracao() {
       await carregarTodosSemestres();
       await carregarInicial();
 
-      // Se o semestre excluído era o selecionado, limpa ou seleciona outro
       if (semesterSelecionado === id) {
         const novosAtivos = semestres.filter(s => s.id !== id);
         if (novosAtivos.length > 0) setSemesterSelecionado(novosAtivos[0].id);
@@ -289,7 +296,6 @@ export default function Configuracao() {
       await carregarTodosSemestres();
       await carregarInicial();
 
-      // Se o semestre desativado era o selecionado, troca para outro ativo
       if (!updated.active && semesterSelecionado === id) {
         const novosAtivos = semestres.filter(s => s.id !== id);
         if (novosAtivos.length > 0) setSemesterSelecionado(novosAtivos[0].id);
@@ -462,6 +468,28 @@ export default function Configuracao() {
     finally { setImportingNational(false); }
   }
 
+  // ── Suspensão de reservas ──────────────────────────────────
+  async function toggleSuspension() {
+    setSavingSuspension(true);
+    setError(null);
+    try {
+      const resp = await fetch(`${API_URL}/config/booking/suspend-teacher-bookings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ suspended: !bookingSuspended }),
+      });
+      if (!resp.ok) throw new Error("Erro ao alterar suspensão");
+      const data = await resp.json();
+      setBookingSuspended(data.suspended);
+      setSuccess(data.suspended ? "Reservas suspensas com sucesso!" : "Reservas reativadas com sucesso!");
+      setShowPopup(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingSuspension(false);
+    }
+  }
+
   function traduzirTipo(type) {
     switch (type) {
       case "NATIONAL": return "Nacional";
@@ -531,6 +559,47 @@ export default function Configuracao() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* ── SUSPENSÃO DE RESERVAS ── */}
+        <h2 className="secao-titulo">Disponibilidade</h2>
+        <div className="card">
+          <div className="card-left">
+            <div className="icon-box" style={{ background: bookingSuspended ? "#fee2e2" : undefined }}>
+              <ShieldCheck size={28} color={bookingSuspended ? "#dc2626" : undefined} />
+            </div>
+            <div className="card-info">
+              <h3>Suspensão de reservas</h3>
+              <p>
+                {bookingSuspended
+                  ? "Reservas estão suspensas. Professores não podem criar novas reservas."
+                  : "Reservas estão ativas. Professores podem criar reservas normalmente."}
+              </p>
+            </div>
+          </div>
+          <div className="card-right">
+            <span
+              className="badge"
+              style={{
+                background: bookingSuspended ? "#fee2e2" : "#dcfce7",
+                color: bookingSuspended ? "#dc2626" : "#16a34a",
+              }}
+            >
+              {bookingSuspended ? "Suspensas" : "Ativas"}
+            </span>
+            <button
+              className={bookingSuspended ? "btn-salvar" : "btn-cancelar"}
+              onClick={toggleSuspension}
+              disabled={savingSuspension}
+              style={{ minWidth: "120px" }}
+            >
+              {savingSuspension
+                ? "Salvando..."
+                : bookingSuspended
+                ? "Reativar reservas"
+                : "Suspender reservas"}
+            </button>
+          </div>
         </div>
 
         {/* ── FERIADOS ── */}

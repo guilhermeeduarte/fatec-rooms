@@ -2649,8 +2649,8 @@ SOLICITAÇÕES DE RESERVA
   font-size: 12px;
   color: var(--gray-500);
   border-top: 1px solid var(--gray-200);
+  margin-top: auto;
 }
-
 .footer a {
   color: var(--red);
   text-decoration: none;

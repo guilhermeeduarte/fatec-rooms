@@ -48,7 +48,7 @@ export default function SolicitaReserva() {
     const [myBookings, setMyBookings] = useState([]);
     const [recurringBookings, setRecurringBookings] = useState([]);
     const [holidays, setHolidays] = useState([]);
-    const [examDatesSet, setExamDatesSet] = useState(new Set()); // ← armazena datas de semanas de avaliação
+    const [examDatesSet, setExamDatesSet] = useState(new Set());
     const [date, setDate] = useState(new Date());
     const [loadingPage, setLoadingPage] = useState(true);
     const [loadingAvailability, setLoadingAvailability] = useState(false);
@@ -57,6 +57,9 @@ export default function SolicitaReserva() {
     const [success, setSuccess] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
     const [showErrorPopup, setShowErrorPopup] = useState(false);
+
+    // Suspensão de reservas
+    const [bookingSuspended, setBookingSuspended] = useState(false);
 
     useEffect(() => {
         if (error) {
@@ -84,7 +87,7 @@ export default function SolicitaReserva() {
                     fetch("/api/rooms", { headers }),
                     fetch("/api/bookings/my", { headers }),
                     fetch("/api/holidays", { headers }),
-                    fetch("/api/semesters", { headers }), // apenas ativos
+                    fetch("/api/semesters", { headers }),
                 ]);
 
                 if (!roomsRes.ok) throw new Error("Falha ao carregar salas.");
@@ -102,7 +105,7 @@ export default function SolicitaReserva() {
                 try {
                     const recurringRes = await fetch("/api/recurring-bookings", { headers });
                     if (recurringRes.ok) {
-                        const data = await recurringRes.json(); // ← retorna PagedResponseDTO agora
+                        const data = await recurringRes.json();
                         setRecurringBookings(data.content ?? data ?? []);
                     }
                 } catch (err) {
@@ -115,10 +118,9 @@ export default function SolicitaReserva() {
                     const activeSemesters = Array.isArray(semestersData) ? semestersData : (semestersData.content || []);
                     const examDates = new Set();
 
-                    // Para cada semestre ativo, buscar suas exam-weeks
                     await Promise.all(
                         activeSemesters.map(async (semester) => {
-                            if (semester.active !== 1) return; // apenas ativos
+                            if (semester.active !== 1) return;
                             try {
                                 const examRes = await fetch(`/api/semesters/${semester.id}/exam-weeks`, {
                                     headers: { Authorization: `Bearer ${token}` }
@@ -126,7 +128,6 @@ export default function SolicitaReserva() {
                                 if (examRes.ok) {
                                     const weeks = await examRes.json();
                                     weeks.forEach(week => {
-                                        // Gera todas as datas entre startDate e endDate (inclusive)
                                         const start = new Date(week.startDate);
                                         const end = new Date(week.endDate);
                                         const current = new Date(start);
@@ -144,6 +145,18 @@ export default function SolicitaReserva() {
                     );
                     setExamDatesSet(examDates);
                 }
+
+                // Verifica se as reservas estão suspensas (endpoint correto)
+                try {
+                    const suspResp = await fetch("/api/config/booking/suspend-teacher-bookings", { headers });
+                    if (suspResp.ok) {
+                        const suspData = await suspResp.json();
+                        setBookingSuspended(suspData.suspended ?? false);
+                    }
+                } catch (err) {
+                    console.warn("Erro ao verificar suspensão de reservas", err);
+                }
+
             } catch (err) {
                 setError(err.message || "Erro ao carregar a página.");
                 setShowErrorPopup(true);
@@ -312,6 +325,44 @@ export default function SolicitaReserva() {
         </>
     );
 
+    // Tela de bloqueio por suspensão
+    if (bookingSuspended) return (
+        <>
+            <Navbar activePage="SolicitaReserva" />
+            <PageHero
+                variant="SolicitaReserva"
+                tag="Painel Operacional"
+                title="Solicitação de Reserva"
+                description="As reservas estão temporariamente suspensas."
+            />
+            <div className="content-solicitarReserva">
+                <div style={{
+                    textAlign: "center",
+                    padding: "3rem 1rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "1rem",
+                }}>
+                    <div style={{
+                        width: "72px", height: "72px", borderRadius: "50%",
+                        background: "#fee2e2", display: "flex",
+                        alignItems: "center", justifyContent: "center",
+                    }}>
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                        </svg>
+                    </div>
+                    <h2 style={{ color: "#dc2626", margin: 0 }}>Reservas suspensas</h2>
+                    <p style={{ color: "#555", maxWidth: "420px", margin: 0 }}>
+                        O sistema de reservas está temporariamente indisponível. Entre em contato com a coordenação para mais informações.
+                    </p>
+                </div>
+            </div>
+            <Footer />
+        </>
+    );
+
     return (
         <>
             <Navbar activePage="SolicitaReserva" />
@@ -361,7 +412,7 @@ export default function SolicitaReserva() {
                             if (view !== "month") return null;
                             const iso = getISOFromDate(d);
                             if (isHolidayDate(iso)) return "dia-feriado";
-                            if (examDatesSet.has(iso)) return "dia-avaliacao"; // ← classe para avaliação
+                            if (examDatesSet.has(iso)) return "dia-avaliacao";
                             if (iso === form.dataISO) return "dia-selecionado";
                             const st = roomStatusMap[iso];
                             if (st === "APPROVED") return "dia-aceita";
@@ -389,7 +440,7 @@ export default function SolicitaReserva() {
                         <div><span className="box vermelho"></span> Cancelada</div>
                         <div><span className="box cinza"></span> Selecionado</div>
                         <div><span className="box laranja"></span> Feriado</div>
-                        <div><span className="box magenta"></span> Avaliação</div> {/* ← nova legenda */}
+                        <div><span className="box magenta"></span> Avaliação</div>
                     </div>
 
                     <div className="reservas-feitas">

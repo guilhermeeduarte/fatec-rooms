@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const menuLinksPublic = [
@@ -25,8 +25,12 @@ export default function Navbar({ activePage }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const authlevel = typeof window !== "undefined" ? localStorage.getItem("authlevel") : null;
+  const [token, setToken] = useState(null);
+  const [authlevel, setAuthlevel] = useState(null);
+  useEffect(() => {
+    setToken(localStorage.getItem("token"));
+    setAuthlevel(localStorage.getItem("authlevel"));
+}, []);
   const userAreaPath = authlevel === "1" ? "/coordenador" : "/professor";
   const userAreaLabel = authlevel === "1" ? "Área do Coordenador" : "Área do Professor";
 
