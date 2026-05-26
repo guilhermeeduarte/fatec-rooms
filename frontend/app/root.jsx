@@ -56,7 +56,7 @@ export default function Root() {
                 var s = d.createElement("script");
 
                 s.setAttribute("data-position", "2");
-                s.setAttribute("data-account", "MvOoS3TA7I");
+                s.setAttribute("data-account", "dEcXIkLEZp");
                 s.setAttribute("src", "https://cdn.userway.org/widget.js");
 
                 (d.body || d.head).appendChild(s);
