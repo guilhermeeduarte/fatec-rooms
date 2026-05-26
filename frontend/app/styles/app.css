@@ -710,7 +710,7 @@ body.high-contrast {
   margin-top: 18px;
 }
 
-.legend-item {
+.oxitem {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -7353,4 +7353,79 @@ footer, .Footer {
   .gr-search { min-width: 140px; }
   .gr-th-slot { min-width: 56px; width: 56px; }
   .gr-td-sala, .gr-th-sala { width: 90px; min-width: 90px; max-width: 90px; }
+}
+
+/* =========================================
+   ALERTA RESERVAS SUSPENSAS
+========================================= */
+
+.booking-suspended-alert {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    padding: 14px 16px;
+
+    margin-bottom: 18px;
+
+    border-radius: 14px;
+
+    background: #fee2e2;
+
+    border: 1px solid #fecaca;
+
+    color: #b91c1c;
+
+    font-weight: 600;
+
+    font-size: 0.95rem;
+
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.08);
+}
+
+.booking-suspended-alert svg {
+    width: 20px;
+    height: 20px;
+
+    flex-shrink: 0;
+}
+
+/* =========================================
+   BOTÃO RESERVAR SALA DESABILITADO
+========================================= */
+
+.menu-card-disabled {
+    background: #f3f4f6 !important;
+
+    border: 1px solid #d1d5db !important;
+
+    opacity: 0.75;
+
+    pointer-events: none;
+
+    cursor: not-allowed;
+
+    transform: none !important;
+
+    box-shadow: none !important;
+
+    filter: grayscale(0.2);
+}
+
+.menu-card-disabled:hover {
+    transform: none !important;
+
+    box-shadow: none !important;
+}
+
+.menu-card-disabled .menu-icon,
+.menu-card-disabled h3,
+.menu-card-disabled p {
+    color: #9ca3af !important;
+}
+
+.menu-card-disabled svg {
+    stroke: #9ca3af !important;
 }
