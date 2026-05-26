@@ -54,7 +54,6 @@ public class SystemConfigController {
      * Apenas coordenadores podem consultar.
      */
     @GetMapping("/booking/suspend-teacher-bookings")
-    @PreAuthorize("hasRole('COORDINATOR')")
     public ResponseEntity<Map<String, Object>> getSuspendTeacherBookings() {
         boolean suspended = configService.isTeacherBookingSuspended();
         return ResponseEntity.ok(Map.of(

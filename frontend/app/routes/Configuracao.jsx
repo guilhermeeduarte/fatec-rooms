@@ -478,13 +478,16 @@ export default function Configuracao() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ suspended: !bookingSuspended }),
       });
-      if (!resp.ok) throw new Error("Erro ao alterar suspensão");
-      const data = await resp.json();
-      setBookingSuspended(data.suspended);
-      setSuccess(data.suspended ? "Reservas suspensas com sucesso!" : "Reservas reativadas com sucesso!");
-      setShowPopup(true);
-    } catch (err) {
-      setError(err.message);
+      if (!resp.ok) {
+    let errorMessage = "Erro ao alterar suspensão";
+    try {
+        const errorData = await resp.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch (e) {
+        errorMessage = await resp.text() || errorMessage;
+    }
+    throw new Error(errorMessage);
+}
     } finally {
       setSavingSuspension(false);
     }
@@ -960,26 +963,7 @@ export default function Configuracao() {
           </button>
         </div>
 
-        {/* ── OUTRAS CONFIGURAÇÕES ── */}
-        <h2 className="secao-titulo">Outras configurações</h2>
-        <div className="outras-config">
-          <div className="config-grid">
-            {[
-              { icon: <Clock size={22} />, title: "Horários de funcionamento", desc: "Defina os horários e dias disponíveis para reservas." },
-              { icon: <Users size={22} />, title: "Restrições de reservas", desc: "Configure limites e regras de utilização." },
-              { icon: <Bell size={22} />, title: "Notificações", desc: "Gerencie avisos e comunicações do sistema." },
-              { icon: <ShieldCheck size={22} />, title: "Permissões", desc: "Configure quem pode reservar e aprovar." },
-            ].map((item) => (
-              <div key={item.title} className="config-item">
-                <div className="config-left">
-                  <div className="icon-box">{item.icon}</div>
-                  <div><h4>{item.title}</h4><p>{item.desc}</p></div>
-                </div>
-                <ChevronRight />
-              </div>
-            ))}
-          </div>
-        </div>
+
       </div>
 
       {/* Modal Semestre */}

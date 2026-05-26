@@ -17,12 +17,6 @@ const menuActions = [
     desc: "Acompanhe o status das reservas.",
     to: "/minhas-reservas",
   },
-  {
-    icon: <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>,
-    title: "Ajuda Rápida",
-    desc: "Ver regras de reserva e horários.",
-    to: "/contato",
-  },
 ];
 
 const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -69,6 +63,7 @@ export default function Professor() {
   const [examInfoByDate, setExamInfoByDate] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [bookingSuspended, setBookingSuspended] = useState(false);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredDay, setHoveredDay] = useState(null);
@@ -86,13 +81,22 @@ export default function Professor() {
       const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
       try {
-        const [userResponse, bookingsResponse, roomsResponse, periodsResponse, holidaysResponse, semestersResponse] = await Promise.all([
+        const [
+              userResponse,
+              bookingsResponse,
+              roomsResponse,
+              periodsResponse,
+              holidaysResponse,
+              semestersResponse,
+              suspendResponse,
+]    = await Promise.all([
           fetch("/api/users/me", { headers }),
           fetch("/api/bookings/my", { headers }),
           fetch("/api/rooms", { headers }),
           fetch("/api/periods", { headers }),
           fetch("/api/holidays", { headers }),
           fetch("/api/semesters", { headers }),
+          fetch("/api/config/booking/suspend-teacher-bookings", { headers }),
         ]);
 
         if (!userResponse.ok) throw new Error("Falha ao obter dados do usuário.");
@@ -106,6 +110,9 @@ export default function Professor() {
         const periodsData = await periodsResponse.json();
         const holidaysData = holidaysResponse.ok ? await holidaysResponse.json() : [];
         const semestersData = semestersResponse.ok ? await semestersResponse.json() : [];
+        const suspendData = suspendResponse.ok
+          ? await suspendResponse.json()
+          : { suspended: false };
 
         bookingsData.sort((a, b) => {
           const dateA = new Date(a.bookingDate).getTime();
@@ -158,6 +165,7 @@ export default function Professor() {
         setRooms(roomsData);
         setPeriods(periodsData);
         setHolidays(Array.isArray(holidaysData) ? holidaysData : []);
+        setBookingSuspended(suspendData.suspended ?? false);
       } catch (err) {
         setError(err.message || "Erro ao carregar dados.");
       } finally {
@@ -330,7 +338,24 @@ export default function Professor() {
                 </div>
               ))}
             </div>
+                {bookingSuspended && (
+  <div className="booking-suspended-alert">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
 
+    <span>
+      As reservas estão suspensas por agora.
+    </span>
+  </div>
+)}
             {summary.pendingReservations > 0 && (
               <div className="alert-card">
                 <div className="alert-icon">
@@ -349,13 +374,36 @@ export default function Professor() {
 
             <div className="section-title">Ações rápidas</div>
             <div className="menu-grid">
-              {menuActions.map((action) => (
-                <Link key={action.title} className="menu-card" to={action.to}>
-                  <div className="menu-icon">{action.icon}</div>
-                  <h3>{action.title}</h3>
-                  <p>{action.desc}</p>
-                </Link>
-              ))}
+              {menuActions.map((action) => {
+  const isReserveButton =
+    action.to === "/solicitar-reserva";
+
+  const disabled =
+    bookingSuspended && isReserveButton;
+
+  return (
+    <Link
+      key={action.title}
+      className={`menu-card ${
+        disabled ? "menu-card-disabled" : ""
+      }`}
+      to={disabled ? "#" : action.to}
+      onClick={(e) => {
+        if (disabled) {
+          e.preventDefault();
+        }
+      }}
+    >
+      <div className="menu-icon">
+        {action.icon}
+      </div>
+
+      <h3>{action.title}</h3>
+
+      <p>{action.desc}</p>
+    </Link>
+  );
+})}
             </div>
 
             <div className="section-title section-title--top-space">
@@ -398,8 +446,6 @@ export default function Professor() {
             <div className="dashboard-panel summary-card">
               <h3>Resumo rápido</h3>
               <div className="summary-grid">
-                <div><span>Salas disponíveis</span><strong>{rooms.length}</strong></div>
-                <div><span>Reservas pendentes</span><strong>{summary.pendingReservations}</strong></div>
                 <div><span>Última reserva</span><strong>{summary.latestBooking ? summary.latestBooking.roomName : "Nenhuma"}</strong></div>
               </div>
             </div>

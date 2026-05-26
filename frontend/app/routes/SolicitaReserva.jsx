@@ -290,9 +290,16 @@ export default function SolicitaReserva() {
                 body: JSON.stringify(body),
             });
             if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(parseBackendError(errorText) || errorText || "Falha ao solicitar a reserva.");
-            }
+                let errorMessage = "Falha ao solicitar a reserva.";
+                try {
+                    const errorJson = await res.json();
+                    errorMessage = errorJson.message || errorJson.error || errorMessage;
+                } catch (e) {
+                    // Não é JSON, usa o texto puro
+                    errorMessage = await res.text() || errorMessage;
+                }
+                throw new Error(errorMessage);
+}
             const totalPeriods = selectedPeriodIds.length;
             const successMessage = totalPeriods === 1
                 ? "Reserva solicitada com sucesso. Aguarde aprovação."
@@ -307,11 +314,16 @@ export default function SolicitaReserva() {
             const updatedRes = await fetch("/api/bookings/my", { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } });
             if (updatedRes.ok) setMyBookings(await updatedRes.json() || []);
         } catch (err) {
-            setError(err.message || "Erro ao enviar a solicitação.");
-            setShowErrorPopup(true);
-        } finally {
-            setLoadingSubmit(false);
-        }
+    // Tenta extrair mensagem amigável do JSON de erro
+    let friendlyMessage = err.message || "Erro ao enviar a solicitação.";
+    if (err.message.includes("suspended") || err.message.includes("suspensa")) {
+        friendlyMessage = "As reservas estão temporariamente suspensas. Não é possível criar novas reservas no momento.";
+    } else if (err.message.includes("400") || err.message.includes("Bad Request")) {
+        friendlyMessage = "Operação não permitida no estado atual. Verifique se as reservas estão ativas.";
+    }
+    setError(friendlyMessage);
+    setShowErrorPopup(true);
+}
     }
 
     const availablePeriods = availability?.periods?.filter(p => p.available) || [];
