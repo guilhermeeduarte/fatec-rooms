@@ -3401,86 +3401,46 @@ SOLICITAÇÕES DE RESERVA
    PÁGINA DE PERFIL DO USUÁRIO
 ══════════════════════════════════════════ */
 
-.user-profile {
-  max-width: 920px;
+/* container geral */
+.perfil-page {
+  max-width: 960px;
   margin: 0 auto;
-  padding: 28px 24px 44px;
+  padding: 2rem 1.5rem 3rem;
+  width: 100%;
 }
 
-.user-card {
+/* grid dos cards */
+.perfil-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.perfil-grid--form {
+  grid-template-columns: 1fr;
+  max-width: 600px;
+}
+
+/* card base */
+.perfil-card {
   background: white;
   border-radius: var(--radius-lg);
   border: 1.5px solid var(--gray-200);
-  padding: 22px;
+  padding: 1.75rem;
   animation: fadeUp 0.4s ease both;
 }
 
-.user-card h3 {
-  font-family: var(--font-main);
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: var(--gray-800);
+/* card hero (avatar + nome) */
+.perfil-card--hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.6rem;
 }
 
-.user-info p {
-  font-size: 14px;
-  color: var(--gray-800);
-  margin-bottom: 8px;
-}
-
-.user-info strong {
-  font-family: var(--font-main);
-  font-weight: 600;
-  color: var(--gray-500);
-}
-
-/* Botão de editar */
-.btn-edit {
-  display: block;
-  margin: 20px auto;          
-  padding: 14px 100px;         
-  border-radius: 14px;
-  border: none;
-  font-family: var(--font-main);
-  font-size: 16px;           
-  font-weight: 700;
-  color: white;
-  background: var(--red);
-  cursor: pointer;
-  transition: background 0.2s, transform 0.15s;
-}
-
-.btn-edit:hover {
-  background: var(--red-dark);
-  transform: translateY(-1px);
-}
-
-.user-form {
-  background: white;
-  border-radius: var(--radius-lg);
-  border: 1.5px solid var(--gray-200);
-  padding: 22px;
-  animation: fadeUp 0.4s ease both;
-}
-
-.user-form h3 {
-  font-family: var(--font-main);
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: var(--gray-800);
-}
-
-.user-form .form-group {
-  margin-bottom: 16px;
-}
-
-.user-form .btn-submit {
-  margin-top: 16px;
-}
-
-.user-avatar {
+.perfil-avatar {
   width: 80px;
   height: 80px;
   border-radius: 50%;
@@ -3489,17 +3449,131 @@ SOLICITAÇÕES DE RESERVA
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 20px;
+  margin-bottom: 0.5rem;
 }
 
-.user-avatar svg {
+.perfil-avatar svg {
   width: 40px;
   height: 40px;
   stroke: var(--gray-500);
   fill: none;
-  stroke-width: 2;
+  stroke-width: 1.5;
 }
 
+.perfil-nome {
+  font-family: var(--font-main);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0;
+}
+
+.perfil-cargo-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-family: var(--font-main);
+}
+
+.perfil-email-hint {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  margin: 0;
+  word-break: break-all;
+}
+
+/* card info */
+.perfil-card--info { }
+
+.perfil-section-title {
+  font-family: var(--font-main);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0 0 1.25rem;
+}
+
+.perfil-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.perfil-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.perfil-info-item--wide {
+  grid-column: span 2;
+}
+
+.perfil-info-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-main);
+}
+
+.perfil-info-value {
+  font-size: 0.92rem;
+  color: var(--gray-800);
+  font-family: var(--font-body);
+}
+
+/* ações */
+.perfil-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* card formulário */
+.perfil-card--form .form-group {
+  margin-bottom: 1rem;
+}
+
+.perfil-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* mensagens */
+.success-message {
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  color: #166534;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+/* responsivo */
+@media (max-width: 768px) {
+  .perfil-grid {
+    grid-template-columns: 1fr;
+  }
+  .perfil-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .perfil-info-item--wide {
+    grid-column: span 1;
+  }
+  .perfil-form-row {
+    grid-template-columns: 1fr;
+  }
+  .perfil-actions {
+    flex-direction: column;
+  }
+}
 /* =============================================
    ACESSIBILIDADE
 ============================================= */
