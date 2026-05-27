@@ -8,7 +8,6 @@ export async function loader() {
     return null;
 }
 
-// Função para buscar todos os usuários (pendentes + aprovados) da API
 async function fetchRegistrations() {
     const token = localStorage.getItem('token');
     const response = await fetch('/api/admin/users', {
@@ -32,7 +31,7 @@ async function fetchRegistrations() {
         id: user.id,
         nome: `${user.firstname} ${user.lastname}`,
         apelido: user.username,
-        area: "Não especificado", // Ajuste se houver campo de departamento
+        area: "Não especificado",
         email: user.email,
         cargo: user.authlevel === 0 ? "pendente" : (user.authlevel === 1 ? "coordenador" : "professor"),
         authLevel: user.authlevel,
@@ -40,7 +39,6 @@ async function fetchRegistrations() {
     }));
 }
 
-// Função para aprovar cadastro
 async function approveRegistration(id, authLevel) {
     const token = localStorage.getItem('token');
     const response = await fetch(`/api/admin/users/${id}/approve`, {
@@ -64,7 +62,6 @@ async function approveRegistration(id, authLevel) {
     return await response.text();
 }
 
-// Função para rejeitar cadastro
 async function rejectRegistration(id) {
     const token = localStorage.getItem('token');
     const response = await fetch(`/api/admin/users/${id}/reject`, {
@@ -99,9 +96,7 @@ export default function AprovarCadastros() {
     const [error, setError] = useState(null);
     const [filtro, setFiltro] = useState("pendente");
     const [confirmacao, setConfirmacao] = useState(null);
-    // confirmacao: { id, acao: "aprovado"|"recusado", authLevel }
 
-    // Verificar se o usuário é coordenador
     useEffect(() => {
         const authlevel = localStorage.getItem('authlevel');
         if (authlevel !== '1') {
@@ -127,7 +122,7 @@ export default function AprovarCadastros() {
         setConfirmacao({
             id: cadastro.id,
             acao: "aprovado",
-            authLevel: 2, // Padrão para professor
+            authLevel: 2,
         });
     }
 
@@ -176,7 +171,7 @@ export default function AprovarCadastros() {
     if (error) return <div>Erro: {error}</div>;
 
     return (
-        <>
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <Navbar activePage="Área do Coordenador" />
 
             <PageHero
@@ -185,102 +180,97 @@ export default function AprovarCadastros() {
                 description="Aceite ou recuse cadastros"
             />
 
-            {/* Filtros */}
-            <div className="aprovacao-filtros">
-                {["pendente", "aprovado"].map((f) => (
-                    <button
-                        key={f}
-                        className={`filtro-btn ${filtro === f ? "active" : ""}`}
-                        onClick={() => setFiltro(f)}
-                    >
-                        {f.charAt(0).toUpperCase() + f.slice(1)}
-                        {f === "pendente" && totalPendente > 0 && (
-                            <span className="filtro-badge">{totalPendente}</span>
-                        )}
-                    </button>
-                ))}
-            </div>
-
-            {/* Lista */}
-            <div className="aprovacao-lista">
-                {filtrados.length === 0 ? (
-                    <div className="aprovacao-vazia">
-                        <svg viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M8 15s1.5-2 4-2 4 2 4 2" />
-                            <line x1="9" y1="9" x2="9.01" y2="9" />
-                            <line x1="15" y1="9" x2="15.01" y2="9" />
-                        </svg>
-                        <p>
-                            Nenhuma solicitação{" "}
-                            {filtro === "pendente" ? "pendente" : "aprovada"}
-                        </p>
-                    </div>
-                ) : (
-                    filtrados.map((c, i) => (
-                        <div
-                            key={c.id}
-                            className="aprovacao-card"
-                            style={{ animationDelay: `${i * 0.07}s` }}
+            <div style={{ flex: 1 }}>
+                <div className="aprovacao-filtros">
+                    {["pendente", "aprovado"].map((f) => (
+                        <button
+                            key={f}
+                            className={`filtro-btn ${filtro === f ? "active" : ""}`}
+                            onClick={() => setFiltro(f)}
                         >
-                            {/* Cabeçalho */}
-                            <div className="aprovacao-card-header">
-                                <div className={`aprovacao-dot ${
-                                    c.status === "aprovado" ? "dot-green" : "dot-yellow"
-                                }`} />
-                                <div className="aprovacao-nome-wrap">
-                                    <span className="aprovacao-apelido">{c.apelido}</span>
-                                    <span className={`aprovacao-badge ${c.authLevel === 1 ? "badge-blue" : "badge-red"}`}>
-                                        {c.status === "pendente" ? "PENDENTE" : c.status.toUpperCase()}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Detalhes */}
-                            <div className="aprovacao-detalhes">
-                                <div className="aprovacao-detalhe-row">
-                                    <span className="detalhe-label">Nome:</span>
-                                    <span className="detalhe-valor">{c.nome}</span>
-                                </div>
-                                <div className="aprovacao-detalhe-row">
-                                    <span className="detalhe-label">Área:</span>
-                                    <span className="detalhe-valor">{c.area}</span>
-                                </div>
-                                <div className="aprovacao-detalhe-row">
-                                    <span className="detalhe-label">E-mail:</span>
-                                    <span className="detalhe-valor detalhe-email">{c.email}</span>
-                                </div>
-                                <div className="aprovacao-detalhe-row">
-                                    <span className="detalhe-label">Cargo:</span>
-                                    <span className="detalhe-valor">
-                                        {c.authLevel === 1 ? "Coordenador" : "Professor"}
-                                        <span className="detalhe-authlevel"> (authLevel {c.authLevel})</span>
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Botões — só aparecem se pendente */}
-                            {c.status === "pendente" && (
-                                <div className="aprovacao-acoes">
-                                    <button className="btn-aprovar" onClick={() => abrirAprovar(c)}>
-                                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
-                                        Aprovar
-                                    </button>
-                                    <button className="btn-rejeitar" onClick={() => abrirRejeitar(c)}>
-                                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                                        Rejeitar
-                                    </button>
-                                </div>
+                            {f.charAt(0).toUpperCase() + f.slice(1)}
+                            {f === "pendente" && totalPendente > 0 && (
+                                <span className="filtro-badge">{totalPendente}</span>
                             )}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="aprovacao-lista">
+                    {filtrados.length === 0 ? (
+                        <div className="aprovacao-vazia">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M8 15s1.5-2 4-2 4 2 4 2" />
+                                <line x1="9" y1="9" x2="9.01" y2="9" />
+                                <line x1="15" y1="9" x2="15.01" y2="9" />
+                            </svg>
+                            <p>
+                                Nenhuma solicitação{" "}
+                                {filtro === "pendente" ? "pendente" : "aprovada"}
+                            </p>
                         </div>
-                    ))
-                )}
+                    ) : (
+                        filtrados.map((c, i) => (
+                            <div
+                                key={c.id}
+                                className="aprovacao-card"
+                                style={{ animationDelay: `${i * 0.07}s` }}
+                            >
+                                <div className="aprovacao-card-header">
+                                    <div className={`aprovacao-dot ${
+                                        c.status === "aprovado" ? "dot-green" : "dot-yellow"
+                                    }`} />
+                                    <div className="aprovacao-nome-wrap">
+                                        <span className="aprovacao-apelido">{c.apelido}</span>
+                                        <span className={`aprovacao-badge ${c.authLevel === 1 ? "badge-blue" : "badge-red"}`}>
+                                            {c.status === "pendente" ? "PENDENTE" : c.status.toUpperCase()}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="aprovacao-detalhes">
+                                    <div className="aprovacao-detalhe-row">
+                                        <span className="detalhe-label">Nome:</span>
+                                        <span className="detalhe-valor">{c.nome}</span>
+                                    </div>
+                                    <div className="aprovacao-detalhe-row">
+                                        <span className="detalhe-label">Área:</span>
+                                        <span className="detalhe-valor">{c.area}</span>
+                                    </div>
+                                    <div className="aprovacao-detalhe-row">
+                                        <span className="detalhe-label">E-mail:</span>
+                                        <span className="detalhe-valor detalhe-email">{c.email}</span>
+                                    </div>
+                                    <div className="aprovacao-detalhe-row">
+                                        <span className="detalhe-label">Cargo:</span>
+                                        <span className="detalhe-valor">
+                                            {c.authLevel === 1 ? "Coordenador" : "Professor"}
+                                            <span className="detalhe-authlevel"> (authLevel {c.authLevel})</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {c.status === "pendente" && (
+                                    <div className="aprovacao-acoes">
+                                        <button className="btn-aprovar" onClick={() => abrirAprovar(c)}>
+                                            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+                                            Aprovar
+                                        </button>
+                                        <button className="btn-rejeitar" onClick={() => abrirRejeitar(c)}>
+                                            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                            Rejeitar
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
 
-            <div className="spacer" />
             <Footer />
 
-            {/* Modal de confirmação */}
             {confirmacao && cadastroEmConfirmacao && (
                 <div
                     className="modal-overlay"
@@ -302,7 +292,6 @@ export default function AprovarCadastros() {
                                 : " não terá acesso ao sistema."}
                         </p>
 
-                        {/* Seletor de authLevel — só aparece ao aprovar */}
                         {confirmacao.acao === "aprovado" && (
                             <div className="modal-authlevel">
                                 <span className="modal-authlevel-label">
@@ -355,6 +344,6 @@ export default function AprovarCadastros() {
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 }

@@ -485,8 +485,8 @@ export default function Professor() {
                 <div className="legend-item"><span className="legend-badge legend-confirmed"></span> Confirmadas</div>
                 <div className="legend-item"><span className="legend-badge legend-pending"></span> Pendentes</div>
                 <div className="legend-item"><span className="legend-badge legend-cancelled"></span> Canceladas</div>
-                <div className="legend-item"><span className="box roxo"></span> Feriados</div>
-                <div className="legend-item"><span className="box magenta"></span> Avaliações</div>
+                <div className="legend-item"><span className="legend-badge legend-holiday"></span> Feriados</div>
+                <div className="legend-item"><span className="legend-badge legend-exam"></span> Avaliações</div>
               </div>
             </div>
           </aside>

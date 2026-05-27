@@ -15,7 +15,7 @@ const menuActions = [
     icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
     title: "Grade de Reservas",
     desc: "Visualize a grade completa do dia",
-    to: "/grade-reservas",
+    to: "/visualizacao-reservas",
   },
   {
     icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
