@@ -1125,7 +1125,7 @@ button.menu-card {
 .reserva-item {
   background: white;
   border-radius: var(--radius-md);
-  padding: 14px 16px;
+  padding: 20px 28px;
   border: 1.5px solid var(--gray-200);
   display: flex;
   align-items: center;
@@ -1133,6 +1133,16 @@ button.menu-card {
   animation: fadeUp 0.5s ease both;
 }
 
+.btn-action {
+  min-width: 100px;
+  height: 38px;
+  text-align: center;
+}
+
+.reserva-item {
+  justify-content: space-between;
+  align-items: flex-start;
+}
 .reserva-item:nth-child(1) { animation-delay: 0.08s; }
 .reserva-item:nth-child(2) { animation-delay: 0.15s; }
 .reserva-item:nth-child(3) { animation-delay: 0.22s; }
@@ -1226,19 +1236,9 @@ button.menu-card {
   background: var(--red-dark);
 }
 
-.reserva-item {
-  justify-content: space-between;
-  align-items: flex-start;
-}
 
-.reservas-list {
-  padding: 0 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 920px;
-  margin: 0 auto;
-}
+
+
 
 @media (max-width: 900px) {
   .reserva-item {
@@ -2026,13 +2026,15 @@ button.menu-card {
 /* ══════════════════════════════════════════
 SOLICITAÇÕES DE RESERVA 
 ══════════════════════════════════════════ */
-.content-solicitarReserva{
-    padding: 40px 24px 32px;
-    background: var(--white);
-    display: flex;
-    gap: 50px;
-    justify-content: center;
-  }
+.content-solicitarReserva {
+  padding: 40px 24px 32px;
+  background: var(--white);
+  display: flex;
+  gap: 50px;
+  justify-content: center;
+  flex: 1;
+  flex-wrap: wrap;
+}
 
 
 .div-calendario{
@@ -2134,7 +2136,6 @@ SOLICITAÇÕES DE RESERVA
 /*calendario*/
 
 .react-calendar {
-  width: 100%;
   max-width: 580px;
   min-height: 430px;
   background: var(--white);
@@ -2146,6 +2147,8 @@ SOLICITAÇÕES DE RESERVA
   border: none;
   font-family: inherit;
   margin-left: 10px;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .react-calendar__navigation button:nth-child(1),
@@ -2517,6 +2520,32 @@ SOLICITAÇÕES DE RESERVA
   border-radius: 30px;
   padding: 24px 22px 20px;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+}
+.modal-espacos .form-group-reserva input,
+.modal-espacos .form-group-reserva select {
+  width: 100%;
+  box-sizing: border-box;
+}
+.modal-espacos .form-group-reserva {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.modal-espacos .btn-submit-reserva {
+  width: auto;
+  flex: 1;
+  margin: 0;
+  height: 44px;
+  font-size: 15px;
+  font-family: var(--font-main);
+}
+.modal-espacos .btn-cancelar {
+  margin-top: 0;
+  height: 44px;
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-main);
+  font-size: 15px;
 }
 
 /* topo */
@@ -4636,17 +4665,6 @@ button {
         width: 100%;
     }
 }
-.title-user{
-  font-family: var(--font-main);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--gray-800);
-  padding: 20px 20px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-left:12%;
-}
 .user-list {
     display: flex;
     flex-direction: column;
@@ -6407,6 +6425,9 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
 
   .gr-slot-th__e {
     display: none;
+  }
+}
+
 
 .dia-avaliacao {
     background-color: var(--magenta-soft) !important;
@@ -6705,8 +6726,7 @@ footer, .Footer {
     grid-template-columns: 1fr;
   }
 }
-  }
-}
+
 /* ═══════════════════════════════════════════
    TODAS AS RESERVAS — TodasReservas.css
    Prefixo: tr-   (evita colisão com app.css)
@@ -6983,7 +7003,10 @@ footer, .Footer {
 
 .tr-field--action {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
+  justify-content: flex-end;
+  grid-column: -2 / -1;
+  align-self: start;
 }
 
 .tr-field__label {
@@ -7433,6 +7456,7 @@ footer, .Footer {
 
 /*/* Célula sala — para sobrescrever qualquer estilo global */
 .gr-td-sala {
+  display:flex;
   width: 120px;
   min-width: 120px;
   max-width: 140px;
@@ -7653,6 +7677,29 @@ footer, .Footer {
   .gr-filterbar, .gr-card__actions, .gr-card__footer,
   .gr-legend, .gr-breadcrumb, .gr-banner { display: none; }
   .gr-card { border: none; box-shadow: none; }
+}
+@media print {
+  .gr-card__body {
+    overflow: visible !important;
+  }
+  .gr-table-wrap {
+    overflow: visible !important;
+  }
+  .gr-table {
+    font-size: 7px !important;
+  }
+  .gr-th-slot {
+    min-width: 40px !important;
+    width: 40px !important;
+  }
+  .gr-td-sala {
+    width: 80px !important;
+    min-width: 80px !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════

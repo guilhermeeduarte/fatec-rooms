@@ -515,6 +515,7 @@ export default function ReservaRecorrente() {
                   if (markedDates.has(iso)) return "dia-aceita";
                   return null;
                 }}
+
                 tileContent={({ date: d, view }) => {
                   if (view !== "month") return null;
                   if (!semesterRange) return null;
@@ -523,15 +524,19 @@ export default function ReservaRecorrente() {
                   if (day < semesterRange.start || day > semesterRange.end) return null;
                   const code = jsDoWToCode[d.getDay()];
                   if (!code || !form.weekDays.includes(code)) return null;
-                  const booking = recurringBookings.find((b) =>
-                      b.weekDays?.some((wd) => wd.startsWith(code === "SEG" ? "MON" : code === "TER" ? "TUE" : code === "QUA" ? "WED" : code === "QUI" ? "THU" : code === "SEX" ? "FRI" : "SAT"))
-                  );
                   return (
-                      <span style={{ fontSize: "0.55rem", display: "block", lineHeight: 1, color: "#166534", marginTop: "1px" }}>
-                  {booking ? booking.roomName?.slice(0, 6) : "✓"}
-                </span>
+                    <span style={{
+                      display: "block",
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "#16a34a",
+                      margin: "2px auto 0",
+                    }} />
                   );
                 }}
+
+
                 locale="pt-BR"
                 formatShortWeekday={(locale, d) =>
                     d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
@@ -755,68 +760,47 @@ export default function ReservaRecorrente() {
                   )}
 
                   {/* Períodos normais (não sábado), filtrados pelo turno da turma */}
-                  {selectedClassGroup && shiftPeriods.length > 0 && (
-                      <div>
-                        {shiftLabel && (
-                            <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                              Turno {shiftLabel}
-                            </div>
-                        )}
-                        {shiftPeriods.map((period) => {
-                              const isChecked = form.periodIds.includes(period.id);
-                              const isAuto = autoSelectedPeriodIds.includes(period.id);
-                              return (
-                                  <label
-                                      key={period.id}
-                                      className="period-checkbox"
-                                      style={{
-                                        background: isAuto && isChecked ? "#eff6ff" : "transparent",
-                                        borderRadius: "6px",
-                                        padding: "4px 6px",
-                                        marginBottom: "2px",
-                                        border: isAuto && isChecked ? "1px solid #bfdbfe" : "1px solid transparent",
-                                      }}
-                                  >
-                                    <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={() => togglePeriod(period.id)}
-                                    />
-                                    <span>
-                              {period.name} — {period.startTime?.slice(0, 5)} às {period.endTime?.slice(0, 5)}
-                                      {isAuto && isChecked && (
-                                          <span style={{ fontSize: "10px", marginLeft: "6px", color: "#2563eb", fontWeight: 600 }}>
-                                  (auto)
-                                </span>
-                                      )}
-                            </span>
-                                  </label>
-                              );
-                            })}
-                      </div>
-                  )}
-
-                  {/* Períodos de sábado — separados */}
-                  {form.weekDays.includes("SAB") && saturdayPeriods.length > 0 && (
-                      <div style={{ marginTop: "12px", borderTop: "1px dashed #e5e7eb", paddingTop: "10px" }}>
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                          Períodos de sábado
-                        </div>
-                        {saturdayPeriods.map((period) => {
-                          const isChecked = form.periodIds.includes(period.id);
-                          return (
-                              <label key={period.id} className="period-checkbox">
-                                <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={() => togglePeriod(period.id)}
-                                />
-                                {period.name} — {period.startTime?.slice(0, 5)} às {period.endTime?.slice(0, 5)}
-                              </label>
-                          );
-                        })}
-                      </div>
-                  )}
+{/* Períodos normais (todos, turno pré-selecionado) */}
+{selectedClassGroup && (
+  <div>
+    {shiftLabel && (
+      <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+        Turno {shiftLabel} — pré-selecionado
+      </div>
+    )}
+    {activePeriods.filter(p => !isSaturdayOnlyPeriod(p)).map((period) => {
+      const isChecked = form.periodIds.includes(period.id);
+      const isAuto = autoSelectedPeriodIds.includes(period.id);
+      return (
+        <label
+          key={period.id}
+          className="period-checkbox"
+          style={{
+            background: isAuto && isChecked ? "#eff6ff" : "transparent",
+            borderRadius: "6px",
+            padding: "4px 6px",
+            marginBottom: "2px",
+            border: isAuto && isChecked ? "1px solid #bfdbfe" : "1px solid transparent",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={() => togglePeriod(period.id)}
+          />
+          <span>
+            {period.name} — {period.startTime?.slice(0, 5)} às {period.endTime?.slice(0, 5)}
+            {isAuto && isChecked && (
+              <span style={{ fontSize: "10px", marginLeft: "6px", color: "#2563eb", fontWeight: 600 }}>
+                (auto)
+              </span>
+            )}
+          </span>
+        </label>
+      );
+    })}
+  </div>
+)}
                 </div>
 
                 {/* Resumo dos selecionados */}

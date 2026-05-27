@@ -5,13 +5,12 @@ import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 import { Calendar } from "lucide-react";
 import { Search } from 'lucide-react';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import "../styles/grade.css";
-
-
 
 // ─────────────────────────────────────────────────────────────────────────
 // PERÍODOS PADRÃO — usados como fallback enquanto a API não retorna
-// (evita tabela em branco; serão substituídos pelos dados reais da API)
 // ─────────────────────────────────────────────────────────────────────────
 const DEFAULT_PERIODS = [
   { periodId: 1,  periodName: "1º",  startTime: "07:30", endTime: "08:20" },
@@ -130,7 +129,7 @@ function Tooltip({ res, roomName, x, y }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// MODAL DE NOVA RESERVA
+// MODAL DE NOVA RESERVA — margens corrigidas
 // ─────────────────────────────────────────────────────────────────────────
 function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
   const [roomId, setRoomId] = useState("");
@@ -178,6 +177,9 @@ function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
     }
   }
 
+  // Estilo inline para grupos de campo dentro do modal — zera margens laterais
+  const fieldStyle = { marginLeft: 0, marginRight: 0 };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-espacos" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
@@ -187,14 +189,14 @@ function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
         </div>
         {error && <div style={{ color: "#b91c1c", marginBottom: "0.75rem", fontSize: "0.9rem" }}>{error}</div>}
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <div className="form-group-reserva">
+          <div className="form-group-reserva" style={fieldStyle}>
             <label>Sala *</label>
             <select value={roomId} onChange={e => setRoomId(e.target.value)} required>
               <option value="">Selecione</option>
               {rooms.map(r => <option key={r.roomId} value={r.roomId}>{r.roomName}</option>)}
             </select>
           </div>
-          <div className="form-group-reserva">
+          <div className="form-group-reserva" style={fieldStyle}>
             <label>Períodos *</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
               {periods.map(p => (
@@ -210,12 +212,12 @@ function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
               ))}
             </div>
           </div>
-          <div className="form-group-reserva">
+          <div className="form-group-reserva" style={fieldStyle}>
             <label>Motivo *</label>
             <input type="text" value={motivo} onChange={e => setMotivo(e.target.value)}
               placeholder="Descreva o motivo" required />
           </div>
-          <div className="form-group-reserva">
+          <div className="form-group-reserva" style={fieldStyle}>
             <label>Curso</label>
             <select value={curso} onChange={e => setCurso(e.target.value)}
               required={!naoSeAplica} disabled={naoSeAplica}
@@ -228,18 +230,22 @@ function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
               <option value="comex">Comércio Exterior</option>
             </select>
           </div>
-          <div className="form-group-reserva-check">
+          <div className="form-group-reserva-check" style={fieldStyle}>
             <input type="checkbox" id="nsa2" checked={naoSeAplica} onChange={e => {
               setNaoSeAplica(e.target.checked);
               if (e.target.checked) setCurso("");
             }} />
             <label htmlFor="nsa2"> Não se aplica a um curso</label>
           </div>
-          <div style={{ display: "flex", gap: "0.75rem" }}>
-            <button type="submit" className="btn-submit-reserva" disabled={loading}>
+          <div style={{ display: "flex", gap: "0.75rem", marginLeft: 0, marginRight: 0 }}>
+            <button type="submit" className="btn-submit-reserva"
+              style={{ flex: 1, margin: 0, height: 44, fontSize: 15 }}
+              disabled={loading}>
               {loading ? "Enviando..." : "Solicitar"}
             </button>
-            <button type="button" className="btn-cancelar" onClick={onClose}>Cancelar</button>
+            <button type="button" className="btn-cancelar"
+              style={{ marginTop: 0, height: 44, padding: "8px 20px" }}
+              onClick={onClose}>Cancelar</button>
           </div>
         </form>
       </div>
@@ -249,8 +255,6 @@ function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
 
 // ─────────────────────────────────────────────────────────────────────────
 // TABELA PRINCIPAL DA GRADE
-// Usa <table> real para colspan/rowspan corretos
-// visiblePeriods NUNCA está vazio — usa DEFAULT_PERIODS como fallback
 // ─────────────────────────────────────────────────────────────────────────
 function ScheduleTable({
   rooms,
@@ -261,7 +265,6 @@ function ScheduleTable({
   onCellEnter,
   onCellLeave,
 }) {
-  // Grupos para cabeçalho linha 1
   const groups = [
     { key: "Manhã",  label: "MANHÃ",  cls: "manham" },
     { key: "Tarde",  label: "TARDE",  cls: "tarde"  },
@@ -271,7 +274,6 @@ function ScheduleTable({
     periods: visiblePeriods.filter(p => periodGroup(p.startTime) === g.key),
   })).filter(g => g.periods.length > 0);
 
-  // Agrupa slots consecutivos da mesma reserva para colspan
   function getGroupedSlots(roomSlots) {
     const slots = visiblePeriods.map(vp => {
       const found = (roomSlots || []).find(s => s.periodId === vp.periodId);
@@ -308,20 +310,15 @@ function ScheduleTable({
     <div className="gr-table-wrap" onMouseMove={onMouseMove}>
       <table className="gr-table">
         <thead>
-          {/* Linha 1 — Manhã / Tarde / Noite */}
           <tr className="gr-thead-group">
             <th className="gr-th-sala" rowSpan={2} />
             {groups.map(g => (
-              <th
-                key={g.key}
-                colSpan={g.periods.length}
-                className={`gr-th-group gr-th-group--${g.cls}`}
-              >
+              <th key={g.key} colSpan={g.periods.length}
+                className={`gr-th-group gr-th-group--${g.cls}`}>
                 {g.label}
               </th>
             ))}
           </tr>
-          {/* Linha 2 — Horários individuais */}
           <tr className="gr-thead-slots">
             {visiblePeriods.map(p => (
               <th key={p.periodId} className="gr-th-slot">
@@ -332,7 +329,6 @@ function ScheduleTable({
           </tr>
         </thead>
         <tbody>
-          {/* Estado de carregamento: mostra salas com células skeleton */}
           {loading && (
             <tr>
               <td colSpan={visiblePeriods.length + 1} className="gr-state">
@@ -343,8 +339,6 @@ function ScheduleTable({
               </td>
             </tr>
           )}
-
-          {/* Erro */}
           {!loading && error && (
             <tr>
               <td colSpan={visiblePeriods.length + 1} className="gr-state gr-state--error">
@@ -352,8 +346,6 @@ function ScheduleTable({
               </td>
             </tr>
           )}
-
-          {/* Sem salas */}
           {!loading && !error && rooms.length === 0 && (
             <tr>
               <td colSpan={visiblePeriods.length + 1} className="gr-state">
@@ -361,8 +353,6 @@ function ScheduleTable({
               </td>
             </tr>
           )}
-
-          {/* Linhas de salas */}
           {!loading && !error && rooms.map(room => {
             const grouped = getGroupedSlots(room.slots);
             return (
@@ -456,7 +446,6 @@ export default function GradeReservas() {
 
   const roomsList = useMemo(() => schedule?.rooms || [], [schedule]);
 
-  // Extrai períodos da API; fallback para DEFAULT_PERIODS se API ainda não respondeu
   const allPeriods = useMemo(() => {
     if (schedule?.rooms?.length) {
       const slots = schedule.rooms[0].slots;
@@ -511,25 +500,91 @@ export default function GradeReservas() {
     setTip({ res: null, roomName: "", x: 0, y: 0 });
   }
 
-  function exportToCSV() {
+  // ── Exportar PDF horizontal ──────────────────────────────────────────
+  function exportToPDF() {
     if (!filteredRooms.length) return;
-    const headers = ["Sala", ...visiblePeriods.map(p => `${p.startTime?.slice(0,5)}-${p.endTime?.slice(0,5)}`)];
-    const rows = filteredRooms.map(room => {
-      const row = [room.roomName];
-      visiblePeriods.forEach(period => {
+
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.text("Grade de Reservas", 14, 14);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(fmtDateCap, 14, 20);
+    doc.setTextColor(0);
+
+    const headers = [
+      "Sala",
+      ...visiblePeriods.map(p => `${p.startTime?.slice(0, 5)}\n${p.endTime?.slice(0, 5)}`),
+    ];
+
+    const rows = filteredRooms.map(room => [
+      room.roomName,
+      ...visiblePeriods.map(period => {
         const slot = room.slots?.find(s => s.periodId === period.periodId);
-        row.push(slot?.occupant?.userOrClass || (slot?.status === "HOLIDAY" ? "FERIADO" : ""));
-      });
-      return row;
+        if (!slot || slot.status === "FREE") return "";
+        if (slot.status === "HOLIDAY") return "Feriado";
+        return slot.occupant?.userOrClass || "";
+      }),
+    ]);
+
+    autoTable(doc, {
+      head: [headers],
+      body: rows,
+      startY: 25,
+      styles: {
+        fontSize: 7,
+        cellPadding: 2,
+        halign: "center",
+        valign: "middle",
+        overflow: "linebreak",
+      },
+      headStyles: {
+        fillColor: [192, 18, 28],
+        textColor: 255,
+        fontStyle: "bold",
+        halign: "center",
+      },
+      columnStyles: {
+        0: { halign: "left", cellWidth: 30, fontStyle: "bold" },
+      },
+      alternateRowStyles: { fillColor: [248, 248, 248] },
+      didParseCell: (data) => {
+        if (data.section !== "body" || data.column.index === 0) return;
+        const periodIndex = data.column.index - 1;
+        const period = visiblePeriods[periodIndex];
+        if (!period) return;
+        const room = filteredRooms[data.row.index];
+        if (!room) return;
+        const slot = room.slots?.find(s => s.periodId === period.periodId);
+        if (!slot?.occupant) return;
+        if (slot.occupant.type === "RECURRING") {
+          data.cell.styles.fillColor = [168, 85, 247];
+          data.cell.styles.textColor = [255, 255, 255];
+        } else {
+          data.cell.styles.fillColor = [245, 158, 11];
+          data.cell.styles.textColor = [255, 255, 255];
+        }
+      },
+      // Legenda no rodapé
+      didDrawPage: (data) => {
+        const pageHeight = doc.internal.pageSize.getHeight();
+        doc.setFontSize(7);
+        doc.setFillColor(168, 85, 247);
+        doc.rect(14, pageHeight - 10, 8, 4, "F");
+        doc.setTextColor(60);
+        doc.text("Recorrente", 24, pageHeight - 7);
+        doc.setFillColor(245, 158, 11);
+        doc.rect(55, pageHeight - 10, 8, 4, "F");
+        doc.text("Simples", 65, pageHeight - 7);
+        doc.setTextColor(160);
+        doc.text(`Exportado em ${new Date().toLocaleDateString("pt-BR")}`, data.settings.margin.left, pageHeight - 2);
+      },
     });
-    const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `grade_${isoDate}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    doc.save(`grade_${isoDate}.pdf`);
   }
 
   const fmtDate = selDate.toLocaleDateString("pt-BR", {
@@ -563,11 +618,9 @@ export default function GradeReservas() {
       )}
 
       <main className="gr-main">
-
-        {/* Card */}
         <div className="gr-card">
 
-          {/* Topo: título + botões */}
+          {/* Topo */}
           <div className="gr-card__top">
             <div>
               <h2 className="gr-card__title">Grade de Horários</h2>
@@ -576,8 +629,8 @@ export default function GradeReservas() {
               </p>
             </div>
             <div className="gr-card__actions">
-              <button className="gr-btn gr-btn--outline" onClick={exportToCSV}>
-                Exportar
+              <button className="gr-btn gr-btn--outline" onClick={exportToPDF}>
+                Exportar PDF
               </button>
               <button className="gr-btn gr-btn--outline" onClick={() => window.print()}>
                 Imprimir
@@ -588,15 +641,14 @@ export default function GradeReservas() {
             </div>
           </div>
 
-          {/* Barra de filtros */}
+          {/* Filtros */}
           <div className="gr-filterbar">
-            {/* Navegação de data */}
             <div className="gr-filterbar__date" style={{ position: "relative" }}>
               <button className="gr-nav-btn" onClick={() => setSelDate(d => addDays(d, -1))}>‹</button>
               <button className="gr-nav-date-btn" onClick={() => setShowCal(v => !v)}>
                 {selDate.toLocaleDateString("pt-BR", {
                   weekday: "short", day: "2-digit", month: "short", year: "numeric",
-                })}<Calendar style={{ "margin-bottom": "-2px", "margin-left": "0.7em" }} color="black" size={15} />
+                })}<Calendar style={{ marginBottom: "-2px", marginLeft: "0.7em" }} color="black" size={15} />
               </button>
               <button className="gr-nav-btn" onClick={() => setSelDate(d => addDays(d, 1))}>›</button>
               {showCal && (
@@ -626,9 +678,9 @@ export default function GradeReservas() {
             <div className="gr-search">
               <Search size={18} color="gray" style={{ marginRight: "8px" }} />
               <input
-                  placeholder="Pesquisar turma, professor..."
-                  value={filterSearch}
-                  onChange={e => setFilterSearch(e.target.value)}
+                placeholder="Pesquisar turma, professor..."
+                value={filterSearch}
+                onChange={e => setFilterSearch(e.target.value)}
               />
             </div>
           </div>
@@ -644,7 +696,7 @@ export default function GradeReservas() {
             </span>
           </div>
 
-          {/* Banners situacionais */}
+          {/* Banners */}
           {isHolidayDay && (
             <div className="gr-banner gr-banner--holiday">
               <strong>Feriado</strong> — Reservas indisponíveis nesta data.
@@ -660,9 +712,7 @@ export default function GradeReservas() {
           )}
 
           {/* Tabela */}
-          <div className="gr-card__body">
-            {tableEl}
-          </div>
+          <div className="gr-card__body">{tableEl}</div>
 
           {/* Rodapé */}
           <div className="gr-card__footer">
@@ -697,36 +747,30 @@ export default function GradeReservas() {
 
       {/* Modal nova reserva */}
       {showBookingModal && (
-          <BookingModal
-              rooms={roomsList}
-              periods={allPeriods}
-              date={selDate}
-              onClose={() => setShowBookingModal(false)}
-              onSuccess={async () => {
-                setShowBookingModal(false);
-
-                // Buscar o nível de autenticação do usuário
-                try {
-                  const token = localStorage.getItem("token");
-                  const userRes = await fetch("/api/users/me", {
-                    headers: { Authorization: `Bearer ${token}` }
-                  });
-                  const userData = await userRes.json();
-
-                  // Verifica o authLevel e define a mensagem
-                  if (userData.authlevel === 1) {
-                    setSuccessMsg("Reserva realizada com sucesso.");
-                  } else {
-                    setSuccessMsg("Reserva solicitada com sucesso. Aguarde aprovação.");
-                  }
-                } catch (error) {
-                  // Caso de erro na busca, mensagem padrão
-                  setSuccessMsg("Reserva solicitada com sucesso. Aguarde aprovação.");
-                }
-
-                fetchSchedule(isoDate);
-              }}
-          />
+        <BookingModal
+          rooms={roomsList}
+          periods={allPeriods}
+          date={selDate}
+          onClose={() => setShowBookingModal(false)}
+          onSuccess={async () => {
+            setShowBookingModal(false);
+            try {
+              const token = localStorage.getItem("token");
+              const userRes = await fetch("/api/users/me", {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              const userData = await userRes.json();
+              if (userData.authlevel === 1) {
+                setSuccessMsg("Reserva realizada com sucesso.");
+              } else {
+                setSuccessMsg("Reserva solicitada com sucesso. Aguarde aprovação.");
+              }
+            } catch {
+              setSuccessMsg("Reserva solicitada com sucesso. Aguarde aprovação.");
+            }
+            fetchSchedule(isoDate);
+          }}
+        />
       )}
     </div>
   );

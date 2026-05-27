@@ -81,7 +81,12 @@ export default function Cadastro() {
     async function handleSubmit(e) {
         e.preventDefault();
         setError(null);
-
+        const nomeNormalizado = form.nome
+            .trim()
+            .split(/\s+/)
+            .map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+            .join(" ");
+            
         const nomeError = validateNome(form.nome);
         if (nomeError) { setError(nomeError); return; }
 
@@ -99,7 +104,7 @@ export default function Cadastro() {
         }
 
         try {
-            const nameParts = form.nome.trim().split(/\s+/).filter(Boolean);
+            const nameParts = nomeNormalizado.trim().split(/\s+/).filter(Boolean);
             const [firstname, ...lastnameParts] = nameParts;
             const lastname = lastnameParts.join(" ");
 
@@ -112,7 +117,7 @@ export default function Cadastro() {
                     email: form.email.trim(),
                     username: form.email.split("@")[0],
                     password: form.senha,
-                    displayname: form.nome,
+                    displayname: nomeNormalizado,
                 }),
             });
 

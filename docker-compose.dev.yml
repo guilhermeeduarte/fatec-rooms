@@ -41,7 +41,7 @@ services:
       - "5173:5173"
     volumes:
       - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
+      - /app/node_modules
     environment:
       - NODE_ENV=development
     networks:
@@ -68,4 +68,3 @@ networks:
 
 volumes:
   maven_cache:
-  frontend_node_modules:

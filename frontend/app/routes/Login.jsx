@@ -20,7 +20,7 @@ export default function Login() {
     }
 
     function parseLoginError(message, status) {
-        if (!message) {
+        if (!message || status === 401) {
             return status === 401
                 ? "E-mail ou senha incorretos. Verifique seus dados e tente novamente."
                 : "Erro no login. Tente novamente mais tarde.";

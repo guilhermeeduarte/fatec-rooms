@@ -248,9 +248,6 @@ export default function GerenciarUsuario() {
             />
 
             <div className="content">
-                <div className="title-user">
-                    <h3>Usuários cadastrados</h3>
-                </div>
 
                 {/* Barra de busca e filtros — usa classes já existentes no app.css */}
                 <div className="filtros">
@@ -300,10 +297,6 @@ export default function GerenciarUsuario() {
                     </div>
                 ) : (
                     <>
-                        <p className="usuarios-count">
-                            {usuariosFiltrados.length} usuário{usuariosFiltrados.length !== 1 ? "s" : ""} encontrado{usuariosFiltrados.length !== 1 ? "s" : ""}
-                            {hasActiveFilters && " com os filtros aplicados"}
-                        </p>
                         <div className="reservas-list">
                             {usuariosFiltrados.map((usuario) => (
                                 <div key={usuario.id} className="reserva-item">

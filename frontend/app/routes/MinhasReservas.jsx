@@ -68,7 +68,7 @@ export default function MinhasReservas() {
           espaco: r.roomName || "",
           horaInicio: startTime,
           horaFim: last?.periodEnd?.slice(0, 5) || "--:--",
-          motivo: r.subject || r.notes || "",
+          motivo: r.notes || r.subject || "",
           status: traduzirStatus(r.status),
           periodo: extrairPeriodo(startTime),
           curso: extrairCurso(r.notes),
