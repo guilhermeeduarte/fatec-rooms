@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
+import { Search } from 'lucide-react';
+import "../styles/todasReservas.css";
 
 const WEEKDAY_LABELS = {
   MONDAY: "SEG", TUESDAY: "TER", WEDNESDAY: "QUA",
@@ -83,7 +85,7 @@ export default function TodasReservas() {
         bookingDate, createdAt,
         data: bookingDate ? bookingDate.split("-").reverse().join("/") : "",
         dataSolicitacao: createdAt ? createdAt.split("-").reverse().join("/") : "",
-        tipoReserva: "Comum",
+        tipoReserva: "Simples",
         espaco: reserva.roomName,
         horaInicio: startTime,
         horaFim: last?.periodEnd?.slice(0, 5) || "--:--",
@@ -254,11 +256,18 @@ export default function TodasReservas() {
         <div className="tr-filters">
           <div className="tr-filters__row">
             <input
-              type="text"
-              placeholder="🔍  Buscar por sala, motivo, solicitante ou status…"
-              value={busca}
-              onChange={e => setBusca(e.target.value)}
-              className="tr-filters__search"
+                type="text"
+                placeholder="Buscar por sala, motivo, solicitante ou status…"
+                value={busca}
+                onChange={e => setBusca(e.target.value)}
+                className="tr-filters__search"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "12px center",
+                  backgroundSize: "18px",
+                  paddingLeft: "38px"
+                }}
             />
             <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} className="tr-filters__select">
               <option value="">Todos os status</option>
@@ -390,7 +399,7 @@ export default function TodasReservas() {
                 {reserva.status !== "Cancelada" && reserva.status !== "Recusada" && (
                   <div className="tr-field tr-field--action">
                     <button
-                      className="tr-btn-cancel"
+                      className="tr-btn-cancel cancel-reserva"
                       onClick={() => cancelarReserva(reserva)}
                       disabled={cancellingId === reserva.id}
                     >

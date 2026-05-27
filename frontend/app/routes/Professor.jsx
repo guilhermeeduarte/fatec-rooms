@@ -352,7 +352,7 @@ export default function Professor() {
     </svg>
 
     <span>
-      As reservas estão suspensas por agora.
+      As reservas estão suspensas no momento.
     </span>
   </div>
 )}
@@ -394,9 +394,9 @@ export default function Professor() {
         }
       }}
     >
-      <div className="menu-icon">
-        {action.icon}
-      </div>
+        <div className={`menu-icon ${disabled ? "menu-icon-disabled" : ""}`}>
+            {action.icon}
+        </div>
 
       <h3>{action.title}</h3>
 
@@ -516,7 +516,7 @@ export default function Professor() {
           }}
         >
           <div style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: "10px", borderBottom: "1px solid #E5E7EB", paddingBottom: "6px", display: "flex", justifyContent: "space-between" }}>
-            <span>📅 Dia {hoveredDay}</span>
+            <span>Dia {hoveredDay}</span>
             <span style={{ background: "#F3F4F6", padding: "2px 10px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: "500" }}>
               {tooltipData.bookings.length} reserva(s)
             </span>
@@ -524,14 +524,14 @@ export default function Professor() {
 
           {tooltipData.isExam && (
             <div style={{ marginBottom: "10px", padding: "8px", background: "#FDF2F8", borderRadius: "12px", borderLeft: "4px solid #E83E8C" }}>
-              <div style={{ fontWeight: 700, color: "#E83E8C", fontSize: "0.75rem", textTransform: "uppercase", marginBottom: "4px" }}>📖 Semana de Avaliação</div>
+              <div style={{ fontWeight: 700, color: "#E83E8C", fontSize: "0.75rem", textTransform: "uppercase", marginBottom: "4px" }}>Semana de Avaliação</div>
               <div style={{ fontSize: "0.85rem", fontWeight: 500 }}>Provas: {tooltipData.examTypes}</div>
             </div>
           )}
 
           {tooltipData.holiday && (
             <div style={{ marginBottom: "10px", padding: "8px", background: "#F3E8FF", borderRadius: "12px", borderLeft: "4px solid #A855F7" }}>
-              <div style={{ fontWeight: 700, color: "#6D28D9", fontSize: "0.75rem", textTransform: "uppercase", marginBottom: "4px" }}>🎉 Feriado</div>
+              <div style={{ fontWeight: 700, color: "#6D28D9", fontSize: "0.75rem", textTransform: "uppercase", marginBottom: "4px" }}>Feriado</div>
               <div style={{ fontSize: "0.85rem", fontWeight: 500 }}>{tooltipData.holiday.name}</div>
               {tooltipData.holiday.description && (
                 <div style={{ fontSize: "0.7rem", color: "#6B7280", marginTop: "4px" }}>{tooltipData.holiday.description}</div>
@@ -558,15 +558,15 @@ export default function Professor() {
                       {statusLabels[statusKey] || statusKey}
                     </div>
                     <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "#1F2937" }}>
-                      ⏱️ {booking.periods && booking.periods.length > 0
+                      {booking.periods && booking.periods.length > 0
                         ? `${formatTime(booking.periods[0].periodStart)} – ${formatTime(booking.periods[booking.periods.length - 1].periodEnd)}`
                         : "Horário não definido"}
                     </div>
                     <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#374151", marginTop: "4px" }}>
-                      🪑 {booking.roomName}
+                      {booking.roomName}
                     </div>
                     <div style={{ fontSize: "0.7rem", color: "#6B7280", marginTop: "2px" }}>
-                      📋 {booking.subject || "Sem assunto"}
+                      {booking.subject || "Sem assunto"}
                     </div>
                   </div>
                 );

@@ -107,7 +107,7 @@ export default function RelatorioReservas() {
     .slice(0, 10)
     .map(s => ({
       name: s.name,
-      "Avulsas aprovadas":    s.approvedBookings,
+      "Simples aprovadas":    s.approvedBookings,
       "Recorrentes ativas":   s.recurringActiveInstances,
       "Pendentes":            s.pendingBookings,
     }));
@@ -123,7 +123,7 @@ export default function RelatorioReservas() {
     if (activeTab === "salas") {
       const headers = [
         "Sala","Localização",
-        "Avulsas Total","Aprovadas","Pendentes","Canceladas","Rejeitadas",
+        "Simples Total","Aprovadas","Pendentes","Canceladas","Rejeitadas",
         "Recorrentes Total","Recorrentes Ativas","Recorrentes Canceladas","Recorrentes Puladas",
         "Ocupações Combinadas",
       ];
@@ -184,7 +184,7 @@ export default function RelatorioReservas() {
         title="Relatórios de Uso"
         className="page-hero-relatorios"
         tag="Análise de Reservas"
-        description="Visualize estatísticas de utilização das salas — avulsas e recorrentes."
+        description="Visualize estatísticas de utilização das salas — simples e recorrentes."
       />
 
       <div className="layout-relatorios">
@@ -222,7 +222,7 @@ export default function RelatorioReservas() {
             {/* Stats */}
             <div className="stats-row" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
               <StatCard highlight label="Ocupações Totais" value={totalCombinado} />
-              <StatCard label="Avulsas"         value={totalAvulsas} />
+              <StatCard label="Simples"         value={totalAvulsas} />
               <StatCard label="Aprovadas"       value={totalAprovadas} />
               <StatCard label="Pendentes"       value={totalPendentes} />
               <StatCard label="Inst. Recorrentes" value={totalRInstancias} />
@@ -235,7 +235,7 @@ export default function RelatorioReservas() {
             {/* Gráficos */}
             <div className="graficos-grid">
               <div className="grafico-card">
-                <h2>Reservas Avulsas por Status</h2>
+                <h2>Reservas Simples por Status</h2>
                 {pieAvulsas.length === 0
                   ? <p style={{ color: "var(--gray-500)", fontSize: 14 }}>Nenhum dado.</p>
                   : (
@@ -277,7 +277,7 @@ export default function RelatorioReservas() {
 
             {/* Barras combinadas */}
             <div className="grafico-card">
-              <h2>Ocupações por Sala — Top 10 (avulsas + recorrentes)</h2>
+              <h2>Ocupações por Sala — Top 10 (simples + recorrentes)</h2>
               {barData.length === 0
                 ? <p style={{ color: "var(--gray-500)", fontSize: 14 }}>Nenhuma sala com ocupação encontrada.</p>
                 : (
@@ -308,7 +308,7 @@ export default function RelatorioReservas() {
                         <tr style={{ borderBottom: "2px solid var(--gray-200)", background: "var(--gray-50)" }}>
                           <Th>Sala</Th>
                           <Th>Local</Th>
-                          <Th center>Avulsas</Th>
+                          <Th center>Simples</Th>
                           <Th center color="#22C55E">Aprovadas</Th>
                           <Th center color="#F59E0B">Pendentes</Th>
                           <Th center color="#EF4444">Canceladas</Th>

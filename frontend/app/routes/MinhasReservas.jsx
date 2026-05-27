@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import Popup from "../components/Popup";
+import { Search } from 'lucide-react';
 
 export default function MinhasReservas() {
   const [reservas, setReservas] = useState([]);
@@ -127,7 +128,7 @@ export default function MinhasReservas() {
   }
 
   const hasActiveFilters = busca || statusFiltro || dataFiltro ||
-    filtrosAvancados.sala || filtrosAvancados.periodo || filtrosAvancados.curso;
+      filtrosAvancados.sala || filtrosAvancados.periodo || filtrosAvancados.curso;
 
   const limparFiltros = () => {
     setBusca(""); setStatusFiltro(""); setDataFiltro("");
@@ -138,8 +139,8 @@ export default function MinhasReservas() {
   const reservasFiltradas = reservas.filter((r) => {
     const q = busca.toLowerCase();
     const matchBusca = !busca ||
-      r.espaco.toLowerCase().includes(q) || r.motivo.toLowerCase().includes(q) ||
-      r.status.toLowerCase().includes(q) || r.curso.toLowerCase().includes(q);
+        r.espaco.toLowerCase().includes(q) || r.motivo.toLowerCase().includes(q) ||
+        r.status.toLowerCase().includes(q) || r.curso.toLowerCase().includes(q);
     const matchStatus = !statusFiltro || r.status === statusFiltro;
     const matchData = !dataFiltro || r.rawDate === dataFiltro;
     const matchSala = !filtrosAvancados.sala || r.espaco.toLowerCase().includes(filtrosAvancados.sala.toLowerCase());
@@ -168,167 +169,188 @@ export default function MinhasReservas() {
   const podeAcionar = (r) => r.status !== "Cancelada" && r.status !== "Recusada";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "#f9fafb" }}>
-      <Navbar activePage="Minhas Reservas" />
-      <PageHero title="Minhas Reservas" tag="Área do Professor" description="Visualize, filtre e gerencie suas reservas." />
+      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "#f9fafb" }}>
+        <Navbar activePage="Minhas Reservas" />
+        <PageHero title="Minhas Reservas" tag="Área do Professor" description="Visualize, filtre e gerencie suas reservas." />
 
-      <main style={{ flex: 1, width: "100%", maxWidth: 1100, margin: "0 auto", padding: "2rem 1.5rem" }}>
+        <main style={{ flex: 1, width: "100%", maxWidth: 1100, margin: "0 auto", padding: "2rem 1.5rem" }}>
 
-        {/* ── Filtros ── */}
-        <div style={{ background: "white", borderRadius: 14, padding: "1rem 1.25rem", marginBottom: "1.25rem", boxShadow: "0 2px 8px rgba(0,0,0,.06)", border: "1px solid #e5e7eb" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", alignItems: "center" }}>
-            <input
-              type="text"
-              placeholder="🔍  Buscar por sala, motivo, curso..."
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              style={{ flex: "2 1 240px", padding: "0.5rem 0.85rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.85rem", background: "#f9fafb" }}
-            />
-            <select value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}
-              style={{ flex: "1 1 160px", padding: "0.5rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.85rem", background: "#f9fafb" }}>
-              <option value="">Todos os status</option>
-              <option value="Pendente">Pendente</option>
-              <option value="Aceita">Aceita</option>
-              <option value="Cancelada">Cancelada</option>
-              <option value="Recusada">Recusada</option>
-            </select>
-            <input type="date" value={dataFiltro} onChange={(e) => setDataFiltro(e.target.value)}
-              style={{ flex: "1 1 160px", padding: "0.5rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.85rem", background: "#f9fafb" }}
-            />
-            <button type="button" onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              style={{ padding: "0.5rem 1rem", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 8, cursor: "pointer", fontSize: "0.83rem", fontWeight: 600, whiteSpace: "nowrap" }}>
-              {showAdvancedFilters ? "▲ Menos" : "▼ Mais filtros"}
-            </button>
-            {hasActiveFilters && (
-              <button type="button" onClick={limparFiltros}
-                style={{ padding: "0.5rem 1rem", background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 8, cursor: "pointer", fontSize: "0.83rem", fontWeight: 700, whiteSpace: "nowrap" }}>
-                Limpar
-              </button>
-            )}
-          </div>
-
-          {showAdvancedFilters && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px dashed #e5e7eb" }}>
-              <input type="text" placeholder="Sala" value={filtrosAvancados.sala}
-                onChange={(e) => setFiltrosAvancados({ ...filtrosAvancados, sala: e.target.value })}
-                style={{ flex: "1 1 160px", padding: "0.45rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.83rem", background: "#f9fafb" }}
-              />
-              <select value={filtrosAvancados.periodo} onChange={(e) => setFiltrosAvancados({ ...filtrosAvancados, periodo: e.target.value })}
-                style={{ flex: "1 1 140px", padding: "0.45rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.83rem", background: "#f9fafb" }}>
-                <option value="">Período</option>
-                <option value="Manhã">Manhã</option>
-                <option value="Tarde">Tarde</option>
-                <option value="Noite">Noite</option>
-              </select>
-              <input type="text" placeholder="Curso" value={filtrosAvancados.curso}
-                onChange={(e) => setFiltrosAvancados({ ...filtrosAvancados, curso: e.target.value })}
-                style={{ flex: "1 1 160px", padding: "0.45rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.83rem", background: "#f9fafb" }}
-              />
-            </div>
-          )}
-
-          <p style={{ fontSize: "0.82rem", color: "#94a3b8", marginTop: "0.6rem", marginBottom: 0 }}>
-            {loading ? "Carregando..." : `${reservasFiltradas.length} reserva${reservasFiltradas.length !== 1 ? "s" : ""} encontrada${reservasFiltradas.length !== 1 ? "s" : ""}${hasActiveFilters ? " com os filtros aplicados" : ""}`}
-          </p>
-        </div>
-
-        {/* ── Cards ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
-          {!loading && reservasFiltradas.length === 0 && (
-            <div style={{ textAlign: "center", padding: "3rem", color: "#94a3b8", background: "white", borderRadius: 14, border: "1.5px dashed #e5e7eb" }}>
-              {hasActiveFilters ? "Nenhuma reserva corresponde aos filtros." : "Você ainda não possui reservas."}
-            </div>
-          )}
-
-          {reservasFiltradas.map((reserva) => (
-            <div key={reserva.id} style={{
-              background: "white",
-              borderRadius: 14,
-              border: "1.5px solid #e5e7eb",
-              borderLeft: `5px solid ${borderColor(reserva.status)}`,
-              padding: "1.25rem 1.5rem",
-              boxShadow: "0 2px 8px rgba(0,0,0,.04)",
-              transition: "transform .18s, box-shadow .18s",
-            }}>
-              {/* Grid de campos */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem 1.5rem" }}>
-                <Field label="Data" value={reserva.data} />
-                <Field label="Espaço" value={reserva.espaco} />
-                <Field label="Horário" value={`${reserva.horaInicio} – ${reserva.horaFim}`} />
-                <Field label="Período" value={reserva.periodo || "—"} />
-                <Field label="Curso" value={reserva.curso || "—"} />
-
-                {/* Status com badge */}
-                <div>
-                  <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Status</div>
-                  <span style={{ display: "inline-block", fontSize: "0.8rem", fontWeight: 700, padding: "3px 12px", borderRadius: 20, background: statusBg(reserva.status), color: statusColor(reserva.status) }}>
-                    {reserva.status}
-                  </span>
-                </div>
-
-                {/* Motivo — full width */}
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Motivo</div>
-                  {editandoId === reserva.id ? (
-                    <input value={novoMotivo} onChange={(e) => setNovoMotivo(e.target.value)}
-                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.9rem" }}
-                    />
-                  ) : (
-                    <div style={{ fontSize: "0.9rem", color: "#1e293b" }}>{reserva.motivo || "—"}</div>
-                  )}
-                </div>
+          {/* ── Filtros ── */}
+          <div style={{ background: "white", borderRadius: 14, padding: "1rem 1.25rem", marginBottom: "1.25rem", boxShadow: "0 2px 8px rgba(0,0,0,.06)", border: "1px solid #e5e7eb" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", alignItems: "center" }}>
+              {/* Input de busca com ícone de lupa */}
+              <div style={{ flex: "2 1 240px", position: "relative" }}>
+                <Search
+                    size={18}
+                    color="#9ca3af"
+                    style={{
+                      position: "absolute",
+                      left: "12px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      pointerEvents: "none"
+                    }}
+                />
+                <input
+                    type="text"
+                    placeholder="Buscar por sala, motivo, curso..."
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "0.5rem 0.85rem 0.5rem 38px",
+                      border: "1.5px solid #d1d5db",
+                      borderRadius: 8,
+                      fontSize: "0.85rem",
+                      background: "#f9fafb"
+                    }}
+                />
               </div>
-
-              {/* Botões de ação */}
-              {podeAcionar(reserva) && (
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.6rem", marginTop: "1rem", paddingTop: "0.85rem", borderTop: "1px solid #f3f4f6" }}>
-                  {editandoId === reserva.id ? (
-                    <>
-                      <button onClick={cancelarEdicao}
-                        style={{ padding: "0.45rem 1.1rem", border: "1px solid #d1d5db", background: "white", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 500 }}>
-                        Voltar
-                      </button>
-                      <button onClick={() => salvarEdicao(reserva.id)} disabled={salvando}
-                        style={{ padding: "0.45rem 1.1rem", background: "#16a34a", color: "white", border: "none", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 700 }}>
-                        {salvando ? "Salvando..." : "Salvar"}
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      {podeEditar(reserva) && (
-                        <button onClick={() => iniciarEdicao(reserva)}
-                          style={{ padding: "0.45rem 1.1rem", border: "1.5px solid #3b82f6", color: "#3b82f6", background: "white", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 600 }}>
-                          Editar motivo
-                        </button>
-                      )}
-                      <button onClick={() => cancelarReserva(reserva.id)}
-                        style={{ padding: "0.45rem 1.1rem", background: "#ef4444", color: "white", border: "none", borderRadius: 8, cursor: "pointer", fontSize: "0.85rem", fontWeight: 700 }}>
-                        Cancelar reserva
-                      </button>
-                    </>
-                  )}
-                </div>
+              <select value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}
+                      style={{ flex: "1 1 160px", padding: "0.5rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.85rem", background: "#f9fafb" }}>
+                <option value="">Todos os status</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Aceita">Aceita</option>
+                <option value="Cancelada">Cancelada</option>
+                <option value="Recusada">Recusada</option>
+              </select>
+              <input type="date" value={dataFiltro} onChange={(e) => setDataFiltro(e.target.value)}
+                     style={{ flex: "1 1 160px", padding: "0.5rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.85rem", background: "#f9fafb" }}
+              />
+              <button type="button" onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                      style={{ padding: "0.5rem 1rem", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 8, cursor: "pointer", fontSize: "0.83rem", fontWeight: 600, whiteSpace: "nowrap" }}>
+                {showAdvancedFilters ? "▲ Menos" : "▼ Mais filtros"}
+              </button>
+              {hasActiveFilters && (
+                  <button type="button" onClick={limparFiltros}
+                          style={{ padding: "0.5rem 1rem", background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 8, cursor: "pointer", fontSize: "0.83rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                    Limpar
+                  </button>
               )}
             </div>
-          ))}
-        </div>
-      </main>
 
-      <Footer />
+            {showAdvancedFilters && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px dashed #e5e7eb" }}>
+                  <input type="text" placeholder="Sala" value={filtrosAvancados.sala}
+                         onChange={(e) => setFiltrosAvancados({ ...filtrosAvancados, sala: e.target.value })}
+                         style={{ flex: "1 1 160px", padding: "0.45rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.83rem", background: "#f9fafb" }}
+                  />
+                  <select value={filtrosAvancados.periodo} onChange={(e) => setFiltrosAvancados({ ...filtrosAvancados, periodo: e.target.value })}
+                          style={{ flex: "1 1 140px", padding: "0.45rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.83rem", background: "#f9fafb" }}>
+                    <option value="">Período</option>
+                    <option value="Manhã">Manhã</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Noite">Noite</option>
+                  </select>
+                  <input type="text" placeholder="Curso" value={filtrosAvancados.curso}
+                         onChange={(e) => setFiltrosAvancados({ ...filtrosAvancados, curso: e.target.value })}
+                         style={{ flex: "1 1 160px", padding: "0.45rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.83rem", background: "#f9fafb" }}
+                  />
+                </div>
+            )}
 
-      {showSuccessPopup && <Popup message={success} onClose={() => setShowSuccessPopup(false)} />}
-      {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
-    </div>
+            <p style={{ fontSize: "0.82rem", color: "#94a3b8", marginTop: "0.6rem", marginBottom: 0 }}>
+              {loading ? "Carregando..." : `${reservasFiltradas.length} reserva${reservasFiltradas.length !== 1 ? "s" : ""} encontrada${reservasFiltradas.length !== 1 ? "s" : ""}${hasActiveFilters ? " com os filtros aplicados" : ""}`}
+            </p>
+          </div>
+
+          {/* ── Cards ── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
+            {!loading && reservasFiltradas.length === 0 && (
+                <div style={{ textAlign: "center", padding: "3rem", color: "#94a3b8", background: "white", borderRadius: 14, border: "1.5px dashed #e5e7eb" }}>
+                  {hasActiveFilters ? "Nenhuma reserva corresponde aos filtros." : "Você ainda não possui reservas."}
+                </div>
+            )}
+
+            {reservasFiltradas.map((reserva) => (
+                <div key={reserva.id} style={{
+                  background: "white",
+                  borderRadius: 14,
+                  border: "1.5px solid #e5e7eb",
+                  borderLeft: `5px solid ${borderColor(reserva.status)}`,
+                  padding: "1.25rem 1.5rem",
+                  boxShadow: "0 2px 8px rgba(0,0,0,.04)",
+                  transition: "transform .18s, box-shadow .18s",
+                }}>
+                  {/* Grid de campos */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem 1.5rem" }}>
+                    <Field label="Data" value={reserva.data} />
+                    <Field label="Espaço" value={reserva.espaco} />
+                    <Field label="Horário" value={`${reserva.horaInicio} – ${reserva.horaFim}`} />
+                    <Field label="Período" value={reserva.periodo || "—"} />
+                    <Field label="Curso" value={reserva.curso || "—"} />
+
+                    {/* Status com badge */}
+                    <div>
+                      <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Status</div>
+                      <span style={{ display: "inline-block", fontSize: "0.8rem", fontWeight: 700, padding: "3px 12px", borderRadius: 20, background: statusBg(reserva.status), color: statusColor(reserva.status) }}>
+                    {reserva.status}
+                  </span>
+                    </div>
+
+                    {/* Motivo — full width */}
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Motivo</div>
+                      {editandoId === reserva.id ? (
+                          <input value={novoMotivo} onChange={(e) => setNovoMotivo(e.target.value)}
+                                 style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: "0.9rem" }}
+                          />
+                      ) : (
+                          <div style={{ fontSize: "0.9rem", color: "#1e293b" }}>{reserva.motivo || "—"}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Botões de ação */}
+                  {podeAcionar(reserva) && (
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.6rem", marginTop: "1rem", paddingTop: "0.85rem", borderTop: "1px solid #f3f4f6" }}>
+                        {editandoId === reserva.id ? (
+                            <>
+                              <button onClick={cancelarEdicao}
+                                      className={"btn-cancelar"}>
+                                Voltar
+                              </button>
+                              <button onClick={() => salvarEdicao(reserva.id)} disabled={salvando}
+                                      className={"btn-salvar"}>
+                                {salvando ? "Salvando..." : "Salvar"}
+                              </button>
+                            </>
+                        ) : (
+                            <>
+                              {podeEditar(reserva) && (
+                                  <button onClick={() => iniciarEdicao(reserva)}
+                                          className={"btn-action btn-secondary"}>
+                                    Editar motivo
+                                  </button>
+                              )}
+                              <button onClick={() => cancelarReserva(reserva.id)}
+                                      className={"btn-action"}>
+                                Cancelar reserva
+                              </button>
+                            </>
+                        )}
+                      </div>
+                  )}
+                </div>
+            ))}
+          </div>
+        </main>
+
+        <Footer />
+
+        {showSuccessPopup && <Popup message={success} onClose={() => setShowSuccessPopup(false)} />}
+        {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
+      </div>
   );
 }
 
 function Field({ label, value }) {
   return (
-    <div>
-      <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-        {label}
+      <div>
+        <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+          {label}
+        </div>
+        <div style={{ fontSize: "0.9rem", color: "#1e293b" }}>{value}</div>
       </div>
-      <div style={{ fontSize: "0.9rem", color: "#1e293b" }}>{value}</div>
-    </div>
   );
 }

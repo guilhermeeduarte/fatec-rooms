@@ -3,13 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
+import "../styles/reservasRecentes.css";
 
 const menuActions = [
-  {
-    icon: <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M11 20H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2v10" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-    title: "Solicitações de Reserva",
-    desc: "Aprove ou rejeite solicitações",
-    to: "/coordenador-solicitacoes",
+    {
+    icon: <svg viewBox="0 0 24 24">
+      <path d="M17 1l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M7 23l-4-4 4-4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>,
+    title: "Reserva Recorrente",
+    desc: "Crie reservas para todo o semestre",
+    to: "/reserva-recorrente",
   },
   {
     icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
@@ -18,57 +24,79 @@ const menuActions = [
     to: "/visualizacao-reservas",
   },
   {
-    icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
+    icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
+    title: "Reservar Sala",
+    desc: "Reserva com aprovação imediata",
+    to: "/reserva-coordenador",
+  },
+  {
+    icon: <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M11 20H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2v10" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+    title: "Solicitações de Reserva",
+    desc: "Aprove ou rejeite solicitações pendentes",
+    to: "/coordenador-solicitacoes",
+  },
+  {
+    icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+               stroke="#C0121C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               className="lucide lucide-list-icon lucide-list">
+      <path d="M3 5h.01"/>
+      <path d="M3 12h.01"/>
+      <path d="M3 19h.01"/>
+      <path d="M8 5h13"/>
+      <path d="M8 12h13"/>
+      <path d="M8 19h13"/>
+    </svg>,
     title: "Todas as Reservas",
-    desc: "Visualize e gerencie todas as reservas",
+    desc: "Visualize e gerencie histórico completo",
     to: "/todas-reservas",
   },
   {
     icon: <svg viewBox="0 0 24 24">
-      <path d="M17 1l4 4-4 4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M3 11V9a4 4 0 0 1 4-4h14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M7 23l-4-4 4-4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M21 13v2a4 4 0 0 1-4 4H3" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
     </svg>,
-    title: "Reserva Recorrente",
-    desc: "Crie reservas que se repetem semanalmente",
-    to: "/reserva-recorrente",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
-    title: "Reservar Sala",
-    desc: "Reserva com aprovação imediata",
-    to: "/solicita-reserva-coordenador",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
-    title: "Gerenciar Salas",
-    desc: "Adicionar, editar ou desativar salas",
-    to: "/gerenciar-salas",
-  },
-  {
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
     title: "Gerenciar Usuários",
-    desc: "Cadastrar e gerenciar acesso",
+    desc: "Gerencie os usuários do sistema",
     to: "/gerenciar-usuarios",
   },
   {
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
-    title: "Professores",
-    desc: "Aprovar cadastros pendentes",
+    icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+               stroke="#C0121C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               className="lucide lucide-check-icon lucide-check">
+      <path d="M20 6 9 17l-5-5"/>
+    </svg>,
+    title: "Aprovação de Cadastro",
+    desc: "Aprove novos professores e coordenadores",
     to: "/confirmar",
   },
   {
-    icon: <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
-    title: "Relatórios",
-    desc: "Uso de salas e estatísticas",
-    to: "/relatorio-reservas",
+    icon: <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
+    title: "Configurações",
+    desc: "Configure períodos e semestres",
+    to: "/configuracao",
   },
   {
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>,
-    title: "Configurações",
-    desc: "Configure o sistema",
-    to: "/configuracao",
+    icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+               stroke="#C0121C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               className="lucide lucide-building2-icon lucide-building-2">
+      <path d="M10 12h4"/>
+      <path d="M10 8h4"/>
+      <path d="M14 21v-3a2 2 0 0 0-4 0v3"/>
+      <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/>
+      <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/>
+    </svg>,
+    title: "Gerenciar Salas",
+    desc: "Adicione, edite ou desative salas",
+    to: "/gerenciar-salas",
+  },
+  {
+    icon: <svg viewBox="0 0 24 24">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>,
+    title: "Relatórios",
+    desc: "Uso de salas e estatísticas do semestre",
+    to: "/relatorio-reservas",
   },
 ];
 
@@ -222,134 +250,109 @@ export default function Coordenador() {
   ].slice(0, 5);
 
   return (
-    <>
-      <Navbar activePage="Área do Coordenador" />
+      <>
+        <Navbar activePage="Área do Coordenador" />
 
-      <PageHero
-        variant="coordenador"
-        tag="Painel Administrativo"
-        title="Área do Coordenador"
-        description="Gerencie salas, professores e reservas."
-      />
+        <PageHero
+            variant="coordenador"
+            tag="Painel Administrativo"
+            title="Área do Coordenador"
+            description="Gerencie salas, professores e reservas."
+        />
 
-      <main className="content dashboard-page">
+        <main className="content dashboard-page">
+          <div className="dashboard-top-grid">
 
-        {/* Estatísticas */}
-        <div className="stats-row">
-          {stats.map((s) => (
-            <div key={s.label} className={`stat-card ${s.highlight ? "highlight" : ""}`}>
-              <div className="stat-icon">{s.icon}</div>
-              <div className="stat-number">{s.number}</div>
-              <div className="stat-label">{s.label}</div>
-            </div>
-          ))}
-        </div>
+            {/* Coluna principal */}
+            <div>
+              {/* Estatísticas */}
+              <div className="stats-row">
+                {stats.map((s) => (
+                    <div key={s.label} className={`stat-card ${s.highlight ? "highlight" : ""}`}>
+                      <div className="stat-icon">{s.icon}</div>
+                      <div className="stat-number">{s.number}</div>
+                      <div className="stat-label">{s.label}</div>
+                    </div>
+                ))}
+              </div>
 
-        {/* alerta de reservas pendentes */}
-        {pendingBookings.length > 0 && (
-          <div className="alert-card">
-            <div className="alert-icon">
-              <svg viewBox="0 0 24 24">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            </div>
-            <div className="alert-text">
-              <h4>{pendingBookings.length} reservas aguardando aprovação</h4>
-              <p>Professores estão aguardando sua confirmação.</p>
-            </div>
-          </div>
-        )}
+              {/* Alerta de reservas pendentes */}
+              {pendingBookings.length > 0 && (
+                  <div className="alert-card">
+                    <div className="alert-icon">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                      </svg>
+                    </div>
+                    <div className="alert-text">
+                      <h4>{pendingBookings.length} reservas aguardando aprovação</h4>
+                      <p>Professores estão aguardando sua confirmação.</p>
+                    </div>
+                  </div>
+              )}
 
-        {/* Menu de ações */}
-        <div className="section-title">Ações rápidas</div>
-        <div className="menu-grid">
-          {menuActions.map((action) => (
-            <Link key={action.title} className="menu-card" to={action.to}>
-              <div className="menu-icon">{action.icon}</div>
-              <h3>{action.title}</h3>
-              <p>{action.desc}</p>
-            </Link>
-          ))}
-        </div>
-
-        {/* Reservas recentes */}
-        <div className="section-title section-title--top-space">
-          Reservas recentes
-          <Link className="see-all" to="/todas-reservas">Ver todas</Link>
-        </div>
-
-        <div className="reservas-list">
-          {allRecent.length === 0 ? (
-            <div className="reserva-item">
-              <div className="reserva-info">
-                <div className="reserva-sala">Nenhuma reserva recente encontrada.</div>
+              {/* Menu de ações */}
+              <div className="section-title">Ações rápidas</div>
+              <div className="menu-grid">
+                {menuActions.map((action) => (
+                    <Link key={action.title} className="menu-card" to={action.to}>
+                      <div className="menu-icon">{action.icon}</div>
+                      <h3>{action.title}</h3>
+                      <p>{action.desc}</p>
+                    </Link>
+                ))}
               </div>
             </div>
-          ) : (
-            allRecent.map((booking) => {
-              const isRecurring = booking._type === "recurring";
-              const statusKey = isRecurring ? (booking.status || "ACTIVE") : booking.status;
-              const professor = booking.userDisplayName || booking.username || booking.createdByUsername || "—";
 
-              if (isRecurring) {
-                const days = (booking.weekDays || []).map((d) => WEEKDAY_LABELS[d] || d).join(", ");
-                const firstPeriod = (booking.periods || [])[0];
-                const lastPeriod = (booking.periods || [])[(booking.periods || []).length - 1];
-                return (
-                  <div key={`rec-${booking.id}`} className="reserva-item">
-                    <div className={`reserva-dot ${statusClasses[statusKey] || "dot-green"}`} />
-                    <div className="reserva-info">
-                      <div className="reserva-sala">
-                        {booking.roomName}
-                        {booking.roomLocation ? ` — ${booking.roomLocation}` : ""}
-                        <span style={{ marginLeft: 8, fontSize: "0.72rem", background: "#f3e8ff", color: "#7c3aed", borderRadius: 6, padding: "1px 7px", fontWeight: 600 }}>Recorrente</span>
-                      </div>
-                      <div className="reserva-prof">{professor} · {days}</div>
-                    </div>
-                    <div className="reserva-time">
-                      {days || "Recorrente"}<br />
-                      {firstPeriod
-                        ? <>{formatTime(firstPeriod.periodStart)}–{formatTime(lastPeriod?.periodEnd)}</>
-                        : "--:-- – --:--"}
-                      <div className={`reserva-status ${statusClasses[statusKey] || "status-ok"}`}>
-                        {statusLabels[statusKey] || statusKey}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              return (
-                <div key={`bk-${booking.id}`} className="reserva-item">
-                  <div className={`reserva-dot ${statusClasses[statusKey] || "dot-green"}`} />
-                  <div className="reserva-info">
-                    <div className="reserva-sala">{booking.roomName} — {booking.roomLocation}</div>
-                    <div className="reserva-prof">{professor}</div>
-                  </div>
-                  <div className="reserva-time">
-                    {formatDate(booking.bookingDate)}<br />
-                    {booking.periods && booking.periods.length > 0 ? (
-                      <>
-                        {formatTime(booking.periods[0].periodStart)}–{formatTime(booking.periods[booking.periods.length - 1].periodEnd)}
-                      </>
-                    ) : (
-                      "--:-- – --:--"
-                    )}
-                    <div className={`reserva-status ${statusClasses[statusKey] || "status-ok"}`}>
-                      {statusLabels[statusKey] || statusKey}
-                    </div>
-                  </div>
+            {/* Sidebar - Reservas recentes (mantendo estilização original) */}
+            <aside className="dashboard-sidebar">
+              <div className="dashboard-panel summary-card">
+                <div className="section-title" style={{ padding: "0", marginBottom: "16px" }}>
+                  Reservas recentes
+                  <Link className="see-all" to="/todas-reservas">Ver todas</Link>
                 </div>
-              );
-            })
-          )}
-        </div>
-      </main>
 
-      <div className="spacer" />
-      <Footer />
-    </>
+                <div className="reservas-list" style={{ padding: "0" }}>
+                  {recentBookings.length === 0 ? (
+                      <div className="reserva-item">
+                        <div className="reserva-info">
+                          <div className="reserva-sala">Nenhuma reserva recente encontrada.</div>
+                        </div>
+                      </div>
+                  ) : (
+                      recentBookings.map((booking) => (
+                          <div key={booking.id} className="reserva-item">
+                            <div className={`reserva-dot ${statusClasses[booking.status] || "dot-green"}`} />
+                            <div className="reserva-info">
+                              <div className="reserva-sala">{booking.roomName} — {booking.roomLocation}</div>
+                              <div className="reserva-prof">{booking.userDisplayName || booking.username}</div>
+                            </div>
+                            <div className="reserva-time">
+                              {formatDate(booking.bookingDate)}<br />
+                              {booking.periods && booking.periods.length > 0 ? (
+                                  <>
+                                    {formatTime(booking.periods[0].periodStart)}–{formatTime(booking.periods[booking.periods.length - 1].periodEnd)}
+                                  </>
+                              ) : (
+                                  "--:-- – --:--"
+                              )}
+                              <div className={`reserva-status ${statusClasses[booking.status] || "status-ok"}`}>
+                                {statusLabels[booking.status] || booking.status}
+                              </div>
+                            </div>
+                          </div>
+                      ))
+                  )}
+                </div>
+              </div>
+            </aside>
+          </div>
+        </main>
+
+        <div className="spacer" />
+        <Footer />
+      </>
   );
 }

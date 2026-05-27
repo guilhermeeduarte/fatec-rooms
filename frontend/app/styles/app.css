@@ -118,7 +118,7 @@ body.high-contrast {
   /* Fundo */
   --gray-50: #000000;
   --gray-100: #111111;
-   --gray-200: #8b8c8d; 
+   --gray-200: #8b8c8d;
 
   /* Texto */
   --gray-500: #ece9e9;
@@ -553,11 +553,15 @@ body.high-contrast {
 }
 
 .see-all {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--red);
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+}
+
+.see-all:hover {
+  text-decoration: underline;
 }
 
 /* ══════════════════════════════════════════
@@ -710,7 +714,7 @@ body.high-contrast {
   margin-top: 18px;
 }
 
-.legend-item {
+.oxitem {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -727,8 +731,6 @@ body.high-contrast {
 .legend-confirmed { background: #22C55E; }
 .legend-pending { background: var(--yellow); }
 .legend-cancelled { background: var(--red); }
-.legend-holiday { background: var(--holiday); }
-.legend-exam    { background: var(--magenta-soft-strong); border-radius: 4px; }
 
 .section-title--top-space {
   margin-top: 20px;
@@ -1186,11 +1188,16 @@ button.menu-card {
 
 .btn-action:hover {
   background: var(--red-dark);
-  transform: translateY(-1px);
 }
 
 .btn-action.btn-secondary {
+  background: none;
+  border: 1px solid #2196F3;;
+  color: #2196F3;
+}
+.btn-secondary:hover{
   background: #2196F3;
+  color: white;
 }
 
 .btn-action.btn-danger {
@@ -1199,10 +1206,16 @@ button.menu-card {
 
 .btn-action.btn-save {
   background: #2196F3;
+  background: var(--green);
+  color: white;
+  padding: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-main);
 }
 
 .btn-action.btn-save:hover {
-  background: #1E88E5;
+  background: #009E06;
 }
 
 .btn-action.btn-cancel {
@@ -1426,6 +1439,10 @@ button.menu-card {
   color: var(--gray-800);
 }
 
+.btn-config{
+  margin-bottom: 7px;
+}
+
 .modal-btn-confirmar-green,
 .modal-btn-confirmar-red {
   padding: 12px;
@@ -1523,12 +1540,12 @@ button.menu-card {
   transition: var(--transition);
   width: 85%;
   height: 50px;
-  text-align: center;       
-  line-height: 32px;        
+  text-align: center;
+  line-height: 32px;
 }
 
-.btn-submit-cadastro:hover { 
-  background-color: var(--red-dark); 
+.btn-submit-cadastro:hover {
+  background-color: var(--red-dark);
 }
 
 
@@ -2016,7 +2033,7 @@ SOLICITAÇÕES DE RESERVA
     gap: 50px;
     justify-content: center;
   }
-  
+
 
 .div-calendario{
   gap: 12px;
@@ -2351,7 +2368,7 @@ SOLICITAÇÕES DE RESERVA
     padding: 10px;
   }
 
-  
+
 }
 
 .form-group-reserva label {
@@ -2651,8 +2668,8 @@ SOLICITAÇÕES DE RESERVA
   font-size: 12px;
   color: var(--gray-500);
   border-top: 1px solid var(--gray-200);
+  margin-top: auto;
 }
-
 .footer a {
   color: var(--red);
   text-decoration: none;
@@ -2719,7 +2736,7 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .status.vermelho {
-  background: #dc3545; 
+  background: #dc3545;
 }
 .info {
   flex: 1;
@@ -2771,11 +2788,11 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .Auditório {
-  border-left: 6px solid #007bff; 
+  border-left: 6px solid #007bff;
 }
 
 .Sala {
-  border-left: 6px solid #6f42c1; 
+  border-left: 6px solid #6f42c1;
 }
 
 /* ══════════════════════════════════════════
@@ -3396,7 +3413,6 @@ SOLICITAÇÕES DE RESERVA
   font-size: 14px;
   font-family: var(--font-main);
 }
-
 /* ══════════════════════════════════════════
    PÁGINA DE PERFIL DO USUÁRIO
 ══════════════════════════════════════════ */
@@ -3887,7 +3903,7 @@ HISTORICO
   border-radius: 16px;
   border: 1px solid var(--gray-200);
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  justify-content: center; 
+  justify-content: center;
   display: flex;
   flex-direction: column;
 }
@@ -3920,7 +3936,7 @@ HISTORICO
 
 .row {
   display: flex;
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: center;
   margin-top:3px;
 }
@@ -3957,11 +3973,11 @@ HISTORICO
 }
 
 .status-aprovado {
-  color: #16a34a; 
+  color: #16a34a;
 }
 
 .status-cancelado {
-  color: #dc2626; 
+  color: #dc2626;
 }
 
 
@@ -4158,7 +4174,7 @@ HISTORICO
   display: flex;
   align-items: center;
   gap: 18px;
-  
+
 }
 
 
@@ -4230,12 +4246,232 @@ button {
   background: transparent;
   border: 1px solid var(--red);
   color: var(--red);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .btn-editar:hover {
-  background: var(--gray-100);
+  background: var(--red);
+  color: white;
+}
+/* Toggle Switch */
+.toggle-switch {
+  display: flex;
+  align-items: center;
 }
 
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600);
+}
+
+.toggle-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-slider {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  background-color: #dc2626; /* Vermelho para suspenso */
+  border-radius: 34px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Estado ativo (verde) */
+.toggle-input:checked + .toggle-slider {
+  background-color: #16a34a; /* Verde para ativo */
+}
+
+.toggle-input:checked + .toggle-slider::before {
+  transform: translateX(24px);
+}
+
+/* Hover effect */
+.toggle-wrapper:hover .toggle-slider {
+  opacity: 0.85;
+}
+
+/* Disabled state */
+.toggle-input:disabled + .toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-input:disabled ~ * {
+  cursor: not-allowed;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .toggle-slider {
+    width: 44px;
+    height: 24px;
+  }
+
+  .toggle-slider::before {
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+  }
+
+  .toggle-input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+  }
+
+  .toggle-text {
+    font-size: 12px;
+  }
+}
+/* Container para badge e toggle lado a lado */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+
+/* Toggle Switch */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+.status-badge{
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.toggle-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.status-badge.active {
+  color: #16a34a;
+}
+
+.status-badge.suspended {
+  color: #dc2626;
+}
+.toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-slider {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  background-color: #dc2626; /* Vermelho para suspenso */
+  border-radius: 34px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Estado ativo (verde) */
+.toggle-input:checked + .toggle-slider {
+  background-color: #16a34a;
+}
+
+.toggle-input:checked + .toggle-slider::before {
+  transform: translateX(24px);
+}
+
+/* Hover effect */
+.toggle-wrapper:hover .toggle-slider {
+  opacity: 0.85;
+}
+
+/* Disabled state */
+.toggle-input:disabled + .toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-input:disabled ~ * {
+  cursor: not-allowed;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .toggle-container {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .toggle-slider {
+    width: 44px;
+    height: 24px;
+  }
+
+  .toggle-slider::before {
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+  }
+
+  .toggle-input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+  }
+}
 .btn-cancelar {
   height:33px;
   margin-top:10px;
@@ -4312,6 +4548,94 @@ button {
 /* ══════════════════════════════════════════
    PÁGINA DE GERENCIAR USUARIO
 ══════════════════════════════════════════ */
+/* ── Filtros de usuários ────────────────────────────────── */
+.usuarios-count {
+    font-family: var(--font-main);
+    font-size: 13px;
+    color: var(--gray-500);
+    margin: 0 0 1rem 0;
+    padding: 0 20px;
+}
+.filtros-container {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filtros-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.search-wrapper {
+    flex: 1;
+    min-width: 220px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--gray-300, #d1d5db);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: var(--color-white, #fff);
+    color: var(--color-text, #111);
+    box-sizing: border-box;
+}
+
+.search-input:focus-visible {
+    outline: 2px solid rgba(0, 0, 0, 0.2);
+    border-color: var(--gray-400, #9ca3af);
+}
+
+.filtros-selects {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filtro-select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--gray-300, #d1d5db);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: var(--color-white, #fff);
+    color: var(--color-text, #111);
+    cursor: pointer;
+}
+
+.filtro-select:focus-visible {
+    outline: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.filtros-count {
+    font-size: 0.85rem;
+    color: var(--gray-500, #6b7280);
+    margin: 0;
+}
+
+.filtros-count-hint {
+    font-style: italic;
+}
+
+@media (max-width: 600px) {
+    .filtros-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filtros-selects {
+        flex-direction: column;
+    }
+
+    .filtro-select {
+        width: 100%;
+    }
+}
 .title-user{
   font-family: var(--font-main);
   font-size: 20px;
@@ -6083,10 +6407,14 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
 
   .gr-slot-th__e {
     display: none;
-  }
-}
 
+.dia-avaliacao {
+    background-color: var(--magenta-soft) !important;
+    color: var(--gray-800) !important;
+    border-radius: 20%;
+}
 /* Cor para dias de avaliação (magenta) */
+
 .dia-avaliacao {
     background-color: var(--magenta-soft) !important;
     color: var(--gray-800) !important;
@@ -6377,6 +6705,8 @@ footer, .Footer {
     grid-template-columns: 1fr;
   }
 }
+  }
+}
 /* ═══════════════════════════════════════════
    TODAS AS RESERVAS — TodasReservas.css
    Prefixo: tr-   (evita colisão com app.css)
@@ -6629,8 +6959,8 @@ footer, .Footer {
   margin-bottom: 0.65rem;
 }
 
-.tr-badge--comum      { background: #fef9c3; color: #78350f; }
-.tr-badge--recorrente { background: #dbeafe; color: #1e40af; }
+.tr-badge--comum      { background: #fffbd3; color: #f59e0b; }
+.tr-badge--recorrente { background: #ead4ff; color: #a855f7; }
 
 /* ── Grid de campos ──────────────────────── */
 .tr-card__grid {
@@ -7335,4 +7665,77 @@ footer, .Footer {
   .gr-search { min-width: 140px; }
   .gr-th-slot { min-width: 56px; width: 56px; }
   .gr-td-sala, .gr-th-sala { width: 90px; min-width: 90px; max-width: 90px; }
+}
+
+/* =========================================
+   ALERTA RESERVAS SUSPENSAS
+========================================= */
+/* Alerta de suspensão - mesmo estilo do alert-card */
+.booking-suspended-alert {
+  margin: 16px 20px 0; /* Mesma margem do alert-card */
+  background: #fee2e2; /* Vermelho pastel em vez de amarelo */
+  border: 1.5px solid red; /* Mesmo padrão do alert-card */
+  border-radius: var(--radius-md, 12px); /* Mesmo border-radius */
+  padding: 14px 16px; /* Mesmo padding do alert-card */
+  display: flex;
+  align-items: center; /* Altera de flex-start para center para alinhar verticalmente */
+  gap: 12px; /* Mesmo gap do alert-card */
+}
+
+.booking-suspended-alert svg {
+  width: 20px;
+  height: 20px;
+  stroke: #b91c1c;
+  stroke-width: 2;
+  fill: none;
+  flex-shrink: 0;
+}
+
+.booking-suspended-alert span {
+  font-family: var(--font-main, inherit);
+  font-size: 13px; /* Mesmo tamanho do h4 do alert-card */
+  font-weight: 700;
+  color: #b91c1c;
+  line-height: 1.4;
+}
+/* =========================================
+   BOTÃO RESERVAR SALA DESABILITADO
+========================================= */
+
+.menu-card-disabled {
+    background: #f3f4f6 !important;
+
+    border: 1px solid #d1d5db !important;
+
+    opacity: 0.75;
+
+    pointer-events: none;
+
+    cursor: not-allowed;
+
+    transform: none !important;
+
+    box-shadow: none !important;
+
+    filter: grayscale(0.2);
+}
+
+.menu-card-disabled:hover {
+    transform: none !important;
+
+    box-shadow: none !important;
+}
+
+.menu-icon-disabled{
+  background: none;
+}
+
+.menu-card-disabled .menu-icon,
+.menu-card-disabled h3,
+.menu-card-disabled p {
+    color: #9ca3af !important;
+}
+
+.menu-card-disabled svg {
+    stroke: #9ca3af !important;
 }

@@ -27,7 +27,7 @@ export default function Root() {
 
         <Meta />
         <Links />
-
+        <link rel="icon" type="image/png" href="/FatecRooms.png" />
         <title>Fatec Rooms</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />

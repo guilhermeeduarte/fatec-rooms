@@ -3,7 +3,11 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
-import "../styles/app.css";
+import { Calendar } from "lucide-react";
+import { Search } from 'lucide-react';
+import "../styles/grade.css";
+
+
 
 // ─────────────────────────────────────────────────────────────────────────
 // PERÍODOS PADRÃO — usados como fallback enquanto a API não retorna
@@ -11,7 +15,7 @@ import "../styles/app.css";
 // ─────────────────────────────────────────────────────────────────────────
 const DEFAULT_PERIODS = [
   { periodId: 1,  periodName: "1º",  startTime: "07:30", endTime: "08:20" },
-  { periodId: 2,  periodName: "2º",  startTime: "08:20", endTime: "09:10" },
+  { periodId: 2,  periodName: "2º",  startTime: "08:20", endTime: "09:20" },
   { periodId: 3,  periodName: "3º",  startTime: "09:10", endTime: "10:00" },
   { periodId: 4,  periodName: "4º",  startTime: "10:10", endTime: "11:00" },
   { periodId: 5,  periodName: "5º",  startTime: "11:00", endTime: "11:50" },
@@ -21,7 +25,7 @@ const DEFAULT_PERIODS = [
   { periodId: 9,  periodName: "9º",  startTime: "15:40", endTime: "16:30" },
   { periodId: 10, periodName: "10º", startTime: "16:40", endTime: "17:30" },
   { periodId: 11, periodName: "11º", startTime: "19:20", endTime: "20:10" },
-  { periodId: 12, periodName: "12º", startTime: "20:10", endTime: "21:00" },
+  { periodId: 12, periodName: "12º", startTime: "20:10", endTime: "21:10" },
   { periodId: 13, periodName: "13º", startTime: "21:10", endTime: "22:00" },
   { periodId: 14, periodName: "14º", startTime: "22:00", endTime: "22:50" },
 ];
@@ -110,11 +114,11 @@ function Tooltip({ res, roomName, x, y }) {
       style={{ left: x + 14, top: y - 8 }}
     >
       <strong>{roomName}</strong>
-      {isHoliday && <span className="gr-tip__badge gr-tip__badge--holiday">🎉 Feriado</span>}
+      {isHoliday && <span className="gr-tip__badge gr-tip__badge--holiday">Feriado</span>}
       {occ && (
         <>
           <span className={`gr-tip__badge gr-tip__badge--${type}`}>
-            {occ.type === "RECURRING" ? "Recorrente" : "Avulsa"}
+            {occ.type === "RECURRING" ? "Recorrente" : "Simples"}
           </span>
           <span className="gr-tip__turma">{occ.userOrClass}</span>
           {occ.subject && <span className="gr-tip__hora" style={{ fontStyle: "italic" }}>{occ.subject}</span>}
@@ -378,7 +382,7 @@ function ScheduleTable({
                       <td key={idx} colSpan={g.span} className="gr-td gr-td--free"
                         onMouseEnter={e => onCellEnter(e, { status: "HOLIDAY", startTime: g.slot.startTime, endTime: g.slot.endTime }, room.roomName)}
                         onMouseLeave={onCellLeave}>
-                        <div className="gr-block gr-block--holiday"><span className="gr-block__label">🎉</span></div>
+                        <div className="gr-block gr-block--holiday"><span className="gr-block__label"></span></div>
                       </td>
                     );
                   }
@@ -559,12 +563,6 @@ export default function GradeReservas() {
       )}
 
       <main className="gr-main">
-        {/* Breadcrumb */}
-        <div className="gr-breadcrumb">
-          <span>Início</span>
-          <span className="gr-breadcrumb__sep">›</span>
-          <span className="gr-breadcrumb__active">Grade de Reservas</span>
-        </div>
 
         {/* Card */}
         <div className="gr-card">
@@ -579,10 +577,10 @@ export default function GradeReservas() {
             </div>
             <div className="gr-card__actions">
               <button className="gr-btn gr-btn--outline" onClick={exportToCSV}>
-                📤 Exportar
+                Exportar
               </button>
               <button className="gr-btn gr-btn--outline" onClick={() => window.print()}>
-                🖨️ Imprimir
+                Imprimir
               </button>
               <button className="gr-btn gr-btn--icon" onClick={() => setFullscreen(true)} title="Tela cheia">
                 ⛶
@@ -596,9 +594,9 @@ export default function GradeReservas() {
             <div className="gr-filterbar__date" style={{ position: "relative" }}>
               <button className="gr-nav-btn" onClick={() => setSelDate(d => addDays(d, -1))}>‹</button>
               <button className="gr-nav-date-btn" onClick={() => setShowCal(v => !v)}>
-                📅 {selDate.toLocaleDateString("pt-BR", {
+                {selDate.toLocaleDateString("pt-BR", {
                   weekday: "short", day: "2-digit", month: "short", year: "numeric",
-                })}
+                })}<Calendar style={{ "margin-bottom": "-2px", "margin-left": "0.7em" }} color="black" size={15} />
               </button>
               <button className="gr-nav-btn" onClick={() => setSelDate(d => addDays(d, 1))}>›</button>
               {showCal && (
@@ -626,11 +624,11 @@ export default function GradeReservas() {
             </select>
 
             <div className="gr-search">
-              <span>🔍</span>
+              <Search size={18} color="gray" style={{ marginRight: "8px" }} />
               <input
-                placeholder="Pesquisar turma, professor..."
-                value={filterSearch}
-                onChange={e => setFilterSearch(e.target.value)}
+                  placeholder="Pesquisar turma, professor..."
+                  value={filterSearch}
+                  onChange={e => setFilterSearch(e.target.value)}
               />
             </div>
           </div>
@@ -644,15 +642,12 @@ export default function GradeReservas() {
             <span className="gr-legend__item">
               <span className="gr-legend__dot gr-legend__dot--simple" /> Simples
             </span>
-            <span className="gr-legend__item">
-              <span className="gr-legend__dot gr-legend__dot--holiday" /> Feriado
-            </span>
           </div>
 
           {/* Banners situacionais */}
           {isHolidayDay && (
             <div className="gr-banner gr-banner--holiday">
-              🎉 <strong>Feriado</strong> — Reservas indisponíveis nesta data.
+              <strong>Feriado</strong> — Reservas indisponíveis nesta data.
             </div>
           )}
           {isSunday && !isHolidayDay && (
@@ -661,7 +656,7 @@ export default function GradeReservas() {
             </div>
           )}
           {successMsg && (
-            <div className="gr-banner gr-banner--success">✅ {successMsg}</div>
+            <div className="gr-banner gr-banner--success">{successMsg}</div>
           )}
 
           {/* Tabela */}
@@ -672,7 +667,7 @@ export default function GradeReservas() {
           {/* Rodapé */}
           <div className="gr-card__footer">
             <button className="gr-btn gr-btn--outline" onClick={() => navigate("/reserva-recorrente")}>
-              🔄 Reserva Recorrente
+              Reserva Recorrente
             </button>
             <button
               className="gr-btn gr-btn--red"
@@ -691,7 +686,7 @@ export default function GradeReservas() {
       {fullscreen && (
         <div className="gr-fullscreen">
           <div className="gr-fullscreen__bar">
-            <span className="gr-fullscreen__title">🏛️ Grade de Horários — {fmtDateCap}</span>
+            <span className="gr-fullscreen__title">Grade de Horários — {fmtDateCap}</span>
             <button className="gr-btn gr-btn--outline" onClick={() => setFullscreen(false)}>
               ✕ Fechar
             </button>
@@ -702,17 +697,36 @@ export default function GradeReservas() {
 
       {/* Modal nova reserva */}
       {showBookingModal && (
-        <BookingModal
-          rooms={roomsList}
-          periods={allPeriods}
-          date={selDate}
-          onClose={() => setShowBookingModal(false)}
-          onSuccess={() => {
-            setShowBookingModal(false);
-            setSuccessMsg("Reserva solicitada com sucesso. Aguarde aprovação.");
-            fetchSchedule(isoDate);
-          }}
-        />
+          <BookingModal
+              rooms={roomsList}
+              periods={allPeriods}
+              date={selDate}
+              onClose={() => setShowBookingModal(false)}
+              onSuccess={async () => {
+                setShowBookingModal(false);
+
+                // Buscar o nível de autenticação do usuário
+                try {
+                  const token = localStorage.getItem("token");
+                  const userRes = await fetch("/api/users/me", {
+                    headers: { Authorization: `Bearer ${token}` }
+                  });
+                  const userData = await userRes.json();
+
+                  // Verifica o authLevel e define a mensagem
+                  if (userData.authlevel === 1) {
+                    setSuccessMsg("Reserva realizada com sucesso.");
+                  } else {
+                    setSuccessMsg("Reserva solicitada com sucesso. Aguarde aprovação.");
+                  }
+                } catch (error) {
+                  // Caso de erro na busca, mensagem padrão
+                  setSuccessMsg("Reserva solicitada com sucesso. Aguarde aprovação.");
+                }
+
+                fetchSchedule(isoDate);
+              }}
+          />
       )}
     </div>
   );

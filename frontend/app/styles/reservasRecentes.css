@@ -1,0 +1,108 @@
+/* Ajustes para o sidebar com reservas recentes */
+.dashboard-sidebar {
+    width: 380px;
+    flex-shrink: 0;
+}
+
+.dashboard-sidebar .summary-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--gray-200);
+    padding: 20px;
+}
+
+.dashboard-sidebar .section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-main);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-800);
+}
+
+.dashboard-sidebar .see-all {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--red);
+    text-decoration: none;
+    padding: 4px 12px;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.dashboard-sidebar .see-all:hover {
+    text-decoration: underline;
+    color: #b91c1c;
+}
+
+.dashboard-sidebar .reservas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dashboard-sidebar .reserva-item {
+    background: #fafafa;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--radius-md);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dashboard-sidebar .reserva-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dashboard-sidebar .reserva-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dashboard-sidebar .reserva-sala {
+    font-family: var(--font-main);
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dashboard-sidebar .reserva-prof {
+    font-size: 11px;
+    color: var(--gray-500);
+}
+
+.dashboard-sidebar .reserva-time {
+    font-family: var(--font-main);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.dashboard-sidebar .reserva-status {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+/* Responsivo */
+@media (max-width: 1000px) {
+    .dashboard-top-grid {
+        flex-direction: column;
+    }
+
+    .dashboard-sidebar {
+        width: 100%;
+    }
+}

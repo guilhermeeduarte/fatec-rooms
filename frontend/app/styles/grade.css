@@ -1,0 +1,558 @@
+
+/* ══════════════════════════════════════════════════════════════════
+   GRADE DE RESERVAS  —  gr-*
+   Referência visual: imagem do WhatsApp (grade com salas × períodos)
+══════════════════════════════════════════════════════════════════ */
+
+/* ── Página ──────────────────────────────────────────────────── */
+.gr-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #fafafa;
+}
+.gr-main {
+    flex: 1;
+    padding: 1.5rem 2rem 3rem;
+    max-width: 1560px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ── Card ─────────────────────────────────────────────────────── */
+.gr-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    overflow: hidden;
+}
+
+/* ── Topo do card ─────────────────────────────────────────────── */
+.gr-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.gr-card__title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.15rem;
+    line-height: 1.2;
+}
+.gr-card__subtitle {
+    font-size: 0.82rem;
+    color: #9ca3af;
+    margin: 0;
+    text-transform: capitalize;
+}
+.gr-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* ── Botões ───────────────────────────────────────────────────── */
+.gr-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    padding: 0.42rem 0.9rem;
+    line-height: 1;
+}
+.gr-btn--outline {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+}
+.gr-btn--outline:hover { background: #f9fafb; }
+.gr-btn--icon {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    padding: 0.42rem 0.65rem;
+    font-size: 1rem;
+}
+.gr-btn--icon:hover { background: #f9fafb; }
+.gr-btn--red {
+    background: #dc2626;
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 0.48rem 1.1rem;
+}
+.gr-btn--red:hover { background: #b91c1c; }
+.gr-btn--red:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+
+/* ── Barra de filtros ─────────────────────────────────────────── */
+.gr-filterbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.7rem 1.5rem;
+    border-top: 1px solid #f3f4f6;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafafa;
+}
+.gr-filterbar__date {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.gr-filterbar__sep {
+    width: 1px;
+    height: 24px;
+    background: #e5e7eb;
+    flex-shrink: 0;
+    margin: 0 0.1rem;
+}
+
+/* Botões de navegação de data */
+.gr-nav-btn {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #374151;
+    transition: background 0.15s;
+    padding: 0;
+    line-height: 1;
+}
+.gr-nav-btn:hover { background: #f3f4f6; }
+
+.gr-nav-date-btn {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0.28rem 0.75rem;
+    height: 28px;
+    font-size: 0.82rem;
+    color: #374151;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+.gr-nav-date-btn:hover { background: #f3f4f6; }
+
+.gr-select {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0 0.65rem;
+    height: 28px;
+    font-size: 0.82rem;
+    color: #374151;
+    background: #ffffff;
+    cursor: pointer;
+}
+.gr-search {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0 0.75rem;
+    height: 28px;
+    background: #ffffff;
+    flex: 1;
+    min-width: 180px;
+    box-sizing: border-box;
+}
+.gr-search input {
+    border: none;
+    outline: none;
+    font-size: 0.82rem;
+    width: 100%;
+    background: transparent;
+}
+
+/* ── Legenda ──────────────────────────────────────────────────── */
+.gr-legend {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.79rem;
+    color: #6b7280;
+    padding: 0.55rem 1.5rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+.gr-legend__title { font-weight: 700; color: #374151; font-size: 0.77rem; letter-spacing: 0.03em; }
+.gr-legend__item { display: flex; align-items: center; gap: 0.4rem; }
+.gr-legend__dot {
+    width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex-shrink: 0;
+}
+.gr-legend__dot--recurring { background: #a855f7; }
+.gr-legend__dot--simple    { background: #f59e0b; }
+.gr-legend__dot--holiday   { background: #d1d5db; }
+
+/* ── Banners ──────────────────────────────────────────────────── */
+.gr-banner {
+    margin: 0.75rem 1.5rem;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
+}
+.gr-banner--holiday { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+.gr-banner--success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+
+/* ── Corpo (tabela) ───────────────────────────────────────────── */
+.gr-card__body { overflow-x: auto; }
+
+/* ── Rodapé ───────────────────────────────────────────────────── */
+.gr-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #f3f4f6;
+    background: #fafafa;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TABELA
+══════════════════════════════════════════════════════════════════ */
+.gr-table-wrap {
+    overflow-x: auto;
+    width: 100%;
+}
+.gr-table {
+    border-collapse: collapse;
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
+}
+
+/* ── Cabeçalho linha 1: grupos Manhã / Tarde / Noite ──────────── */
+.gr-thead-group { background: #ffffff; }
+
+/* Célula sala no cabeçalho */
+.gr-th-sala {
+    width: 120px;
+    min-width: 120px;
+    background: #ffffff;
+    border: none;
+}
+
+/* Células de grupo */
+.gr-th-group {
+    text-align: center;
+    padding: 8px 4px 7px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    background: #ffffff;
+    border: none;
+    /* underline colorida via border-bottom */
+    border-bottom: 3px solid transparent;
+    border-right: 1px solid #f0f0f0;
+    white-space: nowrap;
+}
+/* Última célula de grupo sem separador */
+.gr-th-group:last-child { border-right: none; }
+
+/* Manhã — laranja */
+.gr-th-group--manham {
+    color: #f97316;
+    border-bottom-color: #f97316;
+}
+/* Tarde — azul */
+.gr-th-group--tarde {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+}
+/* Noite — roxo/índigo */
+.gr-th-group--noite {
+    color: #ff2eb7;
+    border-bottom-color: #ff2eb7;
+}
+
+/* ── Cabeçalho linha 2: horários individuais ──────────────────── */
+.gr-thead-slots { background: white; }
+.gr-th-slot {
+    min-width: 74px;
+    width: 74px;
+    text-align: center;
+    padding: 5px 2px 6px;
+    background: white;
+    border-top: none;
+    vertical-align: middle;
+}
+.gr-th-slot__h {
+    display: block;
+    font-weight: 700;
+    font-size: 0.76rem;
+    color: #374151;
+    line-height: 1.25;
+}
+.gr-th-slot__e {
+    display: block;
+    font-size: 0.67rem;
+    color: #9ca3af;
+    line-height: 1.1;
+}
+
+/* ── Linhas do corpo ──────────────────────────────────────────── */
+.gr-tr { border-bottom: 1px solid #f3f4f6; }
+.gr-tr:last-child { border-bottom: none; }
+
+/*/* Célula sala — para sobrescrever qualquer estilo global */
+/* ── Estilo para a célula da sala com fundo vermelho pastel ── */
+.gr-td-sala {
+    width: 120px;
+    min-width: 120px;
+    max-width: 140px;
+    padding: 0 0.75rem;
+    height: 55px;
+    vertical-align: middle;
+    border-right: 4px solid white;
+    border-top: 7px solid white;
+    border-bottom: 7px solid white;
+    background: #ffe8e8 !important; /* Vermelho pastel claro */
+    border-radius: 12px; /* Bordas arredondadas */
+}
+
+
+/* Para manter o hover consistente */
+.gr-td-sala:hover {
+    background: #fecaca !important; /* Um tom um pouco mais escuro no hover */
+    cursor: default;
+}
+.gr-sala__nome {
+    display: block;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #1f2937;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.gr-sala__loc {
+    display: block;
+    font-size: 0.7rem;
+    /* mesma cor azul-claro da imagem */
+    color: gray;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Células de dados */
+.gr-td {
+    height: 54px;
+    padding: 3px 4px;
+    border: 1px dashed #c3c6c9;
+    vertical-align: middle;
+}
+.gr-td--free { background: #ffffff; }
+.gr-td--free:hover { background: #f8fafc; cursor: pointer; }
+.gr-td--recurring,
+.gr-td--simple { padding: 3px 4px; }
+
+/* ── Blocos de reserva ────────────────────────────────────────── */
+.gr-block {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+    min-height: 46px;
+    padding: 0 10px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+/* Recorrente → roxo */
+.gr-block--recurring { background: #a855f7; }
+/* Avulso → âmbar */
+.gr-block--simple    { background: #f59e0b; }
+/* Feriado */
+.gr-block--holiday {
+    background: white;
+    border: none;
+    justify-content: center;
+}
+.gr-block__label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+.gr-block--holiday .gr-block__label { color: #6b7280; }
+
+/* ── Estado vazio / loading / erro ────────────────────────────── */
+.gr-state {
+    padding: 3rem;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+.gr-state--error { color: #b91c1c; }
+.gr-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+.gr-loading__spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #a855f7;
+    border-radius: 50%;
+    animation: gr-spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+@keyframes gr-spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════════════════════════════════
+   TOOLTIP
+══════════════════════════════════════════════════════════════════ */
+.gr-tip {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    min-width: 160px;
+    max-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-left: 4px solid #a855f7;
+}
+.gr-tip--simple  { border-left-color: #f59e0b; }
+.gr-tip--holiday { border-left-color: #d1d5db; }
+.gr-tip strong   { font-size: 0.85rem; color: #111827; }
+.gr-tip__badge {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    width: fit-content;
+}
+.gr-tip__badge--recurring { background: #f3e8ff; color: #7c3aed; }
+.gr-tip__badge--simple    { background: #fef3c7; color: #f59e0b; }
+.gr-tip__badge--holiday   { background: #f3f4f6; color: #6b7280; }
+.gr-tip__hora  { font-size: 0.75rem; color: #6b7280; }
+.gr-tip__turma { font-size: 0.82rem; color: #374151; font-weight: 600; }
+
+/* ══════════════════════════════════════════════════════════════════
+   MINI CALENDÁRIO
+══════════════════════════════════════════════════════════════════ */
+.gr-minical {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 200;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,.12);
+    width: 240px;
+}
+.gr-minical__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+.gr-minical__nav button {
+    background: none; border: none; cursor: pointer;
+    font-size: 1.1rem; color: #374151; padding: 0.2rem 0.5rem;
+}
+.gr-minical__nav span {
+    font-size: 0.88rem; font-weight: 600; color: #111827; text-transform: capitalize;
+}
+.gr-minical__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+.gr-minical__wd {
+    text-align: center; font-size: 0.68rem; color: #9ca3af;
+    font-weight: 600; padding: 2px 0;
+}
+.gr-minical__day {
+    background: none; border: none; border-radius: 50%;
+    width: 30px; height: 30px; cursor: pointer; font-size: 0.78rem;
+    color: #374151; transition: background 0.15s;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto;
+}
+.gr-minical__day:hover:not(:disabled) { background: #fee2e2; color: #dc2626; }
+.gr-minical__day--today { background: #dc2626; color: #fff; font-weight: 700; }
+.gr-minical__day--empty { visibility: hidden; cursor: default; }
+.gr-minical__day:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════════════════════════════
+   FULLSCREEN
+══════════════════════════════════════════════════════════════════ */
+.gr-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+}
+.gr-fullscreen__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    flex-shrink: 0;
+}
+.gr-fullscreen__title { font-weight: 700; font-size: 1rem; color: #111827; }
+.gr-fullscreen__body { flex: 1; overflow: auto; padding: 1rem; }
+
+/* ══════════════════════════════════════════════════════════════════
+   PRINT
+══════════════════════════════════════════════════════════════════ */
+@media print {
+    .gr-filterbar, .gr-card__actions, .gr-card__footer,
+    .gr-legend, .gr-breadcrumb, .gr-banner { display: none; }
+    .gr-card { border: none; box-shadow: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVO
+══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .gr-main { padding: 1rem; }
+    .gr-card__top { flex-direction: column; }
+    .gr-filterbar { gap: 0.4rem; }
+    .gr-search { min-width: 140px; }
+    .gr-th-slot { min-width: 56px; width: 56px; }
+    .gr-td-sala, .gr-th-sala { width: 90px; min-width: 90px; max-width: 90px; }
+}

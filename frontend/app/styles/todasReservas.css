@@ -1,0 +1,140 @@
+/* ------------------------------------------
+   TODAS AS RESERVAS
+------------------------------------------ */
+
+.layout-reservas-completas {
+    display: flex;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 40px auto;
+    align-items: flex-start;
+    font-family: var(--font-main);
+}
+
+.conteudo-principal {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-main);
+}
+
+.filtros-reservas {
+    width: 100%;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    font-family: var(--font-main);
+}
+
+.filtros-reservas .input-busca,
+.filtros-reservas .select-status,
+.filtros-reservas .input-data {
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    font-family: var(--font-main);
+}
+
+.filtros-reservas .input-busca {
+    flex: 1;
+    font-family: var(--font-main);
+}
+
+.container-lista-reservas {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-family: var(--font-main);
+}
+
+.card-reserva-completa {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px 25px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    transition: 0.3s;
+    border-left: 6px solid #e0e0e0;
+    font-family: var(--font-main);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.card-reserva-completa:hover {
+    transform: translateY(-3px);
+    font-family: var(--font-main);
+}
+
+.card-reserva-completa.aceita {
+    border-left: 6px solid var(--green);
+    font-family: var(--font-main);
+}
+
+.card-reserva-completa.pendente {
+    border-left: 6px solid #FFC107;
+    font-family: var(--font-main);
+}
+
+.card-reserva-completa.cancelada {
+    border-left: 6px solid #F44336;
+    opacity: 0.7;
+    font-family: var(--font-main);
+}
+
+.card-reserva-completa.recusada {
+    border-left: 6px solid #F44336;
+    opacity: 0.7;
+    font-family: var(--font-main);
+}
+
+.informacoes-reserva {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 2fr 1fr;
+    gap: 20px;
+    width: 100%;
+    font-family: var(--font-main);
+}
+
+.item-informacao {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-main);
+}
+
+.rotulo-informacao {
+    font-weight: 600;
+    color: #222;
+    font-size: 13px;
+    margin-bottom: 4px;
+    font-family: var(--font-main);
+}
+
+.valor-informacao {
+    color: #555;
+    font-size: 14px;
+    font-family: var(--font-main);
+}
+
+.valor-status.aceita {
+    color: var(--green);
+    font-weight: 600;
+}
+
+.valor-status.pendente {
+    color: #FFC107;
+    font-weight: 600;
+}
+
+.valor-status.cancelada {
+    color: #F44336;
+    font-weight: 600;
+}
+
+.valor-status.recusada {
+    color: #F44336;
+    font-weight: 600;
+}
