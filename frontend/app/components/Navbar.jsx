@@ -9,7 +9,6 @@ const menuLinksPublic = [
 const menuLinksTeacher = [
   { label: "Reservar Sala", href: "/solicitar-reserva" },
   { label: "Minhas Reservas", href: "/minhas-reservas" },
-  { label: "Contato", href: "/contato" },
 ];
 
 const menuLinksCoordinator = [

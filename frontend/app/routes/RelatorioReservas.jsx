@@ -248,7 +248,17 @@ export default function RelatorioReservas() {
                             <Cell key={item.name} fill={COLOR_MAP_AVULSAS[item.name]} />
                           ))}
                         </Pie>
-                        <Tooltip /><Legend />
+                        <Tooltip
+                            contentStyle={{
+                              borderRadius: "12px",
+                              padding: "8px 12px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                              border: "none",
+                              backgroundColor: "#ffffff",
+                              fontSize: "12px",
+                              fontFamily: "var(--font-main)"
+                            }}
+                        /><Legend />
                       </PieChart>
                     </ResponsiveContainer>
                   )}
@@ -268,7 +278,17 @@ export default function RelatorioReservas() {
                             <Cell key={item.name} fill={COLOR_MAP_RECURRING[item.name]} />
                           ))}
                         </Pie>
-                        <Tooltip /><Legend />
+                        <Tooltip
+                            contentStyle={{
+                              borderRadius: "12px",
+                              padding: "8px 12px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                              border: "none",
+                              backgroundColor: "#ffffff",
+                              fontSize: "12px",
+                              fontFamily: "var(--font-main)"
+                            }}
+                        /><Legend />
                       </PieChart>
                     </ResponsiveContainer>
                   )}
@@ -286,9 +306,19 @@ export default function RelatorioReservas() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={55} />
                       <YAxis allowDecimals={false} />
-                      <Tooltip />
+                      <Tooltip
+                          contentStyle={{
+                            borderRadius: "12px",
+                            padding: "8px 12px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                            border: "none",
+                            backgroundColor: "#ffffff",
+                            fontSize: "12px",
+                            fontFamily: "var(--font-main)"
+                          }}
+                      />
                       <Legend />
-                      <Bar dataKey="Avulsas aprovadas"  stackId="a" fill="#22C55E" />
+                      <Bar dataKey="Simples aprovadas"  stackId="a" fill="#22C55E" />
                       <Bar dataKey="Recorrentes ativas" stackId="a" fill="#3B82F6" />
                       <Bar dataKey="Pendentes"          stackId="a" fill="#F59E0B" />
                     </BarChart>
@@ -379,7 +409,17 @@ export default function RelatorioReservas() {
                             <Cell key={item.name} fill={COLOR_MAP_RECURRING[item.name]} />
                           ))}
                         </Pie>
-                        <Tooltip /><Legend />
+                        <Tooltip
+                            contentStyle={{
+                              borderRadius: "12px",
+                              padding: "8px 12px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                              border: "none",
+                              backgroundColor: "#ffffff",
+                              fontSize: "12px",
+                              fontFamily: "var(--font-main)"
+                            }}
+                        /><Legend />
                       </PieChart>
                     </ResponsiveContainer>
                   )}
@@ -406,7 +446,17 @@ export default function RelatorioReservas() {
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={55} />
                           <YAxis allowDecimals={false} />
-                          <Tooltip />
+                          <Tooltip
+                              contentStyle={{
+                                borderRadius: "12px",
+                                padding: "8px 12px",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                border: "none",
+                                backgroundColor: "#ffffff",
+                                fontSize: "12px",
+                                fontFamily: "var(--font-main)"
+                              }}
+                          />
                           <Bar dataKey="Instâncias ativas" fill="#3B82F6" />
                         </BarChart>
                       </ResponsiveContainer>

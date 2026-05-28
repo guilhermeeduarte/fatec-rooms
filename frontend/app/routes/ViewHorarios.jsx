@@ -131,6 +131,9 @@ function Tooltip({ res, roomName, x, y }) {
 // ─────────────────────────────────────────────────────────────────────────
 // MODAL DE NOVA RESERVA — margens corrigidas
 // ─────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────
+// MODAL DE NOVA RESERVA — com cursos do backend
+// ─────────────────────────────────────────────────────────────────────────
 function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
   const [roomId, setRoomId] = useState("");
   const [selectedPeriods, setSelectedPeriods] = useState([]);
@@ -139,10 +142,39 @@ function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
   const [naoSeAplica, setNaoSeAplica] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [courses, setCourses] = useState([]); // Estado para cursos
+  const [loadingCourses, setLoadingCourses] = useState(false);
+
+  // Buscar cursos ao abrir o modal
+  useEffect(() => {
+    async function loadCourses() {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      setLoadingCourses(true);
+      try {
+        const response = await fetch("/api/courses", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Filtra apenas cursos ativos
+          const activeCourses = Array.isArray(data)
+              ? data.filter(course => course.active === true)
+              : [];
+          setCourses(activeCourses);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar cursos:", err);
+      } finally {
+        setLoadingCourses(false);
+      }
+    }
+    loadCourses();
+  }, []);
 
   function togglePeriod(id) {
     setSelectedPeriods(prev =>
-      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+        prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
     );
   }
 
@@ -152,8 +184,25 @@ function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
       setError("Preencha sala, períodos e motivo.");
       return;
     }
+
     const token = localStorage.getItem("token");
-    const notes = naoSeAplica ? "Não se aplica" : `Curso: ${curso || "-"}`;
+
+    // Verificação ANTES de enviar para o backend
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      setError("Não é possível fazer reservas em datas passadas. Selecione uma data futura.");
+      return;
+    }
+
+    // Se "Não se aplica" estiver marcado, não inclui curso
+    const notes = naoSeAplica
+        ? motivo
+        : `${motivo}\nCurso: ${curso || "Não informado"}`;
+
     try {
       setLoading(true);
       setError(null);
@@ -168,7 +217,35 @@ function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
           notes,
         }),
       });
-      if (!res.ok) { const t = await res.text(); throw new Error(t || "Erro ao reservar."); }
+
+      if (!res.ok) {
+        let errorMessage = "Erro ao reservar.";
+        try {
+          const errorData = await res.json();
+          // Trata erros de validação do backend
+          if (errorData.details && Array.isArray(errorData.details)) {
+            errorMessage = errorData.details.join(". ");
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+
+          // Mensagens amigáveis para erros comuns
+          if (errorMessage.includes("data da reserva deve ser futura")) {
+            errorMessage = "Não é possível fazer reservas em datas passadas. Selecione uma data futura.";
+          } else if (errorMessage.includes("suspensa")) {
+            errorMessage = "As reservas estão temporariamente suspensas. Não é possível criar novas reservas no momento.";
+          } else if (errorMessage.includes("antecedência")) {
+            errorMessage = "Esta reserva precisa ser feita com mais dias de antecedência. Verifique o prazo mínimo.";
+          }
+        } catch (e) {
+          const textError = await res.text();
+          errorMessage = textError || "Erro ao reservar.";
+        }
+        throw new Error(errorMessage);
+      }
+
       onSuccess();
     } catch (err) {
       setError(err.message);
@@ -181,78 +258,82 @@ function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
   const fieldStyle = { marginLeft: 0, marginRight: 0 };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-espacos" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
-        <div className="modal-topo">
-          <h2>Nova Reserva — {date.toLocaleDateString("pt-BR")}</h2>
-          <button className="btn-close-modal" onClick={onClose}>×</button>
-        </div>
-        {error && <div style={{ color: "#b91c1c", marginBottom: "0.75rem", fontSize: "0.9rem" }}>{error}</div>}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <div className="form-group-reserva" style={fieldStyle}>
-            <label>Sala *</label>
-            <select value={roomId} onChange={e => setRoomId(e.target.value)} required>
-              <option value="">Selecione</option>
-              {rooms.map(r => <option key={r.roomId} value={r.roomId}>{r.roomName}</option>)}
-            </select>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-espacos" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+          <div className="modal-topo">
+            <h2>Nova Reserva — {date.toLocaleDateString("pt-BR")}</h2>
+            <button className="btn-close-modal" onClick={onClose}>×</button>
           </div>
-          <div className="form-group-reserva" style={fieldStyle}>
-            <label>Períodos *</label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-              {periods.map(p => (
-                <label key={p.periodId} style={{
-                  border: selectedPeriods.includes(p.periodId) ? "2px solid #dc2626" : "1px solid #d1d5db",
-                  borderRadius: 6, padding: "4px 10px", cursor: "pointer",
-                  background: selectedPeriods.includes(p.periodId) ? "#fecaca" : "white",
-                }}>
-                  <input type="checkbox" checked={selectedPeriods.includes(p.periodId)}
-                    onChange={() => togglePeriod(p.periodId)} style={{ display: "none" }} />
-                  {p.periodName} <span style={{ fontSize: "0.75rem", color: "#666" }}>{p.startTime?.slice(0,5)}</span>
-                </label>
-              ))}
+          {error && <div style={{ color: "#b91c1c", marginBottom: "0.75rem", fontSize: "0.9rem" }}>{error}</div>}
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <div className="form-group-reserva" style={fieldStyle}>
+              <label>Sala *</label>
+              <select value={roomId} onChange={e => setRoomId(e.target.value)} required>
+                <option value="">Selecione</option>
+                {rooms.map(r => <option key={r.roomId} value={r.roomId}>{r.roomName}</option>)}
+              </select>
             </div>
-          </div>
-          <div className="form-group-reserva" style={fieldStyle}>
-            <label>Motivo *</label>
-            <input type="text" value={motivo} onChange={e => setMotivo(e.target.value)}
-              placeholder="Descreva o motivo" required />
-          </div>
-          <div className="form-group-reserva" style={fieldStyle}>
-            <label>Curso</label>
-            <select value={curso} onChange={e => setCurso(e.target.value)}
-              required={!naoSeAplica} disabled={naoSeAplica}
-              style={{ backgroundColor: naoSeAplica ? "#cfcccc89" : "white" }}>
-              <option value="">Selecione</option>
-              <option value="dsm">Desenvolvimento de Software Multiplataforma</option>
-              <option value="admin">Administração</option>
-              <option value="rh">Recursos Humanos</option>
-              <option value="ads">Análise e Desenvolvimento de Sistemas</option>
-              <option value="comex">Comércio Exterior</option>
-            </select>
-          </div>
-          <div className="form-group-reserva-check" style={fieldStyle}>
-            <input type="checkbox" id="nsa2" checked={naoSeAplica} onChange={e => {
-              setNaoSeAplica(e.target.checked);
-              if (e.target.checked) setCurso("");
-            }} />
-            <label htmlFor="nsa2"> Não se aplica a um curso</label>
-          </div>
-          <div style={{ display: "flex", gap: "0.75rem", marginLeft: 0, marginRight: 0 }}>
-            <button type="submit" className="btn-submit-reserva"
-              style={{ flex: 1, margin: 0, height: 44, fontSize: 15 }}
-              disabled={loading}>
-              {loading ? "Enviando..." : "Solicitar"}
-            </button>
-            <button type="button" className="btn-cancelar"
-              style={{ marginTop: 0, height: 44, padding: "8px 20px" }}
-              onClick={onClose}>Cancelar</button>
-          </div>
-        </form>
+            <div className="form-group-reserva" style={fieldStyle}>
+              <label>Períodos *</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                {periods.map(p => (
+                    <label key={p.periodId} style={{
+                      border: selectedPeriods.includes(p.periodId) ? "2px solid #dc2626" : "1px solid #d1d5db",
+                      borderRadius: 6, padding: "4px 10px", cursor: "pointer",
+                      background: selectedPeriods.includes(p.periodId) ? "#fecaca" : "white",
+                    }}>
+                      <input type="checkbox" checked={selectedPeriods.includes(p.periodId)}
+                             onChange={() => togglePeriod(p.periodId)} style={{ display: "none" }} />
+                      {p.periodName} <span style={{ fontSize: "0.75rem", color: "#666" }}>{p.startTime?.slice(0,5)}</span>
+                    </label>
+                ))}
+              </div>
+            </div>
+            <div className="form-group-reserva" style={fieldStyle}>
+              <label>Motivo *</label>
+              <input type="text" value={motivo} onChange={e => setMotivo(e.target.value)}
+                     placeholder="Descreva o motivo" required />
+            </div>
+            <div className="form-group-reserva" style={fieldStyle}>
+              <label>Curso</label>
+              <select
+                  value={curso}
+                  onChange={e => setCurso(e.target.value)}
+                  required={!naoSeAplica}
+                  disabled={naoSeAplica || loadingCourses}
+                  style={{ backgroundColor: naoSeAplica ? "#cfcccc89" : "white" }}
+              >
+                <option value="">Selecione um curso</option>
+                {courses.map(course => (
+                    <option key={course.id} value={course.name}>
+                      {course.name}
+                    </option>
+                ))}
+              </select>
+              {loadingCourses && <small style={{ color: "#666" }}>Carregando cursos...</small>}
+            </div>
+            <div className="form-group-reserva-check" style={fieldStyle}>
+              <input type="checkbox" id="nsa2" checked={naoSeAplica} onChange={e => {
+                setNaoSeAplica(e.target.checked);
+                if (e.target.checked) setCurso("");
+              }} />
+              <label htmlFor="nsa2"> Não se aplica a um curso</label>
+            </div>
+            <div style={{ display: "flex", gap: "0.75rem", marginLeft: 0, marginRight: 0 }}>
+              <button type="submit" className="btn-submit-reserva"
+                      style={{ flex: 1, margin: 0, height: 44, fontSize: 15 }}
+                      disabled={loading}>
+                {loading ? "Enviando..." : "Solicitar"}
+              </button>
+              <button type="button" className="btn-cancelar"
+                      style={{ marginTop: 0, height: 44, padding: "8px 20px" }}
+                      onClick={onClose}>Cancelar</button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
   );
 }
-
 // ─────────────────────────────────────────────────────────────────────────
 // TABELA PRINCIPAL DA GRADE
 // ─────────────────────────────────────────────────────────────────────────

@@ -982,7 +982,7 @@ export default function Configuracao() {
                   <div className="form-group-reserva"><label>Tipo de prova *</label><select value={currentExamWeek.examType} onChange={(e) => setCurrentExamWeek({ ...currentExamWeek, examType: e.target.value })} required><option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option></select></div>
                   <div className="form-group-reserva"><label>Data início *</label><input type="date" value={currentExamWeek.startDate} onChange={(e) => setCurrentExamWeek({ ...currentExamWeek, startDate: e.target.value })} required /></div>
                   <div className="form-group-reserva"><label>Data fim *</label><input type="date" value={currentExamWeek.endDate} onChange={(e) => setCurrentExamWeek({ ...currentExamWeek, endDate: e.target.value })} required /></div>
-                  <div className="form-group-reserva"><label>Descrição (opcional)</label><input type="text" placeholder="Ex.: Prova escrita..." value={currentExamWeek.description} onChange={(e) => setCurrentExamWeek({ ...currentExamWeek, description: e.target.value })} /></div>
+                  <div className="form-group-reserva"><label>Descrição (opcional)</label><input type="text" placeholder="" value={currentExamWeek.description} onChange={(e) => setCurrentExamWeek({ ...currentExamWeek, description: e.target.value })} /></div>
                   <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
                     <button type="submit" className="btn-submit-reserva" disabled={savingExamWeek}>{savingExamWeek ? "Salvando..." : editingExamWeekId ? "Atualizar" : "Criar"}</button>
                     <button type="button" className="btn-cancelar" onClick={handleCloseExamWeekForm}>Cancelar</button>

@@ -3853,13 +3853,14 @@ input:focus-visible {
   margin: 0 auto;
 }
 
-/* Tooltip customizado */
-.recharts-tooltip-wrapper {
-  background: var(--gray-800);
-  color: var(--white);
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
+.relatorio-tool {
+  borderRadius: "12px";
+  padding: "8px 12px";
+  boxShadow: "0 4px 12px rgba(0,0,0,0.15)";
+  border: "none";
+  backgroundColor: "#ffffff";
+  fontSize: "12px";
+  fontFamily: "var(--font-main)";
 }
 
 /* Legenda */
@@ -7466,7 +7467,6 @@ footer, .Footer {
 
 /*/* Célula sala — para sobrescrever qualquer estilo global */
 .gr-td-sala {
-  display:flex;
   width: 120px;
   min-width: 120px;
   max-width: 140px;
@@ -7484,7 +7484,7 @@ footer, .Footer {
 .gr-sala__nome {
   display: block;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.5rem;
   color: #1f2937;
   line-height: 1.2;
   white-space: nowrap;

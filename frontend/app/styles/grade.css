@@ -340,7 +340,7 @@
 .gr-sala__nome {
     display: block;
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 12px;
     color: #1f2937;
     line-height: 1.2;
     white-space: nowrap;
@@ -536,14 +536,160 @@
 }
 .gr-fullscreen__title { font-weight: 700; font-size: 1rem; color: #111827; }
 .gr-fullscreen__body { flex: 1; overflow: auto; padding: 1rem; }
-
 /* ══════════════════════════════════════════════════════════════════
    PRINT
 ══════════════════════════════════════════════════════════════════ */
+
+
 @media print {
-    .gr-filterbar, .gr-card__actions, .gr-card__footer,
-    .gr-legend, .gr-breadcrumb, .gr-banner { display: none; }
-    .gr-card { border: none; box-shadow: none; }
+    .gr-filterbar,
+    .gr-card__actions,
+    .gr-card__footer,
+    .gr-legend,
+    .gr-breadcrumb,
+    .gr-banner,
+    .gr-btn,
+    .gr-search {
+        display: none;
+    }
+
+    .gr-card {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .gr-main {
+        padding: 0;
+        margin: 0;
+        max-width: 100%;
+    }
+
+    /* Garantir que a tabela ocupe toda a largura */
+    .gr-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    /* Forçar o texto das salas a não cortar */
+    .gr-td-sala {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        height: auto !important;
+        min-height: auto !important;
+        padding: 4px !important;
+        background: #ffe8e8 !important;
+    }
+
+    .gr-sala__nome {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        font-size: 0.7rem !important;
+        line-height: 1.2 !important;
+        margin-bottom: 2px !important;
+    }
+
+    .gr-sala__loc {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        font-size: 0.6rem !important;
+    }
+    /* Ajuste do botão UserWay para não sobrepor conteúdo */
+    .userway_buttons_wrapper {
+        z-index: 999 !important;
+        bottom: 20px !important;
+        right: 20px !important;
+    }
+
+    .userway_buttons_wrapper .userway_btn {
+        width: 44px !important;
+        height: 44px !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Em telas pequenas, ajustar posição */
+    @media (max-width: 768px) {
+        .userway_buttons_wrapper {
+            bottom: 10px !important;
+            right: 10px !important;
+        }
+
+        .userway_buttons_wrapper .userway_btn {
+            width: 36px !important;
+            height: 36px !important;
+        }
+    }
+
+    /* Na impressão, esconder o botão */
+    @media print {
+        .userway_buttons_wrapper {
+            display: none !important;
+        }
+    }
+    @media print {
+        .gr-table.no-grouping .gr-td[colspan] {
+            display: table-cell !important;
+            width: auto !important;
+        }
+    }
+    /* Garantir que as células de horário não cortem texto */
+    .gr-th-slot, .gr-td {
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+
+    .gr-th-slot__h, .gr-th-slot__e {
+        white-space: normal !important;
+    }
+
+    /* Blocos de reserva */
+    .gr-block {
+        white-space: normal !important;
+        word-break: break-word !important;
+        padding: 2px !important;
+        min-height: auto !important;
+    }
+
+    .gr-block__label {
+        white-space: normal !important;
+        word-break: break-word !important;
+        font-size: 0.65rem !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }
+
+    /* Forçar cores de fundo na impressão */
+    .gr-td--recurring, .gr-td--simple {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .gr-block--recurring, .gr-block--simple {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Ajustar cabeçalho da tabela */
+    .gr-th-group, .gr-th-slot {
+        background: #f5f5f5 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Evitar quebra de página dentro da tabela */
+    .gr-tr {
+        page-break-inside: avoid;
+    }
+
+    /* Ajustar tamanho da fonte geral */
+    body {
+        font-size: 10pt;
+    }
+
 }
 
 /* ══════════════════════════════════════════════════════════════════
