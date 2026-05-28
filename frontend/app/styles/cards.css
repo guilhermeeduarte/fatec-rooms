@@ -1,0 +1,44 @@
+@media (max-width: 768px) {
+    .tr-main {
+        padding: 1rem 1rem 2.5rem;
+    }
+
+    .tr-filters__actions {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .tr-filters__btn-toggle,
+    .tr-filters__btn-clear {
+        flex: 1;
+        text-align: center;
+    }
+
+    /* Mantém 2 colunas em tablets e celulares grandes */
+    .tr-card__grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .tr-field--wide {
+        grid-column: span 2;
+    }
+}
+
+/* Apenas em celulares muito pequenos (menos de 480px) vira 1 coluna */
+@media (max-width: 480px) {
+    .tr-card__grid {
+        grid-template-columns: repeat(2, 1fr); /* Ainda 2 colunas */
+    }
+}
+
+/* Para telas realmente muito pequenas (menos de 380px) */
+@media (max-width: 380px) {
+    .tr-card__grid {
+        grid-template-columns: 1fr; /* Vira 1 coluna */
+    }
+
+    .tr-field--wide {
+        grid-column: span 1;
+    }
+}

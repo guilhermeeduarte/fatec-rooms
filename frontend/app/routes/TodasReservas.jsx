@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import Popup from "../components/Popup";
 import { Search } from 'lucide-react';
 import "../styles/todasReservas.css";
+import "../styles/cards.css";
 
 const WEEKDAY_LABELS = {
   MONDAY: "SEG", TUESDAY: "TER", WEDNESDAY: "QUA",

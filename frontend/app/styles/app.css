@@ -4862,14 +4862,16 @@ background: #009E06;
 }
 
 .usuario-box {
-    background: var(--gray-200);
-    padding: 10px 14px;
-    border-radius: 12px;
-    min-width: 120px;
-    display: flex;
-    flex-direction: column;
-    flex:1;
-    overflow:hidden;
+  background: var(--gray-200);
+  padding: 10px 14px;
+  border-radius: 12px;
+  min-width: 280px;
+  width: 100%;
+  max-width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 .usuario-box:hover {
   background: var(--gray-100)
