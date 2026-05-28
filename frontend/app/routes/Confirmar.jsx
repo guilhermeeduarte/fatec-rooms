@@ -17,7 +17,7 @@ async function fetchRegistrations() {
         }
     });
     if (!response.ok) {
-        let errorMessage = 'Erro ao buscar cadastros pendentes';
+        let errorMessage = 'Erro ao buscar cadastros';
         try {
             const errorData = await response.json();
             errorMessage = errorData.message || errorMessage;
@@ -27,18 +27,40 @@ async function fetchRegistrations() {
         throw new Error(errorMessage);
     }
     const data = await response.json();
-    return data.map(user => ({
-        id: user.id,
-        nome: `${user.firstname} ${user.lastname}`,
-        apelido: user.username,
-        area: "Não especificado",
-        email: user.email,
-        cargo: user.authlevel === 0 ? "pendente" : (user.authlevel === 1 ? "coordenador" : "professor"),
-        authLevel: user.authlevel,
-        status: user.enabled === 0 ? "pendente" : "aprovado"
-    }));
-}
 
+    // Mapear todos os usuários, mas tratar status corretamente
+    return data.map(user => {
+        let status = "aprovado";
+        let cargo = "";
+
+        if (user.authlevel === 0) {
+            status = "pendente";
+            cargo = "pendente";
+        } else if (user.authlevel === 1) {
+            cargo = "coordenador";
+        } else if (user.authlevel === 2) {
+            cargo = "professor";
+        }
+
+        // Usuários desabilitados (enabled = 0) não devem aparecer como aprovados
+        if (user.enabled === 0 && status === "aprovado") {
+            return null;
+        }
+
+        return {
+            id: user.id,
+            nome: `${user.firstname} ${user.lastname}`,
+            apelido: `${user.firstname} ${user.lastname}`,
+            area: "Não especificado",
+            email: user.email,
+            cargo: cargo,
+            authLevel: user.authlevel,
+            status: status,
+            enabled: user.enabled,
+            createdAt: user.createdAt || user.created_at || new Date().toISOString() // Adicionar data
+        };
+    }).filter(user => user !== null);
+}
 async function approveRegistration(id, authLevel) {
     const token = localStorage.getItem('token');
     const response = await fetch(`/api/admin/users/${id}/approve`, {
@@ -108,7 +130,21 @@ export default function AprovarCadastros() {
         async function loadCadastros() {
             try {
                 const data = await fetchRegistrations();
-                setCadastros(data);
+
+                // Separar pendentes e aprovados
+                const pendentes = data.filter(c => c.status === "pendente");
+                const aprovados = data.filter(c => c.status === "aprovado");
+
+                // Ordenar pendentes por data (mais recente primeiro)
+                pendentes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                // Ordenar aprovados por nome
+                aprovados.sort((a, b) => a.nome.localeCompare(b.nome));
+
+                // Juntar novamente (pendentes primeiro)
+                const sortedData = [...pendentes, ...aprovados];
+                setCadastros(sortedData);
+
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -253,13 +289,13 @@ export default function AprovarCadastros() {
 
                                 {c.status === "pendente" && (
                                     <div className="aprovacao-acoes">
-                                        <button className="btn-aprovar" onClick={() => abrirAprovar(c)}>
-                                            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
-                                            Aprovar
-                                        </button>
                                         <button className="btn-rejeitar" onClick={() => abrirRejeitar(c)}>
                                             <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                                             Rejeitar
+                                        </button>
+                                        <button className="btn-aprovar" onClick={() => abrirAprovar(c)}>
+                                            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+                                            Aprovar
                                         </button>
                                     </div>
                                 )}

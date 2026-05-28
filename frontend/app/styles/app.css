@@ -587,6 +587,7 @@ body.high-contrast {
 .dashboard-page {
   display: grid;
   gap: 24px;
+  border-radius: 20px;
 }
 
 .dashboard-top-grid {
@@ -742,7 +743,6 @@ body.high-contrast {
   }
 
   .stats-row {
-    margin-top:40px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
@@ -1207,6 +1207,18 @@ button.menu-card {
   background: var(--red);
 }
 
+.btn-save {
+  border-radius: var(--radius-md);
+}
+
+.btn-teste {
+  background: var(--green);
+  border-radius: var(--radius-md);
+}
+.btn-teste:hover {
+  background: #009E06;
+}
+
 .btn-action.btn-save {
   background: #2196F3;
   background: var(--green);
@@ -1224,6 +1236,20 @@ button.menu-card {
 .btn-action.btn-cancel {
   background: var(--red);
 }
+.btn-cancel3 {
+  margin-top: 0;
+  height: 44px;
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-main);
+  font-size: 15px;
+  color: white;
+  cursor: pointer;
+  background: var(--gray-500);
+}
+.btn-cancel3:hover {
+  background: #757575;
+}
 
 .btn-action.btn-cancel:hover {
   background: var(--red-dark);
@@ -1231,7 +1257,6 @@ button.menu-card {
 
 @media (max-width: 900px) {
   .reserva-item {
-    flex-direction: column;
   }
   .room-actions {
     width: 100%;
@@ -2014,7 +2039,7 @@ button.menu-card {
 }
 
 /* ══════════════════════════════════════════
-SOLICITAÇÕES DE RESERVA 
+SOLICITAÇÕES DE RESERVA
 ══════════════════════════════════════════ */
 .content-solicitarReserva{
     padding: 24px 16px 32px;
@@ -2257,13 +2282,43 @@ SOLICITAÇÕES DE RESERVA
 }
 
 .react-calendar__tile--now {
-  border: 2px solid var(--red-dark);
+  border: 2px solid var(--blue-dark);
   font-weight: bold;
+}
+/* Estilo geral para botões desabilitados */
+button:disabled,
+.btn-action:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none; /* Impede qualquer interação */
+}
+
+/* Ou se quiser manter a aparência mas sem interação */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+}
+
+/* Estilo específico para botão desabilitado com classe btn-action */
+.btn-action:disabled {
+  background: #9ca3af !important;
+  color: #e5e7eb !important;
+  border: none !important;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Para botões secundários desabilitados */
+.btn-secondary:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  border: 1px solid #d1d5db;
 }
 
 .react-calendar__tile--active {
-  background: var(--calendar-active) !important;
-  color: white;
   font-weight: 600;
 }
 
@@ -2313,19 +2368,18 @@ SOLICITAÇÕES DE RESERVA
 /*legenda*/
 
 .legenda {
-    display: flex;
-    gap: 15px;
-    margin-top: 18px;
-    font-size: 14px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    margin-left: 20px;
-    margin-bottom: 10px;
+  display: flex;
+  gap: 15px;
+  margin-top: 18px;
+  font-size: 14px;
+  flex-wrap: wrap; /* Muda de nowrap para wrap */
+  margin-left: 20px;
+  margin-bottom: 10px;
 }
 
 .legenda > div {
-    white-space: nowrap;
-    flex-shrink: 0;
+  white-space: nowrap;
+  /* remove flex-shrink: 0 para permitir quebra de linha */
 }
 
 .box {
@@ -4289,6 +4343,31 @@ button {
   color: var(--red);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+.btn-caca {
+  background: var(--green);
+  color: white;
+  border: 1px solid var(--green);
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.btn-caca:hover {
+background: #009E06;
+}
+
+.btn-bowser {
+  background: var(--gray-500);
+  color: white;
+  border: 1px solid var(--gray-500);
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.btn-bowser:hover {
+  background: #757575;
+}
 
 .btn-editar:hover {
   background: var(--red);
@@ -5748,7 +5827,7 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
   }
 }
 /* ══════════════════════════════════════════
-   GRADE DE RESERVAS 
+   GRADE DE RESERVAS
 ══════════════════════════════════════════ */
 
 .gr-page {
@@ -6448,24 +6527,17 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
   }
 }
 
-
-.dia-avaliacao {
-    background-color: var(--magenta-soft) !important;
-    color: var(--gray-800) !important;
-    border-radius: 20%;
-}
 /* Cor para dias de avaliação (magenta) */
 
 .dia-avaliacao {
     background-color: var(--magenta-soft) !important;
-    color: var(--gray-800) !important;
-    border-radius: 20%;
+    color: #E17075;
 }
 
 /* Legenda - box magenta */
 .legenda .box.magenta {
-    background-color: var(--magenta-soft-strong);
-    color: var(--gray-800);
+    background-color: #FFBFDD;
+    color: #E17075;
 }
 .calendar-tooltip {
   background: white !important;
@@ -6894,7 +6966,6 @@ footer, .Footer {
   align-items: flex-end;
   margin-left: auto;
 }
-
 .tr-filters__btn-toggle {
   padding: 0.5rem 1rem;
   border: 1.5px solid #d1d5db;
@@ -7805,4 +7876,54 @@ footer, .Footer {
 
 .menu-card-disabled svg {
     stroke: #9ca3af !important;
+}
+
+/* Estatísticas */
+.stats-row2 {
+  display: grid;
+  gap: 12px;
+  padding: 0px 20px 0;
+  animation: fadeUp 0.5s ease both;
+}
+
+/* Celular (até 640px): 2 colunas */
+@media (max-width: 640px) {
+  .stats-row2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Celular muito pequeno (até 380px): 1 coluna (opcional) */
+@media (max-width: 380px) {
+  .stats-row2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablet (641px - 900px): 2 colunas */
+@media (min-width: 641px) and (max-width: 900px) {
+  .stats-row2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Desktop (acima de 901px): 4 colunas */
+@media (min-width: 901px) {
+  .stats-row2 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── BOTÕES PADRÃO (sem alterar os vermelhos existentes) ────────────────── */
+
+
+
+/* Botão Importar (verde) - herda do btn-salvar */
+.btn-salvar.btn-config {
+  background: #16a34a !important;
+  border: none !important;
+}
+
+.btn-salvar.btn-config:hover {
+  background: #15803d !important;
 }

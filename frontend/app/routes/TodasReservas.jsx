@@ -154,7 +154,7 @@ export default function TodasReservas() {
             status: traduzirStatus(reserva.status),
             professor: reserva.createdByUsername || "Desconhecido",
             periodo: extrairPeriodo(startTime),
-            curso: extrairCurso(reserva.notes),
+            curso: reserva.courseName || "—", // ALTERADO: usa courseName do backend
             weekDays,
           };
         });
@@ -324,7 +324,7 @@ export default function TodasReservas() {
               </select>
               <select value={tipoReservaFiltro} onChange={e => setTipoReservaFiltro(e.target.value)} className="tr-filters__select">
                 <option value="">Todos os tipos</option>
-                <option value="Comum">Comum</option>
+                <option value="Simples">Simples</option>
                 <option value="Recorrente">Recorrente</option>
               </select>
             </div>

@@ -79,6 +79,20 @@ public class UserAdminService {
         return "Usuário '" + user.getUsername() + "' desabilitado.";
     }
 
+    public String enableUser(Integer userId) {
+        User user = UserRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
+
+        if (user.getEnabled() == 1) {
+            throw new IllegalStateException("Usuário já está habilitado.");
+        }
+
+        user.setEnabled((byte) 1);
+        UserRepository.save(user);
+
+        return "Usuário '" + user.getUsername() + "' habilitado.";
+    }
+
     // ----- helpers privados -----
 
     private User findPendingUser(Integer userId) {

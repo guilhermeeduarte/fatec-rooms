@@ -52,12 +52,35 @@ function validateSenha(senha) {
     return null;
 }
 
-function parseRegisterError(message) {
+function parseRegisterError(message, status) {
     if (!message) return "Erro no cadastro. Tente novamente mais tarde.";
-    if (message.includes("Username já está em uso")) return "Usuário já cadastrado. Verifique seu e-mail institucional ou use outro login.";
-    if (message.includes("E-mail já está em uso")) return "E-mail já cadastrado. Use outro endereço ou faça login.";
-    if (message.includes("Senha deve ter ao menos 6 caracteres")) return "A senha deve ter ao menos 6 caracteres.";
-    if (message.toLowerCase().includes("notblank") || message.toLowerCase().includes("invalid")) return "Preencha todos os campos corretamente.";
+
+    // Verificar se é erro 400 (Bad Request)
+    if (status === 400) {
+        // Tentar extrair informações mais específicas
+        if (message.includes("Username") || message.includes("username")) {
+            return "Usuário já cadastrado. Este e-mail já está em uso.";
+        }
+        if (message.includes("Email") || message.includes("email")) {
+            return "E-mail já cadastrado. Use outro endereço ou faça login.";
+        }
+        return "Dados inválidos. Verifique se o e-mail já não está cadastrado.";
+    }
+
+    // Mensagens específicas por conteúdo
+    if (message.includes("Username já está em uso")) {
+        return "Usuário já cadastrado. Verifique seu e-mail institucional ou use outro login.";
+    }
+    if (message.includes("E-mail já está em uso")) {
+        return "E-mail já cadastrado. Use outro endereço ou faça login.";
+    }
+    if (message.includes("Senha deve ter ao menos 6 caracteres")) {
+        return "A senha deve ter ao menos 6 caracteres.";
+    }
+    if (message.toLowerCase().includes("notblank") || message.toLowerCase().includes("invalid")) {
+        return "Preencha todos os campos corretamente.";
+    }
+
     return message;
 }
 
@@ -81,12 +104,13 @@ export default function Cadastro() {
     async function handleSubmit(e) {
         e.preventDefault();
         setError(null);
+
         const nomeNormalizado = form.nome
             .trim()
             .split(/\s+/)
             .map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
             .join(" ");
-            
+
         const nomeError = validateNome(form.nome);
         if (nomeError) { setError(nomeError); return; }
 
@@ -97,10 +121,12 @@ export default function Cadastro() {
         if (senhaError) { setError(senhaError); return; }
 
         if (!form.confirmarSenha || form.confirmarSenha.length === 0) {
-            setError("Confirme sua senha."); return;
+            setError("Confirme sua senha.");
+            return;
         }
         if (form.senha !== form.confirmarSenha) {
-            setError("As senhas não coincidem. Verifique e tente novamente."); return;
+            setError("As senhas não coincidem. Verifique e tente novamente.");
+            return;
         }
 
         try {
@@ -122,8 +148,29 @@ export default function Cadastro() {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(parseRegisterError(errorText));
+                let errorMessage = "";
+                let status = response.status;
+
+                try {
+                    // Tentar extrair mensagem do JSON
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || "";
+                } catch (e) {
+                    // Se não for JSON, pegar texto puro
+                    errorMessage = await response.text();
+                }
+
+                // Tratamento especial para e-mail já cadastrado
+                if (status === 400) {
+                    if (errorMessage.includes("email") || errorMessage.includes("Email")) {
+                        throw new Error("Este e-mail já está cadastrado. Use outro endereço ou faça login.");
+                    }
+                    if (errorMessage.includes("username") || errorMessage.includes("Username")) {
+                        throw new Error("Este usuário já está cadastrado. Verifique seu e-mail ou faça login.");
+                    }
+                }
+
+                throw new Error(parseRegisterError(errorMessage, status));
             }
 
             await response.text();
@@ -205,7 +252,25 @@ export default function Cadastro() {
                                         onClick={() => setShowSenha((prev) => !prev)}
                                         aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
                                     >
-                                        {showSenha ? "🙈" : "👁️"}
+                                        {showSenha ? <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                          viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                          stroke-width="2" stroke-linecap="round"
+                                                          stroke-linejoin="round"
+                                                          className="lucide lucide-eye-off-icon lucide-eye-off">
+                                            <path
+                                                d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
+                                            <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
+                                            <path
+                                                d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
+                                            <path d="m2 2 20 20"/>
+                                        </svg> : <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                      viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                      className="lucide lucide-eye-icon lucide-eye">
+                                            <path
+                                                d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>}
                                     </button>
                                 </div>
                                 <small className="form-help">Mínimo 6 caracteres, sem espaços ou repetições.</small>
@@ -227,7 +292,7 @@ export default function Cadastro() {
                                         onClick={() => setShowConfirmSenha((prev) => !prev)}
                                         aria-label={showConfirmSenha ? "Ocultar senha" : "Mostrar senha"}
                                     >
-                                        {showConfirmSenha ? "🙈" : "👁️"}
+                                        {showConfirmSenha ? <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off-icon lucide-eye-off"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-icon lucide-eye"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>}
                                     </button>
                                 </div>
                             </div>

@@ -52,6 +52,11 @@ public class UserAdminController {
     public ResponseEntity<String> disable(@PathVariable Integer id) {
         return ResponseEntity.ok(userAdminService.disableUser(id));
     }
+    @PatchMapping("/{id}/enable")
+    @PreAuthorize("hasRole('COORDINATOR')")
+    public ResponseEntity<String> enable(@PathVariable Integer id) {
+        return ResponseEntity.ok(userAdminService.enableUser(id));
+    }
 
     @PatchMapping("/{id}/authlevel")
     @PreAuthorize("hasRole('COORDINATOR')")

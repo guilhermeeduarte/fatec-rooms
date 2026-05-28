@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 import Popup from "../components/Popup";
+import "../styles/yoshi.css";
 import {
   CalendarCheck,
   ShieldCheck,
@@ -42,6 +43,13 @@ export default function Configuracao() {
   const navigate = useNavigate();
   const [token, setToken] = useState(null);
   const [authlevel, setAuthlevel] = useState(null);
+
+  const [showDeleteSemesterModal, setShowDeleteSemesterModal] = useState(false);
+  const [semesterToDelete, setSemesterToDelete] = useState(null);
+  const [showDeleteExamWeekModal, setShowDeleteExamWeekModal] = useState(false);
+  const [examWeekToDelete, setExamWeekToDelete] = useState(null);
+  const [showDeleteHolidayModal, setShowDeleteHolidayModal] = useState(false);
+  const [holidayToDelete, setHolidayToDelete] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -127,7 +135,7 @@ export default function Configuracao() {
 
   // Bloqueio de scroll para modais
   useEffect(() => {
-    if (showExamWeekForm || showSemesterModal || showHolidayForm || showPreview) {
+    if (showExamWeekForm || showSemesterModal) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -135,7 +143,7 @@ export default function Configuracao() {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [showExamWeekForm, showSemesterModal, showHolidayForm, showPreview]);
+  }, [showExamWeekForm, showSemesterModal]);
 
   useEffect(() => {
     if (error) setShowErrorPopup(true);
@@ -228,6 +236,32 @@ export default function Configuracao() {
     }
   }
 
+  function openDeleteHolidayModal(holiday) {
+    setHolidayToDelete(holiday);
+    setShowDeleteHolidayModal(true);
+  }
+
+  async function confirmDeleteHoliday() {
+    if (!token || !holidayToDelete) return;
+
+    try {
+      const resp = await fetch(`${API_URL}/holidays/${holidayToDelete.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!resp.ok) throw new Error("Erro ao remover feriado");
+      setSuccess(`"${holidayToDelete.name}" removido.`);
+      setShowPopup(true);
+      await carregarFeriados(token);
+    } catch (err) {
+      setError(err.message);
+      setShowErrorPopup(true);
+    } finally {
+      setShowDeleteHolidayModal(false);
+      setHolidayToDelete(null);
+    }
+  }
+
   async function carregarFeriados(tokenParam) {
     setLoadingHolidays(true);
     setError(null);
@@ -244,6 +278,31 @@ export default function Configuracao() {
     }
   }
 
+  function openDeleteExamWeekModal(examWeek) {
+    setExamWeekToDelete(examWeek);
+    setShowDeleteExamWeekModal(true);
+  }
+
+  async function confirmDeleteExamWeek() {
+    if (!token || !examWeekToDelete) return;
+
+    try {
+      const resp = await fetch(`${API_URL}/semesters/${semesterSelecionado}/exam-weeks/${examWeekToDelete.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!resp.ok) throw new Error("Erro ao remover");
+      setSuccess(`Semana de ${examWeekToDelete.examType} removida.`);
+      setShowPopup(true);
+      await carregarExamWeeks(semesterSelecionado, token);
+    } catch (err) {
+      setError(err.message);
+      setShowErrorPopup(true);
+    } finally {
+      setShowDeleteExamWeekModal(false);
+      setExamWeekToDelete(null);
+    }
+  }
   // -------------------- Funções que usam o token do estado (já disponível) --------------------
   async function salvarPrazo() {
     if (valorTempPrazo < 1) { setError("O prazo deve ser maior que 0."); return; }
@@ -380,26 +439,35 @@ export default function Configuracao() {
     }
   }
 
-  async function deletarSemester(id, name) {
-    if (!token) return;
-    if (!window.confirm(`Tem certeza que deseja excluir o semestre "${name}"?`)) return;
+  function openDeleteSemesterModal(semester) {
+    setSemesterToDelete(semester);
+    setShowDeleteSemesterModal(true);
+  }
+
+  async function confirmDeleteSemester() {
+    if (!token || !semesterToDelete) return;
+
     try {
-      const resp = await fetch(`${API_URL}/semesters/${id}`, {
+      const resp = await fetch(`${API_URL}/semesters/${semesterToDelete.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!resp.ok) throw new Error("Erro ao excluir semestre");
-      setSuccess(`Semestre "${name}" excluído.`);
+      setSuccess(`Semestre "${semesterToDelete.name}" excluído.`);
       setShowPopup(true);
       await carregarTodosSemestres(token);
       await carregarInicial(token);
-      if (semesterSelecionado === id) {
-        const novosAtivos = semestres.filter(s => s.id !== id);
+      if (semesterSelecionado === semesterToDelete.id) {
+        const novosAtivos = semestres.filter(s => s.id !== semesterToDelete.id);
         if (novosAtivos.length > 0) setSemesterSelecionado(novosAtivos[0].id);
         else setSemesterSelecionado("");
       }
     } catch (err) {
       setError(err.message);
+      setShowErrorPopup(true);
+    } finally {
+      setShowDeleteSemesterModal(false);
+      setSemesterToDelete(null);
     }
   }
 
@@ -541,7 +609,6 @@ export default function Configuracao() {
 
   async function importarNacionais() {
     if (!token) return;
-    if (!window.confirm(`Importar feriados nacionais de ${nationalYear}?`)) return;
     setImportingNational(true);
     setError(null);
     setSuccess(null);
@@ -655,8 +722,8 @@ export default function Configuracao() {
         <div className="content-config">
           {/* Prazo */}
           <h2 className="secao-titulo">Reservas</h2>
-          <div className="card">
-            <div className="card-left">
+          <div className="card" style={{ flexWrap: "wrap" }}>
+            <div className="card-left" style={{ flex: "1 1 200px" }}>
               <div className="icon-box"><CalendarCheck size={28} /></div>
               <div className="card-info">
                 <h3>Prazo de antecedência</h3>
@@ -664,19 +731,19 @@ export default function Configuracao() {
               </div>
             </div>
             {!editandoPrazo ? (
-                <div className="card-right">
+                <div className="card-right" style={{ flex: "1 1 auto", justifyContent: "flex-end", flexWrap: "wrap", gap: "12px" }}>
                   <span className="badge">{prazo} dias</span>
-                  <button className="btn-editar" onClick={() => setEditandoPrazo(true)}>Editar</button>
+                  <button className="btn-action btn-editar" onClick={() => setEditandoPrazo(true)}>Editar</button>
                 </div>
             ) : (
-                <div className="card-right">
+                <div className="card-right" style={{ flex: "1 1 auto", justifyContent: "flex-end", flexWrap: "wrap", gap: "12px" }}>
                   <div className="input-group">
                     <input type="number" value={valorTempPrazo} onChange={(e) => setValorTempPrazo(Number(e.target.value))} min="1" />
                     <span>dias</span>
                   </div>
                   <div className="botoes">
-                    <button className="btn-cancelar" onClick={() => { setEditandoPrazo(false); setValorTempPrazo(prazo); }} disabled={savingPrazo}>Cancelar</button>
-                    <button className="btn-salvar" onClick={salvarPrazo} disabled={savingPrazo}>{savingPrazo ? "Salvando..." : "Salvar"}</button>
+                    <button className="btn-action btn-bowser" onClick={() => { setEditandoPrazo(false); setValorTempPrazo(prazo); }} disabled={savingPrazo}>Cancelar</button>
+                    <button className="btn-action btn-caca" onClick={salvarPrazo} disabled={savingPrazo}>{savingPrazo ? "Salvando..." : "Salvar"}</button>
                   </div>
                 </div>
             )}
@@ -739,10 +806,10 @@ export default function Configuracao() {
                   min="2024" max="2030"
                   style={{ width: "90px", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }}
               />
-              <button className="btn-editar" onClick={previewNacionais} disabled={loadingPreview}>
+              <button className="btn-action btn-editar" onClick={previewNacionais} disabled={loadingPreview}>
                 {loadingPreview ? "Buscando..." : "Prévia"}
               </button>
-              <button className="btn-salvar btn-config" onClick={importarNacionais} disabled={importingNational}>
+              <button className="btn-action btn-caca" onClick={importarNacionais} disabled={importingNational}>
                 {importingNational ? "Importando..." : "Importar"}
               </button>
             </div>
@@ -762,7 +829,7 @@ export default function Configuracao() {
                       </div>
                   ))}
                 </div>
-                <button className="btn-salvar" style={{ width: "fit-content" }} onClick={importarNacionais} disabled={importingNational}>
+                <button className="btn-action btn-caca" style={{ width: "fit-content" }} onClick={importarNacionais} disabled={importingNational}>
                   {importingNational ? "Importando..." : "Confirmar importação"}
                 </button>
               </div>
@@ -792,7 +859,13 @@ export default function Configuracao() {
                               </span>
                               {h.description && <span style={{ color: "#888", fontSize: "0.85rem" }}>{h.description}</span>}
                             </div>
-                            <button onClick={() => deletarFeriado(h.id, h.name)} style={{ background: "none", border: "none", cursor: "pointer", color: "#e74c3c" }} title="Remover"><Trash2 size={18} /></button>
+                            <button
+                                onClick={() => openDeleteHolidayModal(h)}
+                                style={{ background: "none", border: "none", cursor: "pointer", color: "#e74c3c" }}
+                                title="Remover"
+                            >
+                              <Trash2 size={18} />
+                            </button>
                           </div>
                       ))
                   )}
@@ -801,17 +874,17 @@ export default function Configuracao() {
             {showHolidayForm ? (
                 <form onSubmit={salvarFeriado} style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginTop: "0.5rem", borderTop: "1px solid #eee", paddingTop: "1rem" }}>
                   <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-                    <input type="text" placeholder="Nome do feriado *" value={currentHoliday.name} onChange={(e) => setCurrentHoliday({ ...currentHoliday, name: e.target.value })} required style={{ flex: 2, minWidth: "160px", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }} />
-                    <input type="date" value={currentHoliday.holidayDate} onChange={(e) => setCurrentHoliday({ ...currentHoliday, holidayDate: e.target.value })} required style={{ flex: 1, minWidth: "140px", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }} />
-                    <select value={currentHoliday.type} onChange={(e) => setCurrentHoliday({ ...currentHoliday, type: e.target.value })} style={{ padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }}>
+                    <input className={"tr-filters__search"} type="text" placeholder="Nome do feriado *" value={currentHoliday.name} onChange={(e) => setCurrentHoliday({ ...currentHoliday, name: e.target.value })} required style={{ flex: 2, minWidth: "160px", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }} />
+                    <input className={"tr-filters__search"} type="date" value={currentHoliday.holidayDate} onChange={(e) => setCurrentHoliday({ ...currentHoliday, holidayDate: e.target.value })} required style={{ flex: 1, minWidth: "140px", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }} />
+                    <select className={"tr-filters__select"} value={currentHoliday.type} onChange={(e) => setCurrentHoliday({ ...currentHoliday, type: e.target.value })} style={{ padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }}>
                       <option value="NATIONAL">Nacional</option>
                       <option value="CUSTOM">Local</option>
                     </select>
                   </div>
-                  <input type="text" placeholder="Descrição (opcional)" value={currentHoliday.description} onChange={(e) => setCurrentHoliday({ ...currentHoliday, description: e.target.value })} style={{ padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }} />
+                  <input className={"tr-filters__search"} type="text" placeholder="Descrição (opcional)" value={currentHoliday.description} onChange={(e) => setCurrentHoliday({ ...currentHoliday, description: e.target.value })} style={{ flex: 2, minWidth: "160px", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }} />
                   <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button className="btn-salvar" type="submit" disabled={savingHoliday}>{savingHoliday ? "Salvando..." : "Salvar feriado"}</button>
-                    <button className="btn-cancelar" type="button" onClick={() => { setShowHolidayForm(false); setCurrentHoliday(EMPTY_HOLIDAY); }}>Cancelar</button>
+                    <button className="btn-action btn-bowser" type="button" onClick={() => { setShowHolidayForm(false); setCurrentHoliday(EMPTY_HOLIDAY); }}>Cancelar</button>
+                    <button className="btn-action btn-caca" type="submit" disabled={savingHoliday}>{savingHoliday ? "Salvando..." : "Salvar feriado"}</button>
                   </div>
                 </form>
             ) : (
@@ -835,7 +908,7 @@ export default function Configuracao() {
                     </div>
                   </div>
                   <div className="card-right">
-                    <select value={semesterSelecionado} onChange={(e) => setSemesterSelecionado(Number(e.target.value))} style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--gray-200)" }}>
+                    <select className={"eastereggguilhermastico"} value={semesterSelecionado} onChange={(e) => setSemesterSelecionado(Number(e.target.value))} style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--gray-200)" }}>
                       {semestres.map((sem) => (<option key={sem.id} value={sem.id}>{formatarNomeSemestre(sem.name)} {sem.active === 1 ? "(Ativo)" : "(Inativo)"}</option>))}
                     </select>
                   </div>
@@ -852,7 +925,8 @@ export default function Configuracao() {
                               </div>
                               <div style={{ display: "flex", gap: "8px" }}>
                                 <button onClick={() => handleOpenExamWeekForm(ew)} style={{ background: "none", border: "none", cursor: "pointer", color: "#2196F3" }} title="Editar"><Edit size={18} /></button>
-                                <button onClick={() => deletarExamWeek(ew.id, ew.examType)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--red)" }} title="Excluir"><Trash2 size={18} /></button>
+                                {/* CORRIJA AQUI: use deletarExamWeek, NÃO openDeleteSemesterModal */}
+                                <button onClick={() => openDeleteExamWeekModal(ew)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--red)" }} title="Excluir"><Trash2 size={18} /></button>
                               </div>
                             </div>
                         ))}
@@ -891,7 +965,13 @@ export default function Configuracao() {
                                   {sem.active === 1 ? "Desativar" : "Ativar"}
                                 </button>
                                 <button onClick={() => handleOpenSemesterModal(sem)} style={{ background: "none", border: "none", cursor: "pointer", color: "#2196F3" }} title="Editar"><Edit size={18} /></button>
-                                <button onClick={() => deletarSemester(sem.id, sem.name)} style={{ background: "none", border: "none", cursor: "pointer", color: "#e74c3c" }} title="Excluir"><Trash2 size={18} /></button>
+                                <button
+                                    onClick={() => openDeleteSemesterModal(sem)}
+                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#e74c3c" }}
+                                    title="Excluir"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
                               </div>
                             </div>
                         ))}
@@ -994,6 +1074,108 @@ export default function Configuracao() {
 
         {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
         {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
+
+        {/* Modal de confirmação de exclusão de semestre */}
+        {showDeleteSemesterModal && semesterToDelete && (
+            <div className="modal-overlay">
+              <div className="confirm-modal">
+                <div className="confirm-icon">!</div>
+                <h2>Confirmar exclusão</h2>
+                <p>
+                  Tem certeza que deseja excluir o semestre <strong>{semesterToDelete.name}</strong>?
+                  <br />
+                  <span style={{ fontSize: "0.8rem", color: "#dc2626" }}>
+          Esta ação não pode ser desfeita e pode afetar reservas vinculadas.
+        </span>
+                </p>
+                <div className="confirm-buttons">
+                  <button
+                      className="btn-action btn-secondary"
+                      onClick={() => {
+                        setShowDeleteSemesterModal(false);
+                        setSemesterToDelete(null);
+                      }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                      className="btn-action btn-danger"
+                      onClick={confirmDeleteSemester}
+                  >
+                    Sim, excluir
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+
+        {/* Modal de confirmação de exclusão de semana de prova */}
+        {showDeleteExamWeekModal && examWeekToDelete && (
+            <div className="modal-overlay">
+              <div className="confirm-modal">
+                <div className="confirm-icon">!</div>
+                <h2>Confirmar exclusão</h2>
+                <p>
+                  Tem certeza que deseja excluir a semana de <strong>{examWeekToDelete.examType}</strong>?
+                  <br />
+                  <span style={{ fontSize: "0.8rem", color: "#dc2626" }}>
+          Esta ação não pode ser desfeita.
+        </span>
+                </p>
+                <div className="confirm-buttons">
+                  <button
+                      className="btn-action btn-secondary"
+                      onClick={() => {
+                        setShowDeleteExamWeekModal(false);
+                        setExamWeekToDelete(null);
+                      }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                      className="btn-action btn-danger"
+                      onClick={confirmDeleteExamWeek}
+                  >
+                    Sim, excluir
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+
+        {/* Modal de confirmação de exclusão de feriado */}
+        {showDeleteHolidayModal && holidayToDelete && (
+            <div className="modal-overlay">
+              <div className="confirm-modal">
+                <div className="confirm-icon">!</div>
+                <h2>Confirmar exclusão</h2>
+                <p>
+                  Tem certeza que deseja excluir o feriado <strong>{holidayToDelete.name}</strong>?
+                  <br />
+                  <span style={{ fontSize: "0.8rem", color: "#dc2626" }}>
+          Esta ação não pode ser desfeita.
+        </span>
+                </p>
+                <div className="confirm-buttons">
+                  <button
+                      className="btn-action btn-secondary"
+                      onClick={() => {
+                        setShowDeleteHolidayModal(false);
+                        setHolidayToDelete(null);
+                      }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                      className="btn-action btn-danger"
+                      onClick={confirmDeleteHoliday}
+                  >
+                    Sim, excluir
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
         <Footer />
       </>
   );

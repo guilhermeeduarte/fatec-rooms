@@ -144,6 +144,8 @@ export default function Coordenador() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [pendingUsers, setPendingUsers] = useState([]);
+
   useEffect(() => {
     const authlevel = localStorage.getItem('authlevel');
     if (authlevel !== '1') {
@@ -161,13 +163,14 @@ export default function Coordenador() {
       const today = new Date().toISOString().slice(0, 10);
 
       try {
-        const [roomsResp, usersResp, todayResp, recentResp, pendingResp, recurringResp] = await Promise.all([
+        const [roomsResp, usersResp, todayResp, recentResp, pendingResp, recurringResp, pendingUsersResp] = await Promise.all([
           fetch('/api/rooms', { headers }),
           fetch('/api/admin/users', { headers }),
           fetch(`/api/bookings/admin/by-date?date=${today}`, { headers }),
           fetch('/api/bookings/admin/all?page=0&size=5', { headers }),
           fetch('/api/bookings/admin/pending?page=0&size=50', { headers }),
           fetch('/api/recurring-bookings?page=0&size=5', { headers }),
+          fetch('/api/admin/users/pending', { headers }), // Novo endpoint
         ]);
 
         if (!roomsResp.ok) throw new Error('Falha ao buscar salas');
@@ -183,6 +186,13 @@ export default function Coordenador() {
         const pendingData = await pendingResp.json();
         const recurringData = recurringResp.ok ? await recurringResp.json() : { content: [] };
 
+        // Usar o endpoint específico para usuários pendentes
+        let pendingUsersData = [];
+        if (pendingUsersResp.ok) {
+          pendingUsersData = await pendingUsersResp.json();
+        }
+
+        setPendingUsers(pendingUsersData || []);
         setRooms(roomsData || []);
         setProfessors((usersData || []).filter((user) => user.authlevel === 2));
         setTodayBookings(todayData.content ?? todayData);
@@ -219,7 +229,7 @@ export default function Coordenador() {
     {
       icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
       number: pendingBookings.length,
-      label: "Pendentes",
+      label: "Reservas Pendentes",
     },
   ], [rooms.length, todayBookings.length, professors.length, pendingBookings.length]);
 
@@ -266,7 +276,7 @@ export default function Coordenador() {
             {/* Coluna principal */}
             <div>
               {/* Estatísticas */}
-              <div className="stats-row">
+              <div className="stats-row2">
                 {stats.map((s) => (
                     <div key={s.label} className={`stat-card ${s.highlight ? "highlight" : ""}`}>
                       <div className="stat-icon">{s.icon}</div>
@@ -289,6 +299,26 @@ export default function Coordenador() {
                     <div className="alert-text">
                       <h4>{pendingBookings.length} reservas aguardando aprovação</h4>
                       <p>Professores estão aguardando sua confirmação.</p>
+                    </div>
+                  </div>
+              )}
+
+              {/* Alerta de usuários pendentes */}
+              {pendingUsers.length > 0 && (
+                  <div className="alert-card" style={{ background: "#eff6ff", borderColor: "#3b82f6" }}>
+                    <div className="alert-icon" style={{ background: "#3b82f6" }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+                      </svg>
+                    </div>
+                    <div className="alert-text">
+                      <h4 style={{ color: "#1e40af" }}>
+                        {pendingUsers.length} cadastro{pendingUsers.length !== 1 ? "s" : ""} pendente{pendingUsers.length !== 1 ? "s" : ""}
+                      </h4>
+                      <p style={{ color: "#1e3a8a" }}>
+                        Novos usuários aguardam aprovação de cadastro.
+                      </p>
                     </div>
                   </div>
               )}

@@ -1,0 +1,74 @@
+/* Quando estiver editando o prazo, ajusta o layout */
+.card-right .input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 500px) {
+    .card-right {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .card-right .input-group {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .card-right .input-group input {
+        width: 100%;
+        min-width: auto;
+        text-align: center; /* Centraliza o número */
+    }
+
+    .card-right .input-group span {
+        text-align: right; /* Alinha "dias" à direita */
+        width: 100%;
+        font-weight: 500;
+    }
+
+    .card-right .botoes {
+        margin-top: 8px;
+        display: flex;
+        gap: 12px;
+        justify-content: stretch;
+    }
+
+    .card-right .botoes button {
+        flex: 1;
+    }
+}
+/* Responsividade para o card quando NÃO está editando */
+@media (max-width: 500px) {
+    .card-right {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    .card-right .badge {
+        align-self: center; /* Badge fica à esquerda */
+        margin-bottom: 8px;
+        margin-top: 1em;
+    }
+
+    .card-right button {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+
+.eastereggguilhermastico {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    color: #374151;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid var(--gray-200);
+}
