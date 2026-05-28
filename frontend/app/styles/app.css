@@ -1133,12 +1133,6 @@ button.menu-card {
   animation: fadeUp 0.5s ease both;
 }
 
-.btn-action {
-  min-width: 100px;
-  height: 38px;
-  text-align: center;
-}
-
 .reserva-item {
   justify-content: space-between;
   align-items: flex-start;
@@ -1183,7 +1177,7 @@ button.menu-card {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 110px;
+  min-width: 80px;
   padding: 10px 18px;
   border-radius: 12px;
   border: none;
@@ -1235,22 +1229,17 @@ button.menu-card {
   background: var(--red-dark);
 }
 
-
-
-
-
 @media (max-width: 900px) {
   .reserva-item {
     flex-direction: column;
   }
-
   .room-actions {
     width: 100%;
     align-items: flex-start;
   }
-
-  .reserva-buttons {
-    justify-content: flex-start;
+  .salas-buttons {
+    width: 100% !important;
+    justify-content: space-between !important;
   }
 }
 
@@ -1723,8 +1712,10 @@ button.menu-card {
 /* ══════════════════════════════════════════
    PÁGINA DE APROVAÇÃO DE CADASTROS
 ══════════════════════════════════════════ */
-
 /* Filtros */
+.content-solicitarReserva {
+  flex-wrap: nowrap;
+}
 .aprovacao-filtros {
   display: flex;
   gap: 8px;
@@ -2025,30 +2016,62 @@ button.menu-card {
 /* ══════════════════════════════════════════
 SOLICITAÇÕES DE RESERVA 
 ══════════════════════════════════════════ */
-.content-solicitarReserva {
-  padding: 40px 24px 32px;
-  background: var(--white);
-  display: flex;
-  gap: 50px;
-  justify-content: center;
-  flex: 1;
-  flex-wrap: wrap;
-}
-
+.content-solicitarReserva{
+    padding: 24px 16px 32px;
+    background: var(--white);
+    display: flex;
+    gap: 0;
+    justify-content: center;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    flex: 1;
+  }
 
 .div-calendario{
   gap: 12px;
   padding: 10px;
   padding-left: 20px;
-  width: 700px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 500px;
   height: auto;
-  background:var(--gray-100);
+  background: var(--gray-100);
   border-radius: var(--radius-lg);
   border: 3px transparent solid;
-  margin:10px;
+  margin: 10px;
   align-items: center;
-
 }
+
+.div-forms-reserva{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 560px;
+  height: auto;
+  background: var(--gray-100);
+  border-radius: var(--radius-lg);
+  border: 3px transparent solid;
+  margin: 10px;
+  justify-content: center;
+}
+
+@media (max-width: 728px) {
+  .content-solicitarReserva {
+    flex-wrap: wrap !important;
+  }
+  .div-calendario {
+    width: 100%;
+    flex: none;
+  }
+  .div-forms-reserva {
+    width: 100%;
+    flex: none;
+  }
+}
+
 .title-calendario{
   width: 100%;
   padding: 8px 0px 5px 20px;
@@ -2317,20 +2340,9 @@ SOLICITAÇÕES DE RESERVA
 .amarelo { background: var(--yellow); }
 .vermelho { background: var(--red); }
 .cinza { background: #9E9E9E; }
+
 /* forms */
-.div-forms-reserva{
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 20px;
-  width: 50%;
-  height: 40%;
-  background: var(--gray-100);
-  border-radius: var(--radius-lg);
-  border: 3px transparent solid;
-  margin:10px;
-  justify-content: center;
-}
+
 
 .form-group-reserva {
   margin-bottom: 12px;
@@ -4774,9 +4786,11 @@ button {
     background: var(--gray-200);
     padding: 10px 14px;
     border-radius: 12px;
-    min-width: 220px;
+    min-width: 120px;
     display: flex;
     flex-direction: column;
+    flex:1;
+    overflow:hidden;
 }
 .usuario-box:hover {
   background: var(--gray-100)
@@ -4804,6 +4818,7 @@ button {
     font-size: 13px;
     color: #333;
     font-weight: 500;
+      word-break: break-all;
 }
 
 .reserva-sala-user {
@@ -5705,15 +5720,10 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
 }
 
 /* ── Responsivo ── */
-@media (max-width: 1200px) {
-  .box-calendario-recorrente,
-  .box-form-recorrente {
-    width: 480px;
-    flex: 0 0 480px;
-  }
-}
 
-@media (max-width: 1020px) {
+
+/* ── Responsivo ── */
+@media (max-width: 900px) {
   .content-recorrente {
     flex-direction: column;
     padding: 24px 16px;
@@ -5737,9 +5747,8 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
     flex: 0 0 calc(33.33% - 5px);
   }
 }
-
 /* ══════════════════════════════════════════
-   GRADE DE RESERVAS  — colar no app.css
+   GRADE DE RESERVAS 
 ══════════════════════════════════════════ */
 
 .gr-page {
@@ -6630,9 +6639,10 @@ body {
 }
 
 /* O conteúdo principal deve crescer para empurrar o footer */
-.layout-reservas, .content-solicitarReserva {
+.layout-reservas {
   flex: 1;
 }
+
 
 /* Footer deve ter margin-top automática se necessário, mas já estará no final */
 footer, .Footer {

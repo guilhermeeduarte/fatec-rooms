@@ -316,47 +316,42 @@ export default function GerenciarUsuario() {
                     <>
                         <div className="reservas-list">
                             {usuariosFiltrados.map((usuario) => (
-                                <div key={usuario.id} className="reserva-item">
-                                    <div className="usuario-info">
-                                        <div className="reserva-sala-user">{usuario.nome}</div>
-                                        <div className="usuario-detalhes">
-                                            <div className="usuario-box">
-                                                <span className="usuario-label">E-mail</span>
-                                                <span className="usuario-value">{usuario.email}</span>
-                                            </div>
-                                            <div className="usuario-box">
-                                                <span className="usuario-label">Tipo</span>
-                                                <span className="usuario-value">{usuario.tipo}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="room-actions">
-                                        <div className={`reserva-status ${getStatusClass(usuario.status)}`}>
-                                            {getStatusLabel(usuario.status)}
-                                        </div>
-                                        <div className="reserva-buttons">
-                                            <button
-                                                className="btn-action btn-secondary"
-                                                onClick={() => openEditModal(usuario)}
-                                            >
-                                                Editar
-                                            </button>
-                                            {usuario.status === 1 ? (
-                                                <button
-                                                    className="btn-action btn-danger"
-                                                    onClick={() => handleOpenModal(usuario)}
-                                                >
-                                                    Desativar
-                                                </button>
-                                            ) : (
-                                                <button className="btn-action btn-secondary" disabled>
-                                                    Desativado
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                                <div key={usuario.id} className="reserva-item" style={{flexDirection:"column"}}>
+  <div className="usuario-info">
+    <div className="reserva-sala-user">{usuario.nome}</div>
+    <div className="usuario-detalhes">
+      <div style={{display:"flex", gap:"8px", flexWrap:"wrap", marginTop:"6px"}}>
+  <div className="usuario-box">
+    <span className="usuario-label">E-mail</span>
+    <span className="usuario-value">{usuario.email}</span>
+  </div>
+  <div className="usuario-box">
+    <span className="usuario-label">Tipo</span>
+    <span className="usuario-value">{usuario.tipo}</span>
+  </div>
+</div>
+    </div>
+  </div>
+  <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", width:"100%", marginTop:"8px"}}>
+    <div className={`reserva-status ${getStatusClass(usuario.status)}`}>
+      {getStatusLabel(usuario.status)}
+    </div>
+    <div style={{display:"flex", gap:"8px"}}>
+      <button className="btn-action btn-secondary" onClick={() => openEditModal(usuario)}>
+        Editar
+      </button>
+      {usuario.status === 1 ? (
+        <button className="btn-action btn-danger" onClick={() => handleOpenModal(usuario)}>
+          Desativar
+        </button>
+      ) : (
+        <button className="btn-action btn-secondary" disabled>
+          Desativado
+        </button>
+      )}
+    </div>
+  </div>
+</div>
                             ))}
                         </div>
                     </>
