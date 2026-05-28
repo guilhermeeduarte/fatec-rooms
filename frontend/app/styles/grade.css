@@ -272,8 +272,8 @@
 
 /* Manhã — laranja */
 .gr-th-group--manham {
-    color: #f97316;
-    border-bottom-color: #f97316;
+    color: #51cd99;
+    border-bottom-color: #51cd99;
 }
 /* Tarde — azul */
 .gr-th-group--tarde {
@@ -468,6 +468,12 @@
 /* ══════════════════════════════════════════════════════════════════
    MINI CALENDÁRIO
 ══════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   MINI CALENDÁRIO
+══════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   MINI CALENDÁRIO
+══════════════════════════════════════════════════════════════════ */
 .gr-minical {
     position: absolute;
     top: calc(100% + 8px);
@@ -476,42 +482,37 @@
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    padding: 1rem;
+    padding: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,.12);
-    width: 240px;
+    width: 260px;
 }
-.gr-minical__nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.75rem;
+
+/* Responsivo para telas pequenas */
+@media (max-width: 500px) {
+    .gr-minical {
+        width: 260px;
+        left: 50%; /* Centraliza horizontalmente */
+        transform: translateX(-50%); /* Ajusta para centralizar */
+    }
+
+    .gr-minical__day {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
 }
-.gr-minical__nav button {
-    background: none; border: none; cursor: pointer;
-    font-size: 1.1rem; color: #374151; padding: 0.2rem 0.5rem;
+
+@media (max-width: 350px) {
+    .gr-minical {
+        width: 240px;
+    }
+
+    .gr-minical__day {
+        width: 24px;
+        height: 24px;
+        font-size: 0.65rem;
+    }
 }
-.gr-minical__nav span {
-    font-size: 0.88rem; font-weight: 600; color: #111827; text-transform: capitalize;
-}
-.gr-minical__grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-}
-.gr-minical__wd {
-    text-align: center; font-size: 0.68rem; color: #9ca3af;
-    font-weight: 600; padding: 2px 0;
-}
-.gr-minical__day {
-    background: none; border: none; border-radius: 50%;
-    width: 30px; height: 30px; cursor: pointer; font-size: 0.78rem;
-    color: #374151; transition: background 0.15s;
-    display: flex; align-items: center; justify-content: center; margin: 0 auto;
-}
-.gr-minical__day:hover:not(:disabled) { background: #fee2e2; color: #dc2626; }
-.gr-minical__day--today { background: #dc2626; color: #fff; font-weight: 700; }
-.gr-minical__day--empty { visibility: hidden; cursor: default; }
-.gr-minical__day:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* ══════════════════════════════════════════════════════════════════
    FULLSCREEN

@@ -154,6 +154,9 @@ export default function Configuracao() {
     return name;
   }
 
+  function verificarSemestreDuplicado(nome) {
+    return allSemestres.some(sem => sem.name === nome.trim());
+  }
   // -------------------- Funções que recebem token por parâmetro --------------------
   async function carregarInicial(tokenParam) {
     try {
@@ -305,11 +308,34 @@ export default function Configuracao() {
     e.preventDefault();
     if (!token) return;
     const { name, startDate, endDate } = currentSemester;
-    if (!name || !startDate || !endDate) {
+    const nomeTrimmed = name?.trim() || "";
+
+    // Validação 1: campos obrigatórios
+    if (!nomeTrimmed || !startDate || !endDate) {
       setError("Preencha todos os campos obrigatórios.");
       setShowErrorPopup(true);
       return;
     }
+
+    // Validação 2: formato do nome
+    const nomeValido = /^(\d{4})\/([1-2])$/.test(nomeTrimmed);
+    if (!nomeValido) {
+      setError("Formato inválido! Use o padrão AAAA/X (ex: 2026/1 para 1º semestre ou 2026/2 para 2º semestre)");
+      setShowErrorPopup(true);
+      return;
+    }
+
+    // Validação 3: duplicata (apenas para novos semestres, não para edição)
+    if (!editingSemesterId) {
+      const existeDuplicata = allSemestres.some(sem => sem.name === nomeTrimmed);
+      if (existeDuplicata) {
+        setError(`O semestre "${nomeTrimmed}" já existe. Não é possível criar duplicatas.`);
+        setShowErrorPopup(true);
+        return;
+      }
+    }
+
+    // Validação 4: datas
     if (new Date(startDate) > new Date(endDate)) {
       setError("A data de início não pode ser posterior à data de fim.");
       setShowErrorPopup(true);
@@ -326,13 +352,13 @@ export default function Configuracao() {
         resp = await fetch(`${API_URL}/semesters/${editingSemesterId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ name, startDate, endDate }),
+          body: JSON.stringify({ name: nomeTrimmed, startDate, endDate }),
         });
       } else {
         resp = await fetch(`${API_URL}/semesters`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ name, startDate, endDate }),
+          body: JSON.stringify({ name: nomeTrimmed, startDate, endDate }),
         });
       }
 
@@ -348,6 +374,7 @@ export default function Configuracao() {
       await carregarInicial(token);
     } catch (err) {
       setError(err.message);
+      setShowErrorPopup(true);
     } finally {
       setSavingSemester(false);
     }
@@ -892,13 +919,26 @@ export default function Configuracao() {
                     <input
                         type="text"
                         value={currentSemester.name}
-                        onChange={(e) => setCurrentSemester({ ...currentSemester, name: e.target.value })}
+                        onChange={(e) => {
+                          const novoValor = e.target.value;
+                          setCurrentSemester({ ...currentSemester, name: novoValor });
+                        }}
                         placeholder="Ex.: 2026/1"
                         required
+                        style={{
+                          borderColor: currentSemester.name && !/^(\d{4})\/([1-2])$/.test(currentSemester.name.trim())
+                              ? "#dc2626"
+                              : "#d1d5db"
+                        }}
                     />
                     <small style={{ color: "#6b7280", fontSize: "0.7rem", display: "block", marginTop: "4px" }}>
-                      Formato recomendado: <strong>AAAA/X</strong> (ex: 2026/1 para primeiro semestre, 2026/2 para segundo semestre)
+                      Formato obrigatório: <strong>AAAA/X</strong> (ex: 2026/1 para primeiro semestre, 2026/2 para segundo semestre)
                     </small>
+                    {currentSemester.name && !/^(\d{4})\/([1-2])$/.test(currentSemester.name.trim()) && (
+                        <small style={{ color: "#dc2626", fontSize: "0.7rem", display: "block", marginTop: "4px" }}>
+                          ⚠ Formato inválido! Use AAAA/1 ou AAAA/2 (ex: 2026/1)
+                        </small>
+                    )}
                   </div>
                   <div className="form-group-reserva">
                     <label>Data início *</label>

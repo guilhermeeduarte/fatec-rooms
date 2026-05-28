@@ -29,6 +29,59 @@ export default function MinhasReservas() {
     return match ? match[1].trim() : "";
   }
 
+  function extrairMotivo(notes) {
+    if (!notes) return "";
+    // Remove a parte do curso se existir
+    const motivoParte = notes.split(/\nCurso:/i)[0];
+    // Se não tiver nada antes de "Curso:", retorna vazio
+    return motivoParte.trim();
+  }
+
+  async function carregar() {
+    const token = localStorage.getItem("token");
+    if (!token) { setError("Faça login para ver suas reservas."); setLoading(false); return; }
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch("/api/bookings/my", { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error("Falha ao carregar suas reservas.");
+      const data = await res.json();
+      setReservas(data.map((r) => {
+        const periods = r.periods || [];
+        const first = periods[0];
+        const last = periods[periods.length - 1];
+        const startTime = first?.periodStart?.slice(0, 5) || "";
+
+        const notes = r.notes || "";
+        const motivo = extrairMotivo(notes);
+        const curso = extrairCurso(notes);
+
+        // Se o motivo estiver vazio, tenta usar o r.subject como fallback
+        const motivoFinal = motivo || r.subject || "Sem motivo";
+        const cursoFinal = curso || "—";
+
+        return {
+          id: r.id,
+          data: r.bookingDate?.split("-").reverse().join("/") || "",
+          rawDate: r.bookingDate || "",
+          espaco: r.roomName || "",
+          horaInicio: startTime,
+          horaFim: last?.periodEnd?.slice(0, 5) || "--:--",
+          motivo: motivoFinal,
+          status: traduzirStatus(r.status),
+          periodo: extrairPeriodo(startTime),
+          curso: cursoFinal,
+          notesOriginal: notes,
+        };
+      }));
+    } catch (err) {
+      setError(err.message || "Erro ao carregar suas reservas.");
+      setShowErrorPopup(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function extrairPeriodo(startTime) {
     if (!startTime) return "";
     const h = parseInt(startTime.slice(0, 2), 10);
@@ -61,6 +114,11 @@ export default function MinhasReservas() {
         const first = periods[0];
         const last = periods[periods.length - 1];
         const startTime = first?.periodStart?.slice(0, 5) || "";
+
+        const notes = r.notes || "";
+        const motivo = extrairMotivo(notes);
+        const curso = extrairCurso(notes);
+
         return {
           id: r.id,
           data: r.bookingDate?.split("-").reverse().join("/") || "",
@@ -68,10 +126,11 @@ export default function MinhasReservas() {
           espaco: r.roomName || "",
           horaInicio: startTime,
           horaFim: last?.periodEnd?.slice(0, 5) || "--:--",
-          motivo: r.notes || r.subject || "",
+          motivo: motivo || r.subject || "—",
           status: traduzirStatus(r.status),
           periodo: extrairPeriodo(startTime),
-          curso: extrairCurso(r.notes),
+          curso: curso || "—",
+          notesOriginal: notes, // Guarda as notas originais
         };
       }));
     } catch (err) {
@@ -84,24 +143,72 @@ export default function MinhasReservas() {
 
   useEffect(() => { carregar(); }, []);
 
-  function iniciarEdicao(reserva) { setEditandoId(reserva.id); setNovoMotivo(reserva.motivo); }
-  function cancelarEdicao() { setEditandoId(null); setNovoMotivo(""); }
+  function iniciarEdicao(reserva) {
+    setEditandoId(reserva.id);
+    setNovoMotivo(reserva.motivo);
+  }
+  function cancelarEdicao() {
+    setEditandoId(null);
+    setNovoMotivo("");
+  }
 
   async function salvarEdicao(id) {
     const token = localStorage.getItem("token");
-    if (!token) { setError("Faça login para editar."); setShowErrorPopup(true); return; }
+    if (!token) {
+      setError("Faça login para editar.");
+      setShowErrorPopup(true);
+      return;
+    }
     try {
       setSalvando(true);
+
+      // Encontra a reserva original
+      const reservaOriginal = reservas.find(r => r.id === id);
+
+      // Extrai o curso das notas originais (se existir)
+      let cursoParte = "";
+      const cursoMatch = reservaOriginal?.notesOriginal?.match(/Curso:\s*([^\n]+)/i);
+      if (cursoMatch) {
+        cursoParte = `\nCurso: ${cursoMatch[1]}`;
+      }
+
+      // Constrói o novo notes: novo motivo + curso (se existir)
+      let novoNotes = novoMotivo;
+      if (cursoParte) {
+        novoNotes = novoMotivo + cursoParte;
+      }
+
       const res = await fetch(`/api/bookings/${id}/notes`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: novoMotivo }),
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ notes: novoNotes }),
       });
-      if (!res.ok) throw new Error("Falha ao atualizar o motivo.");
-      setReservas((prev) => prev.map((r) => r.id === id ? { ...r, motivo: novoMotivo } : r));
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Falha ao atualizar o motivo.");
+      }
+
+      // Atualiza o estado local
+      setReservas((prev) => prev.map((r) =>
+          r.id === id
+              ? {
+                ...r,
+                motivo: novoMotivo,
+                notesOriginal: novoNotes,
+                curso: cursoMatch ? cursoMatch[1] : "—"
+              }
+              : r
+      ));
+
       setEditandoId(null);
+      setNovoMotivo("");
       setSuccess("Motivo atualizado com sucesso.");
       setShowSuccessPopup(true);
+
     } catch (err) {
       setError(err.message || "Erro ao salvar.");
       setShowErrorPopup(true);
@@ -178,7 +285,6 @@ export default function MinhasReservas() {
           {/* ── Filtros ── */}
           <div style={{ background: "white", borderRadius: 14, padding: "1rem 1.25rem", marginBottom: "1.25rem", boxShadow: "0 2px 8px rgba(0,0,0,.06)", border: "1px solid #e5e7eb" }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", alignItems: "center" }}>
-              {/* Input de busca com ícone de lupa */}
               <div style={{ flex: "2 1 240px", position: "relative" }}>
                 <Search
                     size={18}
@@ -254,7 +360,6 @@ export default function MinhasReservas() {
             </p>
           </div>
 
-          {/* ── Cards ── */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
             {!loading && reservasFiltradas.length === 0 && (
                 <div style={{ textAlign: "center", padding: "3rem", color: "#94a3b8", background: "white", borderRadius: 14, border: "1.5px dashed #e5e7eb" }}>
@@ -272,7 +377,6 @@ export default function MinhasReservas() {
                   boxShadow: "0 2px 8px rgba(0,0,0,.04)",
                   transition: "transform .18s, box-shadow .18s",
                 }}>
-                  {/* Grid de campos */}
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem 1.5rem" }}>
                     <Field label="Data" value={reserva.data} />
                     <Field label="Espaço" value={reserva.espaco} />
@@ -280,15 +384,13 @@ export default function MinhasReservas() {
                     <Field label="Período" value={reserva.periodo || "—"} />
                     <Field label="Curso" value={reserva.curso || "—"} />
 
-                    {/* Status com badge */}
                     <div>
                       <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Status</div>
                       <span style={{ display: "inline-block", fontSize: "0.8rem", fontWeight: 700, padding: "3px 12px", borderRadius: 20, background: statusBg(reserva.status), color: statusColor(reserva.status) }}>
-                    {reserva.status}
-                  </span>
+                        {reserva.status}
+                      </span>
                     </div>
 
-                    {/* Motivo — full width */}
                     <div style={{ gridColumn: "1 / -1" }}>
                       <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Motivo</div>
                       {editandoId === reserva.id ? (
@@ -301,30 +403,23 @@ export default function MinhasReservas() {
                     </div>
                   </div>
 
-                  {/* Botões de ação */}
                   {podeAcionar(reserva) && (
                       <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.6rem", marginTop: "1rem", paddingTop: "0.85rem", borderTop: "1px solid #f3f4f6" }}>
                         {editandoId === reserva.id ? (
                             <>
-                              <button onClick={cancelarEdicao}
-                                      className={"btn-cancelar"}>
-                                Voltar
-                              </button>
-                              <button onClick={() => salvarEdicao(reserva.id)} disabled={salvando}
-                                      className={"btn-salvar"}>
+                              <button onClick={cancelarEdicao} className="btn-action btn-cancel">Voltar</button>
+                              <button onClick={() => salvarEdicao(reserva.id)} disabled={salvando} className="btn-action btn-save">
                                 {salvando ? "Salvando..." : "Salvar"}
                               </button>
                             </>
                         ) : (
                             <>
                               {podeEditar(reserva) && (
-                                  <button onClick={() => iniciarEdicao(reserva)}
-                                          className={"btn-action btn-secondary"}>
+                                  <button onClick={() => iniciarEdicao(reserva)} className="btn-action btn-secondary">
                                     Editar motivo
                                   </button>
                               )}
-                              <button onClick={() => cancelarReserva(reserva.id)}
-                                      className={"btn-action"}>
+                              <button onClick={() => cancelarReserva(reserva.id)} className="btn-action">
                                 Cancelar reserva
                               </button>
                             </>

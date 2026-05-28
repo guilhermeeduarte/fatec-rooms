@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
+import Popup from "../components/Popup";
 import { Search } from 'lucide-react';
 import "../styles/todasReservas.css";
 
@@ -25,6 +26,15 @@ export default function TodasReservas() {
   const [cancellingId, setCancellingId] = useState(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
+  // Estados para o popup
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [popupType, setPopupType] = useState("success");
+
+  // Estados para o modal de confirmação de cancelamento
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedReserva, setSelectedReserva] = useState(null);
+
   // Filtros básicos
   const [busca, setBusca] = useState("");
   const [statusFiltro, setStatusFiltro] = useState("");
@@ -36,6 +46,11 @@ export default function TodasReservas() {
   const [filtrosAvancados, setFiltrosAvancados] = useState({
     pessoa: "", sala: "", periodo: "", curso: ""
   });
+  function extrairMotivo(notes) {
+    if (!notes) return "";
+    const motivoParte = notes.split(/\nCurso:/i)[0];
+    return motivoParte.trim();
+  }
 
   function extrairCurso(notes) {
     if (!notes) return "";
@@ -89,7 +104,7 @@ export default function TodasReservas() {
         espaco: reserva.roomName,
         horaInicio: startTime,
         horaFim: last?.periodEnd?.slice(0, 5) || "--:--",
-        motivo: reserva.subject || reserva.notes || "",
+        motivo: extrairMotivo(reserva.notes) || reserva.subject || "",
         status: traduzirStatus(reserva.status),
         professor: reserva.userDisplayName || reserva.username || "Desconhecido",
         periodo: extrairPeriodo(startTime),
@@ -168,24 +183,55 @@ export default function TodasReservas() {
     fetchReservas(next, true);
   }
 
-  async function cancelarReserva(reserva) {
-    const confirmacao = window.confirm("Deseja realmente cancelar essa reserva?");
-    if (!confirmacao) return;
+  // Função para abrir o modal de confirmação
+  function openConfirmCancelModal(reserva) {
+    setSelectedReserva(reserva);
+    setShowConfirmModal(true);
+  }
+
+  // Função para confirmar o cancelamento
+  async function handleConfirmCancel() {
+    if (!selectedReserva) return;
+
     const token = localStorage.getItem("token");
-    if (!token) { setError("Faça login para cancelar a reserva."); return; }
-    const id = reserva.id.replace(/^(booking|recurring)-/, "");
-    const endpoint = reserva.tipoReserva === "Recorrente"
-      ? `/api/recurring-bookings/${id}/cancel`
-      : `/api/bookings/admin/${id}/cancel`;
+    if (!token) {
+      setPopupMessage("Faça login para cancelar a reserva.");
+      setPopupType("error");
+      setShowPopup(true);
+      setShowConfirmModal(false);
+      setSelectedReserva(null);
+      return;
+    }
+
+    const id = selectedReserva.id.replace(/^(booking|recurring)-/, "");
+    const endpoint = selectedReserva.tipoReserva === "Recorrente"
+        ? `/api/recurring-bookings/${id}/cancel`
+        : `/api/bookings/admin/${id}/cancel`;
+
     try {
-      setCancellingId(reserva.id);
-      const response = await fetch(endpoint, { method: "PATCH", headers: { Authorization: `Bearer ${token}` } });
+      setCancellingId(selectedReserva.id);
+      const response = await fetch(endpoint, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (!response.ok) throw new Error("Falha ao cancelar a reserva.");
-      setReservas(prev => prev.map(r => r.id === reserva.id ? { ...r, status: "Cancelada" } : r));
+
+      setReservas(prev => prev.map(r =>
+          r.id === selectedReserva.id ? { ...r, status: "Cancelada" } : r
+      ));
+
+      setPopupMessage("Reserva cancelada com sucesso!");
+      setPopupType("success");
+      setShowPopup(true);
+
     } catch (err) {
-      setError(err.message || "Erro ao cancelar a reserva.");
+      setPopupMessage(err.message || "Erro ao cancelar a reserva.");
+      setPopupType("error");
+      setShowPopup(true);
     } finally {
       setCancellingId(null);
+      setShowConfirmModal(false);
+      setSelectedReserva(null);
     }
   }
 
@@ -198,14 +244,14 @@ export default function TodasReservas() {
 
   const reservasFiltradas = reservas.filter((reserva) => {
     const matchBuscaGeral = busca === "" ||
-      reserva.espaco.toLowerCase().includes(busca.toLowerCase()) ||
-      reserva.motivo.toLowerCase().includes(busca.toLowerCase()) ||
-      reserva.professor.toLowerCase().includes(busca.toLowerCase()) ||
-      reserva.status.toLowerCase().includes(busca.toLowerCase());
+        reserva.espaco.toLowerCase().includes(busca.toLowerCase()) ||
+        reserva.motivo.toLowerCase().includes(busca.toLowerCase()) ||
+        reserva.professor.toLowerCase().includes(busca.toLowerCase()) ||
+        reserva.status.toLowerCase().includes(busca.toLowerCase());
     const matchStatus = statusFiltro ? reserva.status === statusFiltro : true;
     const matchDataReserva = dataReservaFiltro
-      ? reserva.bookingDate === dataReservaFiltro || isRecurringOnDate(dataReservaFiltro, reserva.weekDays)
-      : true;
+        ? reserva.bookingDate === dataReservaFiltro || isRecurringOnDate(dataReservaFiltro, reserva.weekDays)
+        : true;
     const matchDataSolicitacao = dataSolicitacaoFiltro ? reserva.createdAt === dataSolicitacaoFiltro : true;
     const matchTipoReserva = tipoReservaFiltro ? reserva.tipoReserva === tipoReservaFiltro : true;
     const matchPessoa = reserva.professor.toLowerCase().includes(filtrosAvancados.pessoa.toLowerCase());
@@ -213,7 +259,7 @@ export default function TodasReservas() {
     const matchPeriodo = filtrosAvancados.periodo ? reserva.periodo === filtrosAvancados.periodo : true;
     const matchCurso = reserva.curso.toLowerCase().includes(filtrosAvancados.curso.toLowerCase());
     return matchBuscaGeral && matchStatus && matchDataReserva && matchDataSolicitacao &&
-      matchTipoReserva && matchPessoa && matchSala && matchPeriodo && matchCurso;
+        matchTipoReserva && matchPessoa && matchSala && matchPeriodo && matchCurso;
   });
 
   const reservasOrdenadas = statusFiltro ? reservasFiltradas : [...reservasFiltradas].sort((a, b) => {
@@ -243,186 +289,227 @@ export default function TodasReservas() {
   }
 
   return (
-    <div className="tr-page">
-      <Navbar activePage="Todas as Reservas" />
-      <PageHero
-        title="Gerenciar Reservas"
-        tag="Área do Coordenador"
-        description="Visualize, filtre e gerencie todas as reservas do sistema."
-      />
+      <div className="tr-page">
+        <Navbar activePage="Todas as Reservas" />
+        <PageHero
+            title="Gerenciar Reservas"
+            tag="Área do Coordenador"
+            description="Visualize, filtre e gerencie todas as reservas do sistema."
+        />
 
-      <main className="tr-main">
-        {/* ── Filtros ── */}
-        <div className="tr-filters">
-          <div className="tr-filters__row">
-            <input
-                type="text"
-                placeholder="Buscar por sala, motivo, solicitante ou status…"
-                value={busca}
-                onChange={e => setBusca(e.target.value)}
-                className="tr-filters__search"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "12px center",
-                  backgroundSize: "18px",
-                  paddingLeft: "38px"
-                }}
-            />
-            <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} className="tr-filters__select">
-              <option value="">Todos os status</option>
-              <option value="Pendente">Pendente</option>
-              <option value="Ativa">Ativa</option>
-              <option value="Cancelada">Cancelada</option>
-              <option value="Recusada">Recusada</option>
-            </select>
-            <select value={tipoReservaFiltro} onChange={e => setTipoReservaFiltro(e.target.value)} className="tr-filters__select">
-              <option value="">Todos os tipos</option>
-              <option value="Comum">Comum</option>
-              <option value="Recorrente">Recorrente</option>
-            </select>
-          </div>
-
-          <div className="tr-filters__row tr-filters__row--dates">
-            <div className="tr-filters__date-group">
-              <label>Data da reserva</label>
-              <input type="date" value={dataReservaFiltro} onChange={e => setDataReservaFiltro(e.target.value)} />
-            </div>
-            <div className="tr-filters__date-group">
-              <label>Data da solicitação</label>
-              <input type="date" value={dataSolicitacaoFiltro} onChange={e => setDataSolicitacaoFiltro(e.target.value)} />
-            </div>
-            <div className="tr-filters__actions">
-              <button
-                className="tr-filters__btn-toggle"
-                onClick={() => setShowAdvancedFilters(v => !v)}
-              >
-                {showAdvancedFilters ? "▲ Menos filtros" : "▼ Mais filtros"}
-              </button>
-              <button className="tr-filters__btn-clear" onClick={limparFiltros}>
-                Limpar
-              </button>
-            </div>
-          </div>
-
-          {showAdvancedFilters && (
-            <div className="tr-filters__advanced">
+        <main className="tr-main">
+          {/* ── Filtros ── */}
+          <div className="tr-filters">
+            <div className="tr-filters__row">
               <input
-                type="text"
-                placeholder="Solicitante"
-                value={filtrosAvancados.pessoa}
-                onChange={e => setFiltrosAvancados({ ...filtrosAvancados, pessoa: e.target.value })}
+                  type="text"
+                  placeholder="Buscar por sala, motivo, solicitante ou status…"
+                  value={busca}
+                  onChange={e => setBusca(e.target.value)}
+                  className="tr-filters__search"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "12px center",
+                    backgroundSize: "18px",
+                    paddingLeft: "38px"
+                  }}
               />
-              <input
-                type="text"
-                placeholder="Sala"
-                value={filtrosAvancados.sala}
-                onChange={e => setFiltrosAvancados({ ...filtrosAvancados, sala: e.target.value })}
-              />
-              <select
-                value={filtrosAvancados.periodo}
-                onChange={e => setFiltrosAvancados({ ...filtrosAvancados, periodo: e.target.value })}
-              >
-                <option value="">Período</option>
-                <option value="Manhã">Manhã</option>
-                <option value="Tarde">Tarde</option>
-                <option value="Noite">Noite</option>
+              <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} className="tr-filters__select">
+                <option value="">Todos os status</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Ativa">Ativa</option>
+                <option value="Cancelada">Cancelada</option>
+                <option value="Recusada">Recusada</option>
               </select>
-              <input
-                type="text"
-                placeholder="Curso"
-                value={filtrosAvancados.curso}
-                onChange={e => setFiltrosAvancados({ ...filtrosAvancados, curso: e.target.value })}
-              />
+              <select value={tipoReservaFiltro} onChange={e => setTipoReservaFiltro(e.target.value)} className="tr-filters__select">
+                <option value="">Todos os tipos</option>
+                <option value="Comum">Comum</option>
+                <option value="Recorrente">Recorrente</option>
+              </select>
             </div>
-          )}
-        </div>
 
-        {/* ── Contador de resultados ── */}
-        <p className="tr-count">
-          {loading ? "Carregando…" : `${reservasOrdenadas.length} reserva${reservasOrdenadas.length !== 1 ? "s" : ""} encontrada${reservasOrdenadas.length !== 1 ? "s" : ""}`}
-        </p>
-
-        {/* ── Erro ── */}
-        {error && <div className="tr-error">{error}</div>}
-
-        {/* ── Lista ── */}
-        <div className="tr-list">
-          {!loading && !error && reservasOrdenadas.length === 0 && (
-            <div className="tr-empty">Nenhuma reserva encontrada para os filtros selecionados.</div>
-          )}
-
-          {reservasOrdenadas.map((reserva) => (
-            <div key={reserva.id} className={cardBorderClass(reserva)}>
-              {/* Badge tipo */}
-              <span className={`tr-badge tr-badge--${reserva.tipoReserva === "Recorrente" ? "recorrente" : "comum"}`}>
-                {reserva.tipoReserva}
-              </span>
-
-              <div className="tr-card__grid">
-                <div className="tr-field">
-                  <span className="tr-field__label">Data da Reserva</span>
-                  <span className="tr-field__value">{reserva.data || "—"}</span>
-                </div>
-                <div className="tr-field">
-                  <span className="tr-field__label">Solicitado em</span>
-                  <span className="tr-field__value">{reserva.dataSolicitacao || "—"}</span>
-                </div>
-                <div className="tr-field">
-                  <span className="tr-field__label">Espaço</span>
-                  <span className="tr-field__value">{reserva.espaco}</span>
-                </div>
-                <div className="tr-field">
-                  <span className="tr-field__label">Horário</span>
-                  <span className="tr-field__value">{reserva.horaInicio} – {reserva.horaFim}</span>
-                </div>
-                <div className="tr-field">
-                  <span className="tr-field__label">Período</span>
-                  <span className="tr-field__value">{reserva.periodo || "—"}</span>
-                </div>
-                <div className="tr-field">
-                  <span className="tr-field__label">Solicitante</span>
-                  <span className="tr-field__value">{reserva.professor}</span>
-                </div>
-                <div className="tr-field">
-                  <span className="tr-field__label">Curso</span>
-                  <span className="tr-field__value">{reserva.curso || "—"}</span>
-                </div>
-                <div className="tr-field tr-field--wide">
-                  <span className="tr-field__label">Motivo</span>
-                  <span className="tr-field__value">{reserva.motivo || "—"}</span>
-                </div>
-                <div className="tr-field">
-                  <span className="tr-field__label">Status</span>
-                  <span className={statusClass(reserva.status)}>{reserva.status}</span>
-                </div>
-                {reserva.status !== "Cancelada" && reserva.status !== "Recusada" && (
-                  <div className="tr-field tr-field--action">
-                    <button
-                      className="tr-btn-cancel cancel-reserva"
-                      onClick={() => cancelarReserva(reserva)}
-                      disabled={cancellingId === reserva.id}
-                    >
-                      {cancellingId === reserva.id ? "Cancelando…" : "Cancelar reserva"}
-                    </button>
-                  </div>
-                )}
+            <div className="tr-filters__row tr-filters__row--dates">
+              <div className="tr-filters__date-group">
+                <label>Data da reserva</label>
+                <input type="date" value={dataReservaFiltro} onChange={e => setDataReservaFiltro(e.target.value)} />
+              </div>
+              <div className="tr-filters__date-group">
+                <label>Data da solicitação</label>
+                <input type="date" value={dataSolicitacaoFiltro} onChange={e => setDataSolicitacaoFiltro(e.target.value)} />
+              </div>
+              <div className="tr-filters__actions">
+                <button
+                    className="tr-filters__btn-toggle"
+                    onClick={() => setShowAdvancedFilters(v => !v)}
+                >
+                  {showAdvancedFilters ? "▲ Menos filtros" : "▼ Mais filtros"}
+                </button>
+                <button className="tr-filters__btn-clear" onClick={limparFiltros}>
+                  Limpar
+                </button>
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* ── Carregar mais ── */}
-        {hasMore && !loading && (
-          <div className="tr-loadmore">
-            <button className="tr-loadmore__btn" onClick={loadMore} disabled={loadingMore}>
-              {loadingMore ? "Carregando…" : "Carregar mais"}
-            </button>
+            {showAdvancedFilters && (
+                <div className="tr-filters__advanced">
+                  <input
+                      type="text"
+                      placeholder="Solicitante"
+                      value={filtrosAvancados.pessoa}
+                      onChange={e => setFiltrosAvancados({ ...filtrosAvancados, pessoa: e.target.value })}
+                  />
+                  <input
+                      type="text"
+                      placeholder="Sala"
+                      value={filtrosAvancados.sala}
+                      onChange={e => setFiltrosAvancados({ ...filtrosAvancados, sala: e.target.value })}
+                  />
+                  <select
+                      value={filtrosAvancados.periodo}
+                      onChange={e => setFiltrosAvancados({ ...filtrosAvancados, periodo: e.target.value })}
+                  >
+                    <option value="">Período</option>
+                    <option value="Manhã">Manhã</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Noite">Noite</option>
+                  </select>
+                  <input
+                      type="text"
+                      placeholder="Curso"
+                      value={filtrosAvancados.curso}
+                      onChange={e => setFiltrosAvancados({ ...filtrosAvancados, curso: e.target.value })}
+                  />
+                </div>
+            )}
           </div>
-        )}
-      </main>
 
-      <Footer />
-    </div>
+          {/* ── Contador de resultados ── */}
+          <p className="tr-count">
+            {loading ? "Carregando…" : `${reservasOrdenadas.length} reserva${reservasOrdenadas.length !== 1 ? "s" : ""} encontrada${reservasOrdenadas.length !== 1 ? "s" : ""}`}
+          </p>
+
+          {/* ── Erro ── */}
+          {error && <div className="tr-error">{error}</div>}
+
+          {/* ── Lista ── */}
+          <div className="tr-list">
+            {!loading && !error && reservasOrdenadas.length === 0 && (
+                <div className="tr-empty">Nenhuma reserva encontrada para os filtros selecionados.</div>
+            )}
+
+            {reservasOrdenadas.map((reserva) => (
+                <div key={reserva.id} className={cardBorderClass(reserva)}>
+                  {/* Badge tipo */}
+                  <span className={`tr-badge tr-badge--${reserva.tipoReserva === "Recorrente" ? "recorrente" : "comum"}`}>
+                    {reserva.tipoReserva}
+                  </span>
+
+                  <div className="tr-card__grid">
+                    <div className="tr-field">
+                      <span className="tr-field__label">Data da Reserva</span>
+                      <span className="tr-field__value">{reserva.data || "—"}</span>
+                    </div>
+                    <div className="tr-field">
+                      <span className="tr-field__label">Solicitado em</span>
+                      <span className="tr-field__value">{reserva.dataSolicitacao || "—"}</span>
+                    </div>
+                    <div className="tr-field">
+                      <span className="tr-field__label">Espaço</span>
+                      <span className="tr-field__value">{reserva.espaco}</span>
+                    </div>
+                    <div className="tr-field">
+                      <span className="tr-field__label">Horário</span>
+                      <span className="tr-field__value">{reserva.horaInicio} – {reserva.horaFim}</span>
+                    </div>
+                    <div className="tr-field">
+                      <span className="tr-field__label">Período</span>
+                      <span className="tr-field__value">{reserva.periodo || "—"}</span>
+                    </div>
+                    <div className="tr-field">
+                      <span className="tr-field__label">Solicitante</span>
+                      <span className="tr-field__value">{reserva.professor}</span>
+                    </div>
+                    <div className="tr-field">
+                      <span className="tr-field__label">Curso</span>
+                      <span className="tr-field__value">{reserva.curso || "—"}</span>
+                    </div>
+                    <div className="tr-field tr-field--wide">
+                      <span className="tr-field__label">Motivo</span>
+                      <span className="tr-field__value">{reserva.motivo || "—"}</span>
+                    </div>
+                    <div className="tr-field">
+                      <span className="tr-field__label">Status</span>
+                      <span className={statusClass(reserva.status)}>{reserva.status}</span>
+                    </div>
+                    {reserva.status !== "Cancelada" && reserva.status !== "Recusada" && (
+                        <div className="tr-field tr-field--action">
+                          <button
+                              className="tr-btn-cancel cancel-reserva"
+                              onClick={() => openConfirmCancelModal(reserva)}
+                              disabled={cancellingId === reserva.id}
+                          >
+                            {cancellingId === reserva.id ? "Cancelando…" : "Cancelar reserva"}
+                          </button>
+                        </div>
+                    )}
+                  </div>
+                </div>
+            ))}
+          </div>
+
+          {/* ── Carregar mais ── */}
+          {hasMore && !loading && (
+              <div className="tr-loadmore">
+                <button className="tr-loadmore__btn" onClick={loadMore} disabled={loadingMore}>
+                  {loadingMore ? "Carregando…" : "Carregar mais"}
+                </button>
+              </div>
+          )}
+        </main>
+
+        {/* Modal de confirmação de cancelamento */}
+        {showConfirmModal && selectedReserva && (
+            <div className="modal-overlay">
+              <div className="confirm-modal">
+                <div className="confirm-icon">!</div>
+                <h2>Confirmar cancelamento</h2>
+                <p>
+                  Tem certeza que deseja cancelar esta reserva?
+                  <br />
+                  <strong>{selectedReserva.espaco}</strong> - {selectedReserva.data} - {selectedReserva.horaInicio} às {selectedReserva.horaFim}
+                </p>
+                <div className="confirm-buttons">
+                  <button
+                      className="btn-action btn-secondary"
+                      onClick={() => {
+                        setShowConfirmModal(false);
+                        setSelectedReserva(null);
+                      }}
+                  >
+                    Voltar
+                  </button>
+                  <button
+                      className="btn-action btn-danger"
+                      onClick={handleConfirmCancel}
+                  >
+                    Sim, cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+
+        {/* Popup de sucesso/erro */}
+        {showPopup && (
+            <Popup
+                message={popupMessage}
+                onClose={() => setShowPopup(false)}
+                type={popupType}
+            />
+        )}
+
+        <Footer />
+      </div>
   );
 }

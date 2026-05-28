@@ -36,6 +36,7 @@ export default function SolicitaReservaCoordenador() {
   const [recurringBookings, setRecurringBookings] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [examDatesSet, setExamDatesSet] = useState(new Set());
+  const [courses, setCourses] = useState([]); // Estado para cursos
   const [date, setDate] = useState(new Date());
   const [loadingPage, setLoadingPage] = useState(true);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
@@ -84,12 +85,13 @@ export default function SolicitaReservaCoordenador() {
         setError(null);
 
         const headers = { Authorization: `Bearer ${token}` };
-        const [roomsRes, bookingsRes, holidaysRes, semestersRes, recurringRes] = await Promise.all([
+        const [roomsRes, bookingsRes, holidaysRes, semestersRes, recurringRes, coursesRes] = await Promise.all([
           fetch("/api/rooms", { headers }),
           fetch("/api/bookings/my", { headers }),
           fetch("/api/holidays", { headers }),
           fetch("/api/semesters", { headers }),
           fetch("/api/recurring-bookings", { headers }),
+          fetch("/api/courses", { headers }), // Buscar cursos
         ]);
 
         if (!roomsRes.ok) throw new Error("Falha ao carregar salas.");
@@ -107,38 +109,50 @@ export default function SolicitaReservaCoordenador() {
           setHolidays(Array.isArray(data) ? data : []);
         }
 
+        // Carregar cursos
+        if (coursesRes.ok) {
+          const coursesData = await coursesRes.json();
+          // Filtra apenas cursos ativos
+          const activeCourses = Array.isArray(coursesData)
+              ? coursesData.filter(course => course.active === true)
+              : [];
+          setCourses(activeCourses);
+        } else {
+          console.warn("Não foi possível carregar os cursos.");
+        }
+
         // Semanas de avaliação
         if (semestersRes.ok) {
           const semestersData = await semestersRes.json();
           const activeSemesters = Array.isArray(semestersData)
-            ? semestersData
-            : semestersData.content || [];
+              ? semestersData
+              : semestersData.content || [];
           const examDates = new Set();
 
           await Promise.all(
-            activeSemesters.map(async (semester) => {
-              if (semester.active !== 1) return;
-              try {
-                const examRes = await fetch(`/api/semesters/${semester.id}/exam-weeks`, {
-                  headers: { Authorization: `Bearer ${token}` },
-                });
-                if (examRes.ok) {
-                  const weeks = await examRes.json();
-                  weeks.forEach((week) => {
-                    const start = new Date(week.startDate);
-                    const end = new Date(week.endDate);
-                    const current = new Date(start);
-                    while (current <= end) {
-                      const iso = current.toISOString().split("T")[0];
-                      examDates.add(iso);
-                      current.setDate(current.getDate() + 1);
-                    }
+              activeSemesters.map(async (semester) => {
+                if (semester.active !== 1) return;
+                try {
+                  const examRes = await fetch(`/api/semesters/${semester.id}/exam-weeks`, {
+                    headers: { Authorization: `Bearer ${token}` },
                   });
+                  if (examRes.ok) {
+                    const weeks = await examRes.json();
+                    weeks.forEach((week) => {
+                      const start = new Date(week.startDate);
+                      const end = new Date(week.endDate);
+                      const current = new Date(start);
+                      while (current <= end) {
+                        const iso = current.toISOString().split("T")[0];
+                        examDates.add(iso);
+                        current.setDate(current.getDate() + 1);
+                      }
+                    });
+                  }
+                } catch (err) {
+                  console.error(`Erro ao carregar exam-weeks do semestre ${semester.id}`, err);
                 }
-              } catch (err) {
-                console.error(`Erro ao carregar exam-weeks do semestre ${semester.id}`, err);
-              }
-            })
+              })
           );
           setExamDatesSet(examDates);
         }
@@ -166,8 +180,8 @@ export default function SolicitaReservaCoordenador() {
     setError(null);
     try {
       const res = await fetch(
-        `/api/bookings/availability?roomId=${roomId}&date=${dataISO}`,
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+          `/api/bookings/availability?roomId=${roomId}&date=${dataISO}`,
+          { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
       if (!res.ok) throw new Error("Não foi possível carregar a disponibilidade.");
       setAvailability(await res.json());
@@ -208,7 +222,7 @@ export default function SolicitaReservaCoordenador() {
 
   function handlePeriodToggle(periodId) {
     setSelectedPeriodIds((prev) =>
-      prev.includes(periodId) ? prev.filter((id) => id !== periodId) : [...prev, periodId]
+        prev.includes(periodId) ? prev.filter((id) => id !== periodId) : [...prev, periodId]
     );
   }
 
@@ -286,7 +300,11 @@ export default function SolicitaReservaCoordenador() {
       return;
     }
 
-    const notes = form.naoSeAplica ? "Não se aplica" : `Curso: ${form.curso || "-"}`;
+    // Constrói o notes com motivo e curso
+    const notes = form.naoSeAplica
+        ? form.motivo
+        : `${form.motivo}\nCurso: ${form.curso || "-"}`;
+
     const body = {
       roomId: form.roomId,
       periodIds: selectedPeriodIds.map(Number),
@@ -307,10 +325,9 @@ export default function SolicitaReservaCoordenador() {
         throw new Error(parseBackendError(errorText) || errorText || "Falha ao criar reserva.");
       }
       const totalPeriods = selectedPeriodIds.length;
-      // Mensagem de sucesso indicando que a reserva já está aprovada (coordenador)
       const successMessage = totalPeriods === 1
-        ? "Reserva criada e aprovada automaticamente!"
-        : `Reserva com ${totalPeriods} períodos criada e aprovada automaticamente!`;
+          ? "Reserva criada e aprovada automaticamente!"
+          : `Reserva com ${totalPeriods} períodos criada e aprovada automaticamente!`;
       setSuccess(successMessage);
       setShowPopup(true);
       setSelectedRoom(null);
@@ -325,7 +342,6 @@ export default function SolicitaReservaCoordenador() {
         curso: "",
         naoSeAplica: false,
       }));
-      // Atualiza a lista de reservas
       const updatedRes = await fetch("/api/bookings/my", {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
@@ -342,352 +358,352 @@ export default function SolicitaReservaCoordenador() {
 
   if (loadingPage)
     return (
-      <>
-        <Navbar activePage="SolicitaReservaCoordenador" />
-        <PageHero
-          variant="SolicitaReserva"
-          tag="Painel do Coordenador"
-          title="Reserva de Salas"
-          description="Carregando..."
-        />
-        <div className="content-solicitarReserva">
-          <div className="form-title">Carregando informações...</div>
-        </div>
-        <Footer />
-      </>
+        <>
+          <Navbar activePage="SolicitaReservaCoordenador" />
+          <PageHero
+              variant="SolicitaReserva"
+              tag="Painel do Coordenador"
+              title="Reserva de Salas"
+              description="Carregando..."
+          />
+          <div className="content-solicitarReserva">
+            <div className="form-title">Carregando informações...</div>
+          </div>
+          <Footer />
+        </>
     );
 
   return (
-    <>
-      <Navbar activePage="SolicitaReservaCoordenador" />
-      <PageHero
-        variant="SolicitaReserva"
-        tag="Painel do Coordenador"
-        title="Reserva de Salas"
-        description="Como coordenador, suas reservas são aprovadas automaticamente."
-      />
+      <>
+        <Navbar activePage="SolicitaReservaCoordenador" />
+        <PageHero
+            variant="SolicitaReserva"
+            tag="Painel do Coordenador"
+            title="Reserva de Salas"
+            description="Como coordenador, suas reservas são aprovadas automaticamente."
+        />
 
-      <div className="content-solicitarReserva">
-        <div className="div-calendario">
-          <div className="title-calendario">
-            <h3>Minhas Reservas:</h3>
-            <p>Selecione uma data para iniciar uma reserva.</p>
-          </div>
+        <div className="content-solicitarReserva">
+          <div className="div-calendario">
+            <div className="title-calendario">
+              <h3>Minhas Reservas:</h3>
+              <p>Selecione uma data para iniciar uma reserva.</p>
+            </div>
 
-          <Calendar
-            onChange={(value) => {
-              const isoDate = getISOFromDate(value);
-              const today = new Date(); today.setHours(0, 0, 0, 0);
-              if (value < today) {
-                setError("Não é possível fazer reservas em datas passadas.");
-                setShowErrorPopup(true);
-                return;
-              }
-              if (isHolidayDate(isoDate)) {
-                setError(
-                  `Este dia é feriado: "${holidayByDate[isoDate]?.name || "Feriado"}". Selecione outra data.`
-                );
-                setShowErrorPopup(true);
-                return;
-              }
-              setError(null);
-              setDate(value);
-              setForm((prev) => ({
-                ...prev,
-                data: value.toLocaleDateString("pt-BR"),
-                dataISO: isoDate,
-              }));
-              setSelectedRoom(null);
-              setAvailability(null);
-              setSelectedPeriodIds([]);
-              setPeriodDropdownOpen(false);
-              setModalOpen(true);
-            }}
-            value={date}
-            tileDisabled={({ date: d, view }) => {
-              if (view !== "month") return false;
-              return isHolidayDate(getISOFromDate(d));
-            }}
-            tileClassName={({ date: d, view }) => {
-              if (view !== "month") return null;
-              const iso = getISOFromDate(d);
-              if (isHolidayDate(iso)) return "dia-feriado";
-              if (examDatesSet.has(iso)) return "dia-avaliacao";
-              if (iso === form.dataISO) return "dia-selecionado";
-              const st = roomStatusMap[iso];
-              if (st === "APPROVED") return "dia-aceita";
-              if (st === "PENDING") return "dia-pendente";
-              if (st === "CANCELLED") return "dia-cancelada";
-              return null;
-            }}
-            tileContent={({ date: d, view }) => {
-              if (view !== "month") return null;
-              const iso = getISOFromDate(d);
-              if (isHolidayDate(iso)) {
-                return (
-                  <span
-                    title={holidayByDate[iso]?.name}
-                    style={{ fontSize: "0.6rem", display: "block", lineHeight: 1 }}
-                  ></span>
-                );
-              }
-              return null;
-            }}
-            locale="pt-BR"
-            formatShortWeekday={(locale, d) =>
-              d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
-            }
-          />
+            <Calendar
+                onChange={(value) => {
+                  const isoDate = getISOFromDate(value);
+                  const today = new Date(); today.setHours(0, 0, 0, 0);
+                  if (value < today) {
+                    setError("Não é possível fazer reservas em datas passadas.");
+                    setShowErrorPopup(true);
+                    return;
+                  }
+                  if (isHolidayDate(isoDate)) {
+                    setError(
+                        `Este dia é feriado: "${holidayByDate[isoDate]?.name || "Feriado"}". Selecione outra data.`
+                    );
+                    setShowErrorPopup(true);
+                    return;
+                  }
+                  setError(null);
+                  setDate(value);
+                  setForm((prev) => ({
+                    ...prev,
+                    data: value.toLocaleDateString("pt-BR"),
+                    dataISO: isoDate,
+                  }));
+                  setSelectedRoom(null);
+                  setAvailability(null);
+                  setSelectedPeriodIds([]);
+                  setPeriodDropdownOpen(false);
+                  setModalOpen(true);
+                }}
+                value={date}
+                tileDisabled={({ date: d, view }) => {
+                  if (view !== "month") return false;
+                  return isHolidayDate(getISOFromDate(d));
+                }}
+                tileClassName={({ date: d, view }) => {
+                  if (view !== "month") return null;
+                  const iso = getISOFromDate(d);
+                  if (isHolidayDate(iso)) return "dia-feriado";
+                  if (examDatesSet.has(iso)) return "dia-avaliacao";
+                  if (iso === form.dataISO) return "dia-selecionado";
+                  const st = roomStatusMap[iso];
+                  if (st === "APPROVED") return "dia-aceita";
+                  if (st === "PENDING") return "dia-pendente";
+                  if (st === "CANCELLED") return "dia-cancelada";
+                  return null;
+                }}
+                tileContent={({ date: d, view }) => {
+                  if (view !== "month") return null;
+                  const iso = getISOFromDate(d);
+                  if (isHolidayDate(iso)) {
+                    return (
+                        <span
+                            title={holidayByDate[iso]?.name}
+                            style={{ fontSize: "0.6rem", display: "block", lineHeight: 1 }}
+                        ></span>
+                    );
+                  }
+                  return null;
+                }}
+                locale="pt-BR"
+                formatShortWeekday={(locale, d) =>
+                    d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
+                }
+            />
 
-          <div className="legenda">
-            <div><span className="box verde"></span> Aceita</div>
-            <div><span className="box amarelo"></span> Pendente</div>
-            <div><span className="box vermelho"></span> Cancelada</div>
-            <div><span className="box cinza"></span> Selecionado</div>
-            <div><span className="box laranja"></span> Feriado</div>
-            <div><span className="box magenta"></span> Avaliação</div>
-          </div>
+            <div className="legenda">
+              <div><span className="box verde"></span> Aceita</div>
+              <div><span className="box amarelo"></span> Pendente</div>
+              <div><span className="box vermelho"></span> Cancelada</div>
+              <div><span className="box cinza"></span> Selecionado</div>
+              <div><span className="box laranja"></span> Feriado</div>
+              <div><span className="box magenta"></span> Avaliação</div>
+            </div>
 
-          <div className="reservas-feitas">
-            <h4>Horários Reservados:</h4>
-            <div className="lista-horarios">
-              {activeBookings.length === 0 && activeRecurringBookings.length === 0 && <p>Nenhuma reserva encontrada.</p>}
+            <div className="reservas-feitas">
+              <h4>Horários Reservados:</h4>
+              <div className="lista-horarios">
+                {activeBookings.length === 0 && activeRecurringBookings.length === 0 && <p>Nenhuma reserva encontrada.</p>}
 
-              {activeBookings.map((booking) => {
-                const periods = booking.periods || [];
-                const first = periods[0];
-                const last = periods[periods.length - 1];
-                return (
-                  <p key={`booking-${booking.id}`}>
+                {activeBookings.map((booking) => {
+                  const periods = booking.periods || [];
+                  const first = periods[0];
+                  const last = periods[periods.length - 1];
+                  return (
+                      <p key={`booking-${booking.id}`}>
                     <span className="hora">
                       {formatDateTime(booking.bookingDate)} • {first?.periodStart?.slice(0, 5) || "--:--"} -{" "}
                       {last?.periodEnd?.slice(0, 5) || "--:--"}
                       {periods.length > 1 && ` (${periods.length} períodos)`}
                     </span>
-                    <span className="prof">{booking.roomName}</span>
-                  </p>
-                );
-              })}
+                        <span className="prof">{booking.roomName}</span>
+                      </p>
+                  );
+                })}
 
-              {activeRecurringBookings.map((booking) => {
-                const periods = booking.periods || [];
-                const first = periods[0];
-                const last = periods[periods.length - 1];
-                return (
-                  <p key={`recurring-${booking.id}`}>
+                {activeRecurringBookings.map((booking) => {
+                  const periods = booking.periods || [];
+                  const first = periods[0];
+                  const last = periods[periods.length - 1];
+                  return (
+                      <p key={`recurring-${booking.id}`}>
                     <span className="hora">
                       Reserva recorrente • {formatWeekdays(booking.weekDays)} • {first?.periodStart?.slice(0, 5) || "--:--"} - {last?.periodEnd?.slice(0, 5) || "--:--"}
                       {booking.activeInstances != null && booking.activeInstances > 0 && ` (${booking.activeInstances} instância${booking.activeInstances > 1 ? "s" : ""} ativa${booking.activeInstances > 1 ? "s" : ""})`}
                     </span>
-                    <span className="prof">{booking.roomName}</span>
-                  </p>
-                );
-              })}
+                        <span className="prof">{booking.roomName}</span>
+                      </p>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
 
-        {modalOpen && (
-          <div className="modal-overlay" onClick={() => setModalOpen(false)}>
-            <div className="modal-espacos" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-topo">
-                <h2>Espaços disponíveis</h2>
-                <button className="btn-close-modal" onClick={() => setModalOpen(false)}>
-                  ×
-                </button>
-              </div>
-              <div className="lista-salas">
-                {salas
-                  .filter((s) => s.bookable === 1)
-                  .map((sala) => (
-                    <button
-                      key={sala.id}
-                      className="btn-sala"
-                      type="button"
-                      onClick={() => handleRoomSelect(sala)}
-                    >
-                      <span className="sala-nome">{sala.name}</span>
-                      <span className="sala-andar">
+          {modalOpen && (
+              <div className="modal-overlay" onClick={() => setModalOpen(false)}>
+                <div className="modal-espacos" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-topo">
+                    <h2>Espaços disponíveis</h2>
+                    <button className="btn-close-modal" onClick={() => setModalOpen(false)}>
+                      ×
+                    </button>
+                  </div>
+                  <div className="lista-salas">
+                    {salas
+                        .filter((s) => s.bookable === 1)
+                        .map((sala) => (
+                            <button
+                                key={sala.id}
+                                className="btn-sala"
+                                type="button"
+                                onClick={() => handleRoomSelect(sala)}
+                            >
+                              <span className="sala-nome">{sala.name}</span>
+                              <span className="sala-andar">
                         {sala.location || sala.notes || "Local não informado"}
                       </span>
-                    </button>
-                  ))}
-                {salas.filter((s) => s.bookable === 1).length === 0 && (
-                  <div className="sem-salas">Nenhuma sala ativa encontrada.</div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="div-forms-reserva">
-          <form onSubmit={handleSubmit}>
-
-            <div className="form-group-reserva">
-              <label>Data e espaço selecionado:</label>
-              <div className="horario">
-                <input
-                  type="text"
-                  name="data"
-                  placeholder="DD/MM/AAAA"
-                  value={form.data}
-                  readOnly
-                  style={{ backgroundColor: "#cfcccc89" }}
-                />
-                <input
-                  type="text"
-                  name="espaco"
-                  placeholder="Selecione uma sala"
-                  value={form.espaco}
-                  readOnly
-                  style={{ backgroundColor: "#cfcccc89" }}
-                />
-              </div>
-            </div>
-
-            <div className="form-group-reserva">
-              <label>Períodos disponíveis:</label>
-              <div className="period-dropdown">
-                <button
-                  type="button"
-                  className="period-dropdown-button"
-                  onClick={() => setPeriodDropdownOpen((prev) => !prev)}
-                  disabled={!selectedRoom || loadingAvailability || availablePeriods.length === 0}
-                >
-                  {selectedPeriodIds.length === 0
-                    ? loadingAvailability
-                      ? "Carregando períodos..."
-                      : "Selecione os períodos"
-                    : `${selectedPeriodIds.length} período${
-                        selectedPeriodIds.length > 1 ? "s" : ""
-                      } selecionado${selectedPeriodIds.length > 1 ? "s" : ""}`}
-                  <span className="dropdown-arrow">▾</span>
-                </button>
-
-                {periodDropdownOpen && (
-                  <div className="period-dropdown-options">
-                    {availablePeriods.length === 0 ? (
-                      <small>
-                        {selectedRoom
-                          ? "Nenhum período disponível para essa sala nesta data."
-                          : "Selecione uma sala para ver os períodos disponíveis."}
-                      </small>
-                    ) : (
-                      <>
-                        <div style={{ marginBottom: 8, display: "flex", gap: 8 }}>
-                          <button
-                            type="button"
-                            style={{
-                              fontSize: 12,
-                              padding: "2px 8px",
-                              borderRadius: 6,
-                              border: "1px solid #ccc",
-                              cursor: "pointer",
-                              background: "white",
-                            }}
-                            onClick={() =>
-                              setSelectedPeriodIds(availablePeriods.map((p) => p.periodId))
-                            }
-                          >
-                            Selecionar todos
-                          </button>
-                          <button
-                            type="button"
-                            style={{
-                              fontSize: 12,
-                              padding: "2px 8px",
-                              borderRadius: 6,
-                              border: "1px solid #ccc",
-                              cursor: "pointer",
-                              background: "white",
-                            }}
-                            onClick={() => setSelectedPeriodIds([])}
-                          >
-                            Limpar
-                          </button>
-                        </div>
-                        {availablePeriods.map((period) => (
-                          <label key={period.periodId} className="period-checkbox">
-                            <input
-                              type="checkbox"
-                              value={period.periodId}
-                              checked={selectedPeriodIds.includes(period.periodId)}
-                              onChange={() => handlePeriodToggle(period.periodId)}
-                            />
-                            {period.periodName} — {period.startTime?.slice(0, 5)} às{" "}
-                            {period.endTime?.slice(0, 5)}
-                          </label>
+                            </button>
                         ))}
-                      </>
+                    {salas.filter((s) => s.bookable === 1).length === 0 && (
+                        <div className="sem-salas">Nenhuma sala ativa encontrada.</div>
                     )}
                   </div>
+                </div>
+              </div>
+          )}
+
+          <div className="div-forms-reserva">
+            <form onSubmit={handleSubmit}>
+
+              <div className="form-group-reserva">
+                <label>Data e espaço selecionado:</label>
+                <div className="horario">
+                  <input
+                      type="text"
+                      name="data"
+                      placeholder="DD/MM/AAAA"
+                      value={form.data}
+                      readOnly
+                      style={{ backgroundColor: "#cfcccc89" }}
+                  />
+                  <input
+                      type="text"
+                      name="espaco"
+                      placeholder="Selecione uma sala"
+                      value={form.espaco}
+                      readOnly
+                      style={{ backgroundColor: "#cfcccc89" }}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group-reserva">
+                <label>Períodos disponíveis:</label>
+                <div className="period-dropdown">
+                  <button
+                      type="button"
+                      className="period-dropdown-button"
+                      onClick={() => setPeriodDropdownOpen((prev) => !prev)}
+                      disabled={!selectedRoom || loadingAvailability || availablePeriods.length === 0}
+                  >
+                    {selectedPeriodIds.length === 0
+                        ? loadingAvailability
+                            ? "Carregando períodos..."
+                            : "Selecione os períodos"
+                        : `${selectedPeriodIds.length} período${
+                            selectedPeriodIds.length > 1 ? "s" : ""
+                        } selecionado${selectedPeriodIds.length > 1 ? "s" : ""}`}
+                    <span className="dropdown-arrow">▾</span>
+                  </button>
+
+                  {periodDropdownOpen && (
+                      <div className="period-dropdown-options">
+                        {availablePeriods.length === 0 ? (
+                            <small>
+                              {selectedRoom
+                                  ? "Nenhum período disponível para essa sala nesta data."
+                                  : "Selecione uma sala para ver os períodos disponíveis."}
+                            </small>
+                        ) : (
+                            <>
+                              <div style={{ marginBottom: 8, display: "flex", gap: 8 }}>
+                                <button
+                                    type="button"
+                                    style={{
+                                      fontSize: 12,
+                                      padding: "2px 8px",
+                                      borderRadius: 6,
+                                      border: "1px solid #ccc",
+                                      cursor: "pointer",
+                                      background: "white",
+                                    }}
+                                    onClick={() =>
+                                        setSelectedPeriodIds(availablePeriods.map((p) => p.periodId))
+                                    }
+                                >
+                                  Selecionar todos
+                                </button>
+                                <button
+                                    type="button"
+                                    style={{
+                                      fontSize: 12,
+                                      padding: "2px 8px",
+                                      borderRadius: 6,
+                                      border: "1px solid #ccc",
+                                      cursor: "pointer",
+                                      background: "white",
+                                    }}
+                                    onClick={() => setSelectedPeriodIds([])}
+                                >
+                                  Limpar
+                                </button>
+                              </div>
+                              {availablePeriods.map((period) => (
+                                  <label key={period.periodId} className="period-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        value={period.periodId}
+                                        checked={selectedPeriodIds.includes(period.periodId)}
+                                        onChange={() => handlePeriodToggle(period.periodId)}
+                                    />
+                                    {period.periodName} — {period.startTime?.slice(0, 5)} às{" "}
+                                    {period.endTime?.slice(0, 5)}
+                                  </label>
+                              ))}
+                            </>
+                        )}
+                      </div>
+                  )}
+                </div>
+
+                {selectedPeriodIds.length > 0 && (
+                    <div style={{ marginTop: 8, fontSize: 13, color: "#374151" }}>
+                      <strong>Selecionados:</strong>{" "}
+                      {availablePeriods
+                          .filter((p) => selectedPeriodIds.includes(p.periodId))
+                          .sort((a, b) => a.startTime?.localeCompare(b.startTime))
+                          .map((p) => `${p.startTime?.slice(0, 5)}–${p.endTime?.slice(0, 5)}`)
+                          .join(", ")}
+                    </div>
                 )}
               </div>
 
-              {selectedPeriodIds.length > 0 && (
-                <div style={{ marginTop: 8, fontSize: 13, color: "#374151" }}>
-                  <strong>Selecionados:</strong>{" "}
-                  {availablePeriods
-                    .filter((p) => selectedPeriodIds.includes(p.periodId))
-                    .sort((a, b) => a.startTime?.localeCompare(b.startTime))
-                    .map((p) => `${p.startTime?.slice(0, 5)}–${p.endTime?.slice(0, 5)}`)
-                    .join(", ")}
-                </div>
-              )}
-            </div>
+              <div className="form-group-reserva">
+                <label>Motivo:</label>
+                <input
+                    type="text"
+                    name="motivo"
+                    placeholder="Descreva o motivo da reserva"
+                    value={form.motivo}
+                    onChange={handleChange}
+                    required
+                />
+              </div>
 
-            <div className="form-group-reserva">
-              <label>Motivo:</label>
-              <input
-                type="text"
-                name="motivo"
-                placeholder="Descreva o motivo da reserva"
-                value={form.motivo}
-                onChange={handleChange}
-                required
-              />
-            </div>
+              <div className="form-group-reserva">
+                <label>Curso:</label>
+                <select
+                    name="curso"
+                    value={form.curso}
+                    onChange={handleChange}
+                    required={!form.naoSeAplica}
+                    disabled={form.naoSeAplica}
+                    style={{ backgroundColor: form.naoSeAplica ? "#cfcccc89" : "white" }}
+                >
+                  <option value="">Selecione um curso</option>
+                  {courses.map(course => (
+                      <option key={course.id} value={course.name}>
+                        {course.name}
+                      </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="form-group-reserva">
-              <label>Curso:</label>
-              <select
-                name="curso"
-                value={form.curso}
-                onChange={handleChange}
-                required={!form.naoSeAplica}
-                disabled={form.naoSeAplica}
-                style={{ backgroundColor: form.naoSeAplica ? "#cfcccc89" : "white" }}
-              >
-                <option value="">Selecione um curso</option>
-                <option value="dsm">Desenvolvimento de Software Multiplataforma</option>
-                <option value="admin">Administração</option>
-                <option value="rh">Recursos Humanos</option>
-                <option value="ads">Análise e Desenvolvimento de Sistemas</option>
-                <option value="comex">Comércio Exterior</option>
-              </select>
-            </div>
+              <div className="form-group-reserva-check">
+                <p>Caso a reserva não se aplique a um curso, selecione a opção "Não se aplica"</p>
+                <input
+                    type="checkbox"
+                    name="naoSeAplica"
+                    checked={form.naoSeAplica}
+                    onChange={handleChange}
+                />{" "}
+                Não se aplica
+              </div>
 
-            <div className="form-group-reserva-check">
-              <p>Caso a reserva não se aplique a um curso, selecione a opção "Não se aplica"</p>
-              <input
-                type="checkbox"
-                name="naoSeAplica"
-                checked={form.naoSeAplica}
-                onChange={handleChange}
-              />{" "}
-              Não se aplica
-            </div>
-
-            <button type="submit" className="btn-submit-reserva" disabled={loadingSubmit}>
-              {loadingSubmit ? "Enviando..." : "Reservar (auto-aprovado)"}
-            </button>
-          </form>
+              <button type="submit" className="btn-submit-reserva" disabled={loadingSubmit}>
+                {loadingSubmit ? "Enviando..." : "Reservar (auto-aprovado)"}
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
 
-      {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
-      {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
-      <Footer />
-    </>
+        {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
+        {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
+        <Footer />
+      </>
   );
 }

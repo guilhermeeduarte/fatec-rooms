@@ -6,6 +6,7 @@ import PageHero from "../components/PageHero";
 
 export default function GerenciarUsuario() {
     const navigate = useNavigate();
+    const [token, setToken] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -23,17 +24,25 @@ export default function GerenciarUsuario() {
     const [filterTipo, setFilterTipo] = useState("todos");
     const [filterStatus, setFilterStatus] = useState("todos");
 
+    // Buscar token apenas no cliente
     useEffect(() => {
-        const authlevel = localStorage.getItem("authlevel");
-        if (authlevel !== "1") {
+        const t = localStorage.getItem("token");
+        const a = localStorage.getItem("authlevel");
+        setToken(t);
+
+        if (!t || a !== "1") {
             navigate("/");
             return;
         }
+    }, [navigate]);
+
+    // Carregar usuários quando token estiver disponível
+    useEffect(() => {
+        if (!token) return;
 
         async function loadUsers() {
-            const token = localStorage.getItem("token");
-
             try {
+                setLoading(true);
                 const meResponse = await fetch("/api/users/me", {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -74,8 +83,8 @@ export default function GerenciarUsuario() {
                             user.authlevel === 1
                                 ? "Coordenador"
                                 : user.authlevel === 2
-                                ? "Professor"
-                                : "Pendente",
+                                    ? "Professor"
+                                    : "Pendente",
                         status: user.enabled === 1 ? 1 : 0,
                     }))
                 );
@@ -87,7 +96,7 @@ export default function GerenciarUsuario() {
         }
 
         loadUsers();
-    }, [navigate]);
+    }, [token, navigate]);
 
     // --- Lógica de filtro ---
     const usuariosSemSi = usuarios.filter((u) => currentUserId !== u.id);
@@ -143,13 +152,15 @@ export default function GerenciarUsuario() {
     }
 
     async function saveUserEdit() {
-        if (!editingUser) return;
+        if (!editingUser || !token) {
+            setError("Token não encontrado. Faça login novamente.");
+            return;
+        }
         setSavingEdit(true);
         setError(null);
         setSuccessMessage(null);
 
         try {
-            const token = localStorage.getItem("token");
             const response = await fetch(`/api/admin/users/${editingUser.id}/authlevel`, {
                 method: "PATCH",
                 headers: {
@@ -169,14 +180,20 @@ export default function GerenciarUsuario() {
                 prev.map((user) =>
                     user.id === updated.id
                         ? {
-                              ...user,
-                              authlevel: updated.authlevel,
-                              tipo: updated.authlevel === 1 ? "Coordenador" : "Professor",
-                          }
+                            ...user,
+                            authlevel: updated.authlevel,
+                            tipo: updated.authlevel === 1 ? "Coordenador" : "Professor",
+                        }
                         : user
                 )
             );
             setSuccessMessage("Alteração salva.");
+
+            // Fechar modal após 1.5 segundos
+            setTimeout(() => {
+                setShowEditModal(false);
+                setSuccessMessage(null);
+            }, 1500);
         } catch (err) {
             setError(err.message || "Erro ao salvar usuário.");
         } finally {
@@ -185,7 +202,7 @@ export default function GerenciarUsuario() {
     }
 
     async function disableUser(userId) {
-        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Token não encontrado");
         const response = await fetch(`/api/admin/users/${userId}/disable`, {
             method: "PATCH",
             headers: {
@@ -203,7 +220,7 @@ export default function GerenciarUsuario() {
     }
 
     async function handleConfirmDisable() {
-        if (!selectedUser) return;
+        if (!selectedUser || !token) return;
 
         try {
             await disableUser(selectedUser.id);
@@ -386,12 +403,12 @@ export default function GerenciarUsuario() {
                         >
                             <div className="field-group">
                                 <label>Nome</label>
-                                <input type="text" value={editingUser.nome} readOnly />
+                                <div className="field-value">{editingUser.nome}</div>
                             </div>
 
                             <div className="field-group">
                                 <label>E-mail</label>
-                                <input type="email" value={editingUser.email} readOnly />
+                                <div className="field-value">{editingUser.email}</div>
                             </div>
 
                             <div className="field-group">

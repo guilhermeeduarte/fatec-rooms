@@ -113,7 +113,7 @@ const statusClasses = {
   ACTIVE: "status-ok",
   PENDING: "status-pend",
   CANCELLED: "status-cancel",
-  REJECTED: "status-cancel",
+  REJECTED: "status-red",
 };
 
 const WEEKDAY_LABELS = {

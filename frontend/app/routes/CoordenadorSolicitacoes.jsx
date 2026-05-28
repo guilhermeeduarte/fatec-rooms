@@ -57,6 +57,9 @@ export default function CoordenadorSolicitacoes() {
         const first = periods[0];
         const last = periods[periods.length - 1];
         const createdAt = reserva.createdAt?.split("T")[0] || "";
+
+        const motivo = extrairMotivo(reserva.notes) || reserva.subject || "";
+
         return {
           id: reserva.id,
           data: reserva.bookingDate?.split("-").reverse().join("/") || "",
@@ -65,7 +68,7 @@ export default function CoordenadorSolicitacoes() {
           professor: reserva.userDisplayName || reserva.username || "Desconhecido",
           horaInicio: first?.periodStart?.slice(0, 5) || "--:--",
           horaFim: last?.periodEnd?.slice(0, 5) || "--:--",
-          motivo: reserva.subject || reserva.notes || "",
+          motivo: extrairMotivo(reserva.notes) || reserva.subject || "",
           status: "Pendente",
         };
       });
@@ -81,6 +84,13 @@ export default function CoordenadorSolicitacoes() {
   }
 
   useEffect(() => { loadReservas(0); }, []);
+
+  function extrairMotivo(notes) {
+    if (!notes) return "";
+    // Remove a parte do curso se existir
+    const motivoParte = notes.split(/\nCurso:/i)[0];
+    return motivoParte.trim();
+  }
 
   async function aprovarReserva(id) {
     const token = localStorage.getItem("token");

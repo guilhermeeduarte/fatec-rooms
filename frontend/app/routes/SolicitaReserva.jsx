@@ -49,6 +49,7 @@ export default function SolicitaReserva() {
     const [recurringBookings, setRecurringBookings] = useState([]);
     const [holidays, setHolidays] = useState([]);
     const [examDatesSet, setExamDatesSet] = useState(new Set());
+    const [courses, setCourses] = useState([]); // Estado para armazenar os cursos
     const [date, setDate] = useState(new Date());
     const [loadingPage, setLoadingPage] = useState(true);
     const [loadingAvailability, setLoadingAvailability] = useState(false);
@@ -81,13 +82,14 @@ export default function SolicitaReserva() {
             try {
                 setLoadingPage(true);
                 setError(null);
-                
+
                 const headers = { Authorization: `Bearer ${token}` };
-                const [roomsRes, bookingsRes, holidaysRes, semestersRes] = await Promise.all([
+                const [roomsRes, bookingsRes, holidaysRes, semestersRes, coursesRes] = await Promise.all([
                     fetch("/api/rooms", { headers }),
                     fetch("/api/bookings/my", { headers }),
                     fetch("/api/holidays", { headers }),
                     fetch("/api/semesters", { headers }),
+                    fetch("/api/courses", { headers }), // Buscar cursos
                 ]);
 
                 if (!roomsRes.ok) throw new Error("Falha ao carregar salas.");
@@ -95,10 +97,22 @@ export default function SolicitaReserva() {
 
                 setSalas(await roomsRes.json() || []);
                 setMyBookings(await bookingsRes.json() || []);
-                
+
                 if (holidaysRes.ok) {
                     const data = await holidaysRes.json();
                     setHolidays(Array.isArray(data) ? data : []);
+                }
+
+                // Carregar cursos
+                if (coursesRes.ok) {
+                    const coursesData = await coursesRes.json();
+                    // Filtra apenas cursos ativos
+                    const activeCourses = Array.isArray(coursesData)
+                        ? coursesData.filter(course => course.active === true)
+                        : [];
+                    setCourses(activeCourses);
+                } else {
+                    console.warn("Não foi possível carregar os cursos.");
                 }
 
                 // Carrega reservas recorrentes ativas para exibição no histórico abaixo do calendário.
@@ -146,7 +160,7 @@ export default function SolicitaReserva() {
                     setExamDatesSet(examDates);
                 }
 
-                // Verifica se as reservas estão suspensas (endpoint correto)
+                // Verifica se as reservas estão suspensas
                 try {
                     const suspResp = await fetch("/api/config/booking/suspend-teacher-bookings", { headers });
                     if (suspResp.ok) {
@@ -273,7 +287,10 @@ export default function SolicitaReserva() {
         const token = localStorage.getItem("token");
         if (!token) { navigate("/login"); return; }
 
-        const notes = form.naoSeAplica ? "Não se aplica" : `Curso: ${form.curso || "-"}`;
+        // No handleSubmit, onde constrói o notes
+        const notes = form.naoSeAplica
+            ? form.motivo
+            : `${form.motivo}\nCurso: ${form.curso || "-"}`;
         const body = {
             roomId: form.roomId,
             periodIds: selectedPeriodIds.map(Number),
@@ -295,11 +312,10 @@ export default function SolicitaReserva() {
                     const errorJson = await res.json();
                     errorMessage = errorJson.message || errorJson.error || errorMessage;
                 } catch (e) {
-                    // Não é JSON, usa o texto puro
                     errorMessage = await res.text() || errorMessage;
                 }
                 throw new Error(errorMessage);
-}
+            }
             const totalPeriods = selectedPeriodIds.length;
             const successMessage = totalPeriods === 1
                 ? "Reserva solicitada com sucesso. Aguarde aprovação."
@@ -314,16 +330,17 @@ export default function SolicitaReserva() {
             const updatedRes = await fetch("/api/bookings/my", { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } });
             if (updatedRes.ok) setMyBookings(await updatedRes.json() || []);
         } catch (err) {
-    // Tenta extrair mensagem amigável do JSON de erro
-    let friendlyMessage = err.message || "Erro ao enviar a solicitação.";
-    if (err.message.includes("suspended") || err.message.includes("suspensa")) {
-        friendlyMessage = "As reservas estão temporariamente suspensas. Não é possível criar novas reservas no momento.";
-    } else if (err.message.includes("400") || err.message.includes("Bad Request")) {
-        friendlyMessage = "Operação não permitida no estado atual. Verifique se as reservas estão ativas.";
-    }
-    setError(friendlyMessage);
-    setShowErrorPopup(true);
-}
+            let friendlyMessage = err.message || "Erro ao enviar a solicitação.";
+            if (err.message.includes("suspended") || err.message.includes("suspensa")) {
+                friendlyMessage = "As reservas estão temporariamente suspensas. Não é possível criar novas reservas no momento.";
+            } else if (err.message.includes("400") || err.message.includes("Bad Request")) {
+                friendlyMessage = "Operação não permitida no estado atual. Verifique se as reservas estão ativas.";
+            }
+            setError(friendlyMessage);
+            setShowErrorPopup(true);
+        } finally {
+            setLoadingSubmit(false);
+        }
     }
 
     const availablePeriods = availability?.periods?.filter(p => p.available) || [];
@@ -589,13 +606,20 @@ export default function SolicitaReserva() {
 
                         <div className="form-group-reserva">
                             <label>Curso:</label>
-                            <select name="curso" value={form.curso} onChange={handleChange} required={!form.naoSeAplica} disabled={form.naoSeAplica} style={{ backgroundColor: form.naoSeAplica ? "#cfcccc89" : "white" }}>
+                            <select
+                                name="curso"
+                                value={form.curso}
+                                onChange={handleChange}
+                                required={!form.naoSeAplica}
+                                disabled={form.naoSeAplica}
+                                style={{ backgroundColor: form.naoSeAplica ? "#cfcccc89" : "white" }}
+                            >
                                 <option value="">Selecione um curso</option>
-                                <option value="dsm">Desenvolvimento de Software Multiplataforma</option>
-                                <option value="admin">Administração</option>
-                                <option value="rh">Recursos Humanos</option>
-                                <option value="ads">Análise e Desenvolvimento de Sistemas</option>
-                                <option value="comex">Comércio Exterior</option>
+                                {courses.map(course => (
+                                    <option key={course.id} value={course.name}>
+                                        {course.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 

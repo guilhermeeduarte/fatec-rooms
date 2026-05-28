@@ -22,8 +22,8 @@
   --magenta:   #E83E8C;
   --magenta-soft: rgba(232, 62, 140, 0.16);
   --magenta-soft-strong: rgba(232, 62, 140, 0.24);
-  --holiday:   #880cc2;
-  --holiday-text: #ffffff;
+  --holiday: #edc8ff;
+  --holiday-text: #9f3fff;
   --calendar-active: #067cdddc;
   --calendar-hover: var(--gray-100);
   --calendar-disabled: #ccc;
@@ -1195,7 +1195,6 @@ button.menu-card {
   background: var(--red);
   transition: background 0.2s, transform 0.15s;
 }
-
 .btn-action:hover {
   background: var(--red-dark);
 }
@@ -1285,7 +1284,7 @@ button.menu-card {
 
 .status-ok     { color: #22C55E; }
 .status-pend   { color: var(--yellow); }
-.status-cancel { color: var(--red); }
+.status-cancel { }
 
 /* Alerta */
 .alert-card {
@@ -2146,7 +2145,7 @@ SOLICITAÇÕES DE RESERVA
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
   border: none;
   font-family: inherit;
-  margin-left: 10px;
+  margin-left: -5px;
   width: 100% !important;
   max-width: 100% !important;
 }
@@ -5194,6 +5193,9 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
     background: #FEF3C7;
     color: #92400E;
   }
+.status-red{
+  color: var(--red);
+}
 
   .tooltip-status.status-cancel,
   .tooltip-status.status-red {
@@ -5265,9 +5267,17 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
       font-size: 9px;
     }
   }
-
+.legend-badge {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
 .calendar-holiday { background: var(--holiday) !important; color: var(--holiday-text) !important; }
-.legend-holiday { background: var(--holiday); }
+.legend-holiday { background: #de9bff; }
+.legend-exam { background: #FFBFDD; }
 .dia-feriado { background: var(--holiday) !important; color: var(--holiday-text) !important; pointer-events: none; }
 .box.laranja { background: var(--holiday); }
 
@@ -6483,7 +6493,7 @@ CALENDÁRIO INTERATIVO COM TOOLTIP
 .grade-tabela th, .grade-tabela td { border: 1px solid #cbd5e1; padding: 8px 6px; text-align: center; }
 .grade-tabela th { background-color: #f1f5f9; position: sticky; top: 0; }
 .sala-col { position: sticky; left: 0; background-color: #f8fafc; }
-.sala-nome { font-weight: 500; text-align: left !important; background-color: #f8fafc; }
+.sala-nome { font-weight: 500; text-align: left !important;}
 .linha-selecionada .sala-nome { background-color: #dbeafe; }
 .periodo-cell { cursor: pointer; transition: 0.1s; }
 .periodo-cell.disponivel { background-color: #dcfce7; }
