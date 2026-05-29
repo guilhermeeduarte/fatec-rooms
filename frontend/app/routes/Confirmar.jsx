@@ -251,7 +251,7 @@ export default function AprovarCadastros() {
                             <div
                                 key={c.id}
                                 className="aprovacao-card"
-                                style={{ animationDelay: `${i * 0.07}s` }}
+                                style={{animationDelay: `${i * 0.07}s`, boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px"}}
                             >
                                 <div className="aprovacao-card-header">
                                     <div className={`aprovacao-dot ${
@@ -312,7 +312,7 @@ export default function AprovarCadastros() {
                     className="modal-overlay"
                     onClick={(e) => e.target === e.currentTarget && setConfirmacao(null)}
                 >
-                    <div className="modal">
+                    <div className="modal2">
                         <div className="modal-handle" />
 
                         <h3>

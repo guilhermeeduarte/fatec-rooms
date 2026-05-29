@@ -115,6 +115,8 @@ export default function TodasReservas() {
   }
 
   async function fetchReservas(pageNum, append = false) {
+    // Se não houver filtros ativos, carrega normalmente
+    // Se houver filtro ativo, não carrega mais páginas automaticamente
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
@@ -155,7 +157,7 @@ export default function TodasReservas() {
             status: traduzirStatus(reserva.status),
             professor: reserva.createdByUsername || "Desconhecido",
             periodo: extrairPeriodo(startTime),
-            curso: reserva.courseName || "—", // ALTERADO: usa courseName do backend
+            curso: reserva.courseName || "—",
             weekDays,
           };
         });
@@ -179,6 +181,8 @@ export default function TodasReservas() {
   useEffect(() => { fetchReservas(0); }, []);
 
   function loadMore() {
+    if (!hasMore) return;
+
     const next = page + 1;
     setPage(next);
     fetchReservas(next, true);
@@ -268,6 +272,8 @@ export default function TodasReservas() {
     return (order[a.status] || 5) - (order[b.status] || 5);
   });
 
+  const hasMoreToLoad = hasMore && reservasFiltradas.length >= PAGE_SIZE;
+
   function statusClass(status) {
     switch (status) {
       case "Ativa": return "tr-status tr-status--ativa";
@@ -346,7 +352,7 @@ export default function TodasReservas() {
                 >
                   {showAdvancedFilters ? "▲ Menos filtros" : "▼ Mais filtros"}
                 </button>
-                <button className="tr-filters__btn-clear" onClick={limparFiltros}>
+                <button className="btn-action btn-danger" onClick={limparFiltros}>
                   Limpar
                 </button>
               </div>
@@ -400,11 +406,12 @@ export default function TodasReservas() {
             )}
 
             {reservasOrdenadas.map((reserva) => (
-                <div key={reserva.id} className={cardBorderClass(reserva)}>
+                <div key={reserva.id} style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px"}} className={cardBorderClass(reserva)}>
                   {/* Badge tipo */}
                   <span className={`tr-badge tr-badge--${reserva.tipoReserva === "Recorrente" ? "recorrente" : "comum"}`}>
                     {reserva.tipoReserva}
                   </span>
+                  <span style={{marginLeft: "1em"}} className={statusClass(reserva.status)}>{reserva.status}</span>
 
                   <div className="tr-card__grid">
                     <div className="tr-field">
@@ -440,13 +447,11 @@ export default function TodasReservas() {
                       <span className="tr-field__value">{reserva.motivo || "—"}</span>
                     </div>
                     <div className="tr-field">
-                      <span className="tr-field__label">Status</span>
-                      <span className={statusClass(reserva.status)}>{reserva.status}</span>
                     </div>
                     {reserva.status !== "Cancelada" && reserva.status !== "Recusada" && (
                         <div className="tr-field tr-field--action">
                           <button
-                              className="tr-btn-cancel cancel-reserva"
+                              className="btn-action btn-danger"
                               onClick={() => openConfirmCancelModal(reserva)}
                               disabled={cancellingId === reserva.id}
                           >
@@ -460,7 +465,7 @@ export default function TodasReservas() {
           </div>
 
           {/* ── Carregar mais ── */}
-          {hasMore && !loading && (
+          {hasMoreToLoad && !loading && (
               <div className="tr-loadmore">
                 <button className="tr-loadmore__btn" onClick={loadMore} disabled={loadingMore}>
                   {loadingMore ? "Carregando…" : "Carregar mais"}
@@ -482,7 +487,7 @@ export default function TodasReservas() {
                 </p>
                 <div className="confirm-buttons">
                   <button
-                      className="btn-action btn-secondary"
+                      className="sonic"
                       onClick={() => {
                         setShowConfirmModal(false);
                         setSelectedReserva(null);

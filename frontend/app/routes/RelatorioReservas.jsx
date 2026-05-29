@@ -208,6 +208,7 @@ export default function RelatorioReservas() {
                 fontSize: "14px",
                 color: activeTab === tab.key ? "var(--red)" : "var(--gray-500)",
                 cursor: "pointer",
+                borderRadius: "0",
                 transition: "all 0.2s",
               }}
             >
@@ -550,8 +551,8 @@ function FiltroBar({ busca, setBusca, onExport, onClear, placeholder }) {
           onChange={e => setBusca(e.target.value)}
           style={{ flex: 1 }}
         />
-        <button className="btn-red" onClick={onClear}>Limpar</button>
-        <button className="btn-blue" onClick={onExport}>Exportar CSV</button>
+        <button className="btn-action btn-danger" onClick={onClear}>Limpar</button>
+        <button className="btn-action btn-secondary" onClick={onExport}>Exportar CSV</button>
       </div>
     </div>
   );

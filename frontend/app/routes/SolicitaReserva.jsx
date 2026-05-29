@@ -59,6 +59,14 @@ export default function SolicitaReserva() {
     const [showPopup, setShowPopup] = useState(false);
     const [showErrorPopup, setShowErrorPopup] = useState(false);
 
+    function periodGroup(startTime) {
+        if (!startTime) return "Outro";
+        const h = parseInt(startTime.split(":")[0], 10);
+        if (h < 12) return "Manhã";
+        if (h < 18) return "Tarde";
+        return "Noite";
+    }
+
     // Suspensão de reservas
     const [bookingSuspended, setBookingSuspended] = useState(false);
 
@@ -402,8 +410,8 @@ export default function SolicitaReserva() {
                 description="Gerencie as reservas de salas e visualize o histórico de solicitações."
             />
 
-            <div className="content-solicitarReserva">
-                <div className="div-calendario">
+            <div className="content-solicitarReserva" style={{background: "#FAFAFA"}}>
+                <div className="div-calendario" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px"}}>
                     <div className="title-calendario">
                         <h3>Minhas Reservas:</h3>
                         <p>Selecione uma data para iniciar uma reserva.</p>
@@ -534,7 +542,7 @@ export default function SolicitaReserva() {
                     </div>
                 )}
 
-                <div className="div-forms-reserva">
+                <div className="div-forms-reserva plok" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px"}}>
                     <form onSubmit={handleSubmit}>
 
                         <div className="form-group-reserva">
@@ -545,7 +553,7 @@ export default function SolicitaReserva() {
                             </div>
                         </div>
 
-                        <div className="form-group-reserva">
+                        <div className="form-group-periodo">
                             <label>Períodos disponíveis:</label>
                             <div className="period-dropdown">
                                 <button
@@ -587,14 +595,66 @@ export default function SolicitaReserva() {
                                 )}
                             </div>
 
+                            {/* Resumo dos períodos selecionados */}
                             {selectedPeriodIds.length > 0 && (
-                                <div style={{ marginTop: 8, fontSize: 13, color: "#374151" }}>
-                                    <strong>Selecionados:</strong>{" "}
-                                    {availablePeriods
-                                        .filter(p => selectedPeriodIds.includes(p.periodId))
-                                        .sort((a, b) => a.startTime?.localeCompare(b.startTime))
-                                        .map(p => `${p.startTime?.slice(0, 5)}–${p.endTime?.slice(0, 5)}`)
-                                        .join(", ")}
+                                <div style={{ marginTop: 12, padding: "8px 12px", background: "#eff6ff", borderRadius: "8px", border: "1px solid #bfdbfe" }}>
+                                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#1d4ed8", marginBottom: "6px" }}>
+                                        Período{selectedPeriodIds.length !== 1 ? "s" : ""} selecionado{selectedPeriodIds.length !== 1 ? "s" : ""}:
+                                    </div>
+
+                                    {/* Manhã */}
+                                    {availablePeriods.filter(p => selectedPeriodIds.includes(p.periodId) && periodGroup(p.startTime) === "Manhã").length > 0 && (
+                                        <>
+                                            <div style={{ fontSize: "10px", fontWeight: 700, color: "#1d4ed8", marginTop: "11px", marginBottom: "4px" }}> </div>
+                                            {availablePeriods
+                                                .filter((p) => selectedPeriodIds.includes(p.periodId) && periodGroup(p.startTime) === "Manhã")
+                                                .sort((a, b) => a.startTime?.localeCompare(b.startTime))
+                                                .map((p) => (
+                                                    <div key={p.periodId} style={{ fontSize: "14px", color: "#1d4ed8", display: "flex", alignItems: "center", gap: "8px" }}>
+                                                        <span style={{ fontWeight: 600, minWidth: "35px" }}>{p.periodName}º</span>
+                                                        <span style={{ color: "#1d4ed8" }}>
+                {p.startTime?.slice(0, 5)} <span style={{ fontWeight: 500 }}>até</span> {p.endTime?.slice(0, 5)}
+              </span>
+                                                    </div>
+                                                ))}
+                                        </>
+                                    )}
+
+                                    {/* Tarde */}
+                                    {availablePeriods.filter(p => selectedPeriodIds.includes(p.periodId) && periodGroup(p.startTime) === "Tarde").length > 0 && (
+                                        <>
+                                            <div style={{ fontSize: "10px", fontWeight: 700, color: "#3b82f6", marginTop: "11px", marginBottom: "4px" }}> </div>
+                                            {availablePeriods
+                                                .filter((p) => selectedPeriodIds.includes(p.periodId) && periodGroup(p.startTime) === "Tarde")
+                                                .sort((a, b) => a.startTime?.localeCompare(b.startTime))
+                                                .map((p) => (
+                                                    <div key={p.periodId} style={{ fontSize: "14px", color: "#1d4ed8", display: "flex", alignItems: "center", gap: "8px" }}>
+                                                        <span style={{ fontWeight: 600, minWidth: "35px" }}>{p.periodName}º</span>
+                                                        <span style={{ color: "#1d4ed8" }}>
+                {p.startTime?.slice(0, 5)} <span style={{ fontWeight: 500 }}>até</span> {p.endTime?.slice(0, 5)}
+              </span>
+                                                    </div>
+                                                ))}
+                                        </>
+                                    )}
+
+                                    {/* Noite */}
+                                    {availablePeriods.filter(p => selectedPeriodIds.includes(p.periodId) && periodGroup(p.startTime) === "Noite").length > 0 && (
+                                        <>
+                                            <div style={{ fontSize: "10px", fontWeight: 700, color: "#a855f7", marginTop: "11px", marginBottom: "4px" }}> </div>
+                                            {availablePeriods
+                                                .filter((p) => selectedPeriodIds.includes(p.periodId) && periodGroup(p.startTime) === "Noite")
+                                                .sort((a, b) => a.startTime?.localeCompare(b.startTime))
+                                                .map((p) => (
+                                                    <div key={p.periodId} style={{ fontSize: "14px", color: "#1d4ed8", display: "flex", alignItems: "center", gap: "8px" }}>
+                                                        <span style={{ fontWeight: 600, minWidth: "35px" }}>{p.periodName}º</span>
+                                                        <span style={{ color: "#1d4ed8" }}>
+                {p.startTime?.slice(0, 5)} <span style={{ fontWeight: 500 }}>até</span> {p.endTime?.slice(0, 5)}
+              </span>
+                                                    </div>
+                                                ))}
+                                        </>
+                                    )}
                                 </div>
                             )}
                         </div>

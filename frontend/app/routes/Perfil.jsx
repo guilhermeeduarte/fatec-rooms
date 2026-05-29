@@ -281,7 +281,7 @@ export default function UserProfile() {
                     <div className="perfil-actions">
                       <button
                           type="button"
-                          className="btn-action btn-cancel"
+                          className="sonic"
                           onClick={() => {
                             setEditando(false);
                             setError(null);

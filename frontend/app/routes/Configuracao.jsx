@@ -742,7 +742,7 @@ export default function Configuracao() {
                     <span>dias</span>
                   </div>
                   <div className="botoes">
-                    <button className="btn-action btn-bowser" onClick={() => { setEditandoPrazo(false); setValorTempPrazo(prazo); }} disabled={savingPrazo}>Cancelar</button>
+                    <button className="sonic" onClick={() => { setEditandoPrazo(false); setValorTempPrazo(prazo); }} disabled={savingPrazo}>Cancelar</button>
                     <button className="btn-action btn-caca" onClick={salvarPrazo} disabled={savingPrazo}>{savingPrazo ? "Salvando..." : "Salvar"}</button>
                   </div>
                 </div>
@@ -881,10 +881,10 @@ export default function Configuracao() {
                       <option value="CUSTOM">Local</option>
                     </select>
                   </div>
-                  <input className={"tr-filters__search"} type="text" placeholder="Descrição (opcional)" value={currentHoliday.description} onChange={(e) => setCurrentHoliday({ ...currentHoliday, description: e.target.value })} style={{ flex: 2, minWidth: "160px", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }} />
+                  <input className={"tr-filters__search"} type="text" placeholder="Descrição (opcional)" value={currentHoliday.description} onChange={(e) => setCurrentHoliday({ ...currentHoliday, description: e.target.value })} style={{ flex: 2, minWidth: "160px", marginBottom: "1em", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }} />
                   <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button className="btn-action btn-bowser" type="button" onClick={() => { setShowHolidayForm(false); setCurrentHoliday(EMPTY_HOLIDAY); }}>Cancelar</button>
-                    <button className="btn-action btn-caca" type="submit" disabled={savingHoliday}>{savingHoliday ? "Salvando..." : "Salvar feriado"}</button>
+                    <button className="sonic" type="button" onClick={() => { setShowHolidayForm(false); setCurrentHoliday(EMPTY_HOLIDAY); }}>Cancelar</button>
+                    <button className="btn-action btn-success" type="submit" disabled={savingHoliday}>{savingHoliday ? "Salvando..." : "Salvar feriado"}</button>
                   </div>
                 </form>
             ) : (
@@ -925,14 +925,13 @@ export default function Configuracao() {
                               </div>
                               <div style={{ display: "flex", gap: "8px" }}>
                                 <button onClick={() => handleOpenExamWeekForm(ew)} style={{ background: "none", border: "none", cursor: "pointer", color: "#2196F3" }} title="Editar"><Edit size={18} /></button>
-                                {/* CORRIJA AQUI: use deletarExamWeek, NÃO openDeleteSemesterModal */}
                                 <button onClick={() => openDeleteExamWeekModal(ew)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--red)" }} title="Excluir"><Trash2 size={18} /></button>
                               </div>
                             </div>
                         ))}
                       </div>
                   )}
-                  <button onClick={() => handleOpenExamWeekForm()} style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "20px", background: "none", border: "1px dashed var(--gray-400)", borderRadius: "12px", padding: "10px 16px", cursor: "pointer", width: "fit-content", color: "var(--gray-700)" }}>
+                  <button onClick={() => handleOpenExamWeekForm()} style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "none", border: "1px dashed #aaa", borderRadius: "8px", padding: "0.5rem 1rem", cursor: "pointer", color: "#555", marginTop: "0.75rem", width: "fit-content" }}>
                     <Plus size={18} /> Adicionar semana de avaliação
                   </button>
                 </div>
@@ -1039,11 +1038,11 @@ export default function Configuracao() {
                     />
                   </div>
                   <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
+                    <button type="button" className="sonic" onClick={handleCloseSemesterModal}>
+                      Cancelar
+                    </button>
                     <button type="submit" className="btn-submit-reserva" disabled={savingSemester}>
                       {savingSemester ? "Salvando..." : editingSemesterId ? "Atualizar" : "Criar"}
-                    </button>
-                    <button type="button" className="btn-cancelar" onClick={handleCloseSemesterModal}>
-                      Cancelar
                     </button>
                   </div>
                 </form>
@@ -1064,8 +1063,8 @@ export default function Configuracao() {
                   <div className="form-group-reserva"><label>Data fim *</label><input type="date" value={currentExamWeek.endDate} onChange={(e) => setCurrentExamWeek({ ...currentExamWeek, endDate: e.target.value })} required /></div>
                   <div className="form-group-reserva"><label>Descrição (opcional)</label><input type="text" placeholder="" value={currentExamWeek.description} onChange={(e) => setCurrentExamWeek({ ...currentExamWeek, description: e.target.value })} /></div>
                   <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
+                    <button type="button" className="sonic" onClick={handleCloseExamWeekForm}>Cancelar</button>
                     <button type="submit" className="btn-submit-reserva" disabled={savingExamWeek}>{savingExamWeek ? "Salvando..." : editingExamWeekId ? "Atualizar" : "Criar"}</button>
-                    <button type="button" className="btn-cancelar" onClick={handleCloseExamWeekForm}>Cancelar</button>
                   </div>
                 </form>
               </div>
@@ -1090,7 +1089,7 @@ export default function Configuracao() {
                 </p>
                 <div className="confirm-buttons">
                   <button
-                      className="btn-action btn-secondary"
+                      className="sonic"
                       onClick={() => {
                         setShowDeleteSemesterModal(false);
                         setSemesterToDelete(null);
@@ -1124,7 +1123,7 @@ export default function Configuracao() {
                 </p>
                 <div className="confirm-buttons">
                   <button
-                      className="btn-action btn-secondary"
+                      className="sonic"
                       onClick={() => {
                         setShowDeleteExamWeekModal(false);
                         setExamWeekToDelete(null);
@@ -1158,7 +1157,7 @@ export default function Configuracao() {
                 </p>
                 <div className="confirm-buttons">
                   <button
-                      className="btn-action btn-secondary"
+                      className="sonic"
                       onClick={() => {
                         setShowDeleteHolidayModal(false);
                         setHolidayToDelete(null);

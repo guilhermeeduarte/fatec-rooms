@@ -192,7 +192,7 @@ export default function Cadastro() {
                 description="Crie sua conta para acessar o sistema."
             />
 
-            <div className="content">
+            <div className="content plok" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px",marginTop: "2em", marginBottom: "3em"}}>
                 {submitted ? (
                     <div className="success-msg">
                         <div className="success-icon">

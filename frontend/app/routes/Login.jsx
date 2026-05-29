@@ -87,7 +87,7 @@ export default function Login() {
                 description="Acesse sua conta para acessar o sistema."
             />
 
-            <div className="content">
+            <div className="content plok" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px",marginTop: "2em", marginBottom: "3em"}}>
                 {submitted ? (
                     <div className="success-msg">
                         <div className="success-icon">
@@ -165,14 +165,8 @@ export default function Login() {
                         </form>
 
                         <div style={{textAlign: "center", marginTop: 8 }}>
-                            <a
+                            <a className={"see-all"}
                                 href="/esqueci-senha"
-                                style={{
-                                    color: "#1976d2",
-                                    fontSize: 13,
-                                    textDecoration: "none",
-                                    fontWeight: 500,
-                                }}
                                 onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
                                 onMouseOut={(e) => (e.target.style.textDecoration = "none")}
                             >

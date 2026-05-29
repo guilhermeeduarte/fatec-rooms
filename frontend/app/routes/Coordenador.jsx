@@ -270,7 +270,7 @@ export default function Coordenador() {
             description="Gerencie salas, professores e reservas."
         />
 
-        <main className="content dashboard-page">
+        <main className="content dashboard-page plok2" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", marginTop:"2em"}}>
           <div className="dashboard-top-grid">
 
             {/* Coluna principal */}

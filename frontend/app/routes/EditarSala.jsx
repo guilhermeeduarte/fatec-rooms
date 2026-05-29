@@ -10,6 +10,7 @@ export default function EditarSala() {
   const location = useLocation();
   const query = new URLSearchParams(location.search);
   const roomId = query.get("id");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [name, setName] = useState("");
   const [locationValue, setLocationValue] = useState("");
@@ -115,7 +116,7 @@ export default function EditarSala() {
         description="Ajuste os dados de uma sala existente." 
       />
 
-      <div className="content">
+      <div className="content plok" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px",marginTop: "2em", marginBottom: "3em"}}>
         {loadingRoom ? (
           <div className="form-title">Carregando sala...</div>
         ) : error ? (
@@ -145,13 +146,86 @@ export default function EditarSala() {
 
               <div className="form-group">
                 <label>Disponível para reserva</label>
-                <select
-                  value={bookable ? "1" : "0"}
-                  onChange={(e) => setBookable(e.target.value === "1")}
-                >
-                  <option value="1">Sim</option>
-                  <option value="0">Não</option>
-                </select>
+                <div style={{ position: "relative" }}>
+                  <button
+                      type="button"
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      style={{
+                        width: "100%",
+                        padding: "13px 16px",
+                        border: "1.5px solid #e5e7eb",
+                        borderRadius: "12px",
+                        fontSize: "15px",
+                        background: "#f5f5f5",
+                        color: "#1f2937",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                      }}
+                  >
+                    {bookable ? "Sim" : "Não"}
+                    <span>▼</span>
+                  </button>
+
+                  {dropdownOpen && (
+                      <div style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        right: 0,
+                        background: "white",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        marginTop: "4px",
+                        zIndex: 10,
+                        overflow: "hidden"
+                      }}>
+                        <div
+                            onClick={() => { setBookable(true); setDropdownOpen(false); }}
+                            style={{
+                              padding: "12px 16px",
+                              cursor: "pointer",
+                              background: bookable === true ? "white" : "white",
+                              color: bookable === true ? "black" : "#1f2937",
+                              transition: "all 0.2s"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "#dc2626";
+                              e.currentTarget.style.color = "white";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = bookable === true ? "white" : "white";
+                              e.currentTarget.style.color = bookable === true ? "black" : "#1f2937";
+                            }}
+                        >
+                          Sim
+                        </div>
+                        <div
+                            onClick={() => { setBookable(false); setDropdownOpen(false); }}
+                            style={{
+                              padding: "12px 16px",
+                              cursor: "pointer",
+                              borderTop: "1px solid #e5e7eb",
+                              background: bookable === true ? "white" : "white",
+                              color: bookable === true ? "black" : "#1f2937",
+                              transition: "all 0.2s"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "#dc2626";
+                              e.currentTarget.style.color = "white";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = bookable === true ? "white" : "white";
+                              e.currentTarget.style.color = bookable === true ? "black" : "#1f2937";
+                            }}
+                        >
+                          Não
+                        </div>
+                      </div>
+                  )}
+                </div>
               </div>
 
               <div className="form-group">

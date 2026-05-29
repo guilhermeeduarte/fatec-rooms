@@ -8,7 +8,6 @@ export default [
   route("coordenador", "routes/Coordenador.jsx"),
   route("gerenciar-salas", "routes/GerenciarSalas.jsx"),
   route("salas-editar", "routes/EditarSala.jsx"),
-  route("salas-remover", "routes/RemoverSala.jsx"),
   route("professor", "routes/Professor.jsx"),
   route("cadastro", "routes/Cadastro.jsx"),
   route("confirmar", "routes/Confirmar.jsx"),

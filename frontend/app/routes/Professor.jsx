@@ -322,7 +322,7 @@ export default function Professor() {
         description="Acompanhe suas reservas, solicite novas salas e controle seu calendário."
       />
 
-      <main className="content dashboard-page">
+      <main className="content plok" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px",marginTop: "2em", marginBottom: "3em"}}>
         <div className="dashboard-top-grid">
           <div>
             <div className="stats-row">

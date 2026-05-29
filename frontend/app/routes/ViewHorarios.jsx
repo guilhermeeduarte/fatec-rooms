@@ -260,76 +260,120 @@ function BookingModal({ rooms, periods, date, onClose, onSuccess }) {
   return (
       <div className="modal-overlay" onClick={onClose}>
         <div className="modal-espacos" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
-          <div className="modal-topo">
-            <h2>Nova Reserva — {date.toLocaleDateString("pt-BR")}</h2>
-            <button className="btn-close-modal" onClick={onClose}>×</button>
-          </div>
-          {error && <div style={{ color: "#b91c1c", marginBottom: "0.75rem", fontSize: "0.9rem" }}>{error}</div>}
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <div className="form-group-reserva" style={fieldStyle}>
-              <label>Sala *</label>
-              <select value={roomId} onChange={e => setRoomId(e.target.value)} required>
-                <option value="">Selecione</option>
-                {rooms.map(r => <option key={r.roomId} value={r.roomId}>{r.roomName}</option>)}
-              </select>
+          <div className="modal-content-wrapper">
+            <div className="modal-topo">
+              <h2>Nova Reserva — {date.toLocaleDateString("pt-BR")}</h2>
+              <button className="btn-close-modal" onClick={onClose}>×</button>
             </div>
-            <div className="form-group-reserva" style={fieldStyle}>
-              <label>Períodos *</label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                {periods.map(p => (
-                    <label key={p.periodId} style={{
-                      border: selectedPeriods.includes(p.periodId) ? "2px solid #dc2626" : "1px solid #d1d5db",
-                      borderRadius: 6, padding: "4px 10px", cursor: "pointer",
-                      background: selectedPeriods.includes(p.periodId) ? "#fecaca" : "white",
-                    }}>
-                      <input type="checkbox" checked={selectedPeriods.includes(p.periodId)}
-                             onChange={() => togglePeriod(p.periodId)} style={{ display: "none" }} />
-                      {p.periodName} <span style={{ fontSize: "0.75rem", color: "#666" }}>{p.startTime?.slice(0,5)}</span>
-                    </label>
-                ))}
+            {error && <div style={{ color: "#b91c1c", marginBottom: "0.75rem", fontSize: "0.9rem" }}>{error}</div>}
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <div className="form-group-reserva" style={fieldStyle}>
+                <label>Sala *</label>
+                <select value={roomId} onChange={e => setRoomId(e.target.value)} required>
+                  <option value="">Selecione</option>
+                  {rooms.map(r => <option key={r.roomId} value={r.roomId}>{r.roomName}</option>)}
+                </select>
               </div>
+              <div className="form-group-reserva" style={fieldStyle}>
+                <label>Períodos *</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {/* Manhã */}
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: "bold", color: "#51cd99", marginBottom: "6px" }}>Manhã</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                      {periods.filter(p => periodGroup(p.startTime) === "Manhã").map(p => (
+                          <label key={p.periodId} style={{
+                            border: selectedPeriods.includes(p.periodId) ? "1px solid #dc2626" : "1px solid #d1d5db",
+                            borderRadius: 6, padding: "2px 2px", cursor: "pointer",
+                            background: selectedPeriods.includes(p.periodId) ? "#fecaca" : "white",
+                          }}>
+                            <input type="checkbox" checked={selectedPeriods.includes(p.periodId)}
+                                   onChange={() => togglePeriod(p.periodId)} style={{ display: "none" }} />
+                            {p.periodName} <span style={{ fontSize: "0.75rem", color: "#666" }}>{p.startTime?.slice(0,5)}</span>
+                          </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tarde */}
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: "bold", color: "#3b82f6", marginBottom: "6px" }}>Tarde</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                      {periods.filter(p => periodGroup(p.startTime) === "Tarde").map(p => (
+                          <label key={p.periodId} style={{
+                            border: selectedPeriods.includes(p.periodId) ? "1px solid #dc2626" : "1px solid #d1d5db",
+                            borderRadius: 6, padding: "4px 10px", cursor: "pointer",
+                            background: selectedPeriods.includes(p.periodId) ? "#fecaca" : "white",
+                          }}>
+                            <input type="checkbox" checked={selectedPeriods.includes(p.periodId)}
+                                   onChange={() => togglePeriod(p.periodId)} style={{ display: "none" }} />
+                            {p.periodName} <span style={{ fontSize: "0.75rem", color: "#666" }}>{p.startTime?.slice(0,5)}</span>
+                          </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Noite */}
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: "bold", color: "#ff2eb7", marginBottom: "6px" }}>Noite</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                      {periods.filter(p => periodGroup(p.startTime) === "Noite").map(p => (
+                          <label key={p.periodId} style={{
+                            border: selectedPeriods.includes(p.periodId) ? "1px solid #dc2626" : "1px solid #d1d5db",
+                            borderRadius: 6, padding: "4px 10px", cursor: "pointer",
+                            background: selectedPeriods.includes(p.periodId) ? "#fecaca" : "white",
+                          }}>
+                            <input type="checkbox" checked={selectedPeriods.includes(p.periodId)}
+                                   onChange={() => togglePeriod(p.periodId)} style={{ display: "none" }} />
+                            {p.periodName} <span style={{ fontSize: "0.75rem", color: "#666" }}>{p.startTime?.slice(0,5)}</span>
+                          </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="form-group-reserva" style={fieldStyle}>
+                <label>Motivo *</label>
+                <input type="text" value={motivo} onChange={e => setMotivo(e.target.value)}
+                       placeholder="Descreva o motivo" required />
+              </div>
+              <div className="form-group-reserva" style={fieldStyle}>
+                <label>Curso</label>
+                <select
+                    value={curso}
+                    onChange={e => setCurso(e.target.value)}
+                    required={!naoSeAplica}
+                    disabled={naoSeAplica || loadingCourses}
+                    style={{ backgroundColor: naoSeAplica ? "#cfcccc89" : "white" }}
+                >
+                  <option value="">Selecione um curso</option>
+                  {courses.map(course => (
+                      <option key={course.id} value={course.name}>
+                        {course.name}
+                      </option>
+                  ))}
+                </select>
+                {loadingCourses && <small style={{ color: "#666" }}>Carregando cursos...</small>}
+              </div>
+              <div className="form-group-reserva-check" style={fieldStyle}>
+                <input type="checkbox" id="nsa2" checked={naoSeAplica} onChange={e => {
+                  setNaoSeAplica(e.target.checked);
+                  if (e.target.checked) setCurso("");
+                }} />
+                <label htmlFor="nsa2"> Não se aplica a um curso</label>
+              </div>
+              <div style={{ display: "flex", gap: "0.75rem", marginLeft: 0, marginRight: 0 }}>
+                <button type="submit" className="btn-submit-reserva"
+                        style={{ flex: 1, margin: 0, height: 44, fontSize: 15 }}
+                        disabled={loading}>
+                  {loading ? "Enviando..." : "Solicitar"}
+                </button>
+                <button type="button" className="btn-cancelar"
+                        style={{ marginTop: 0, height: 44, padding: "8px 20px" }}
+                        onClick={onClose}>Cancelar</button>
+              </div>
+            </form>
             </div>
-            <div className="form-group-reserva" style={fieldStyle}>
-              <label>Motivo *</label>
-              <input type="text" value={motivo} onChange={e => setMotivo(e.target.value)}
-                     placeholder="Descreva o motivo" required />
-            </div>
-            <div className="form-group-reserva" style={fieldStyle}>
-              <label>Curso</label>
-              <select
-                  value={curso}
-                  onChange={e => setCurso(e.target.value)}
-                  required={!naoSeAplica}
-                  disabled={naoSeAplica || loadingCourses}
-                  style={{ backgroundColor: naoSeAplica ? "#cfcccc89" : "white" }}
-              >
-                <option value="">Selecione um curso</option>
-                {courses.map(course => (
-                    <option key={course.id} value={course.name}>
-                      {course.name}
-                    </option>
-                ))}
-              </select>
-              {loadingCourses && <small style={{ color: "#666" }}>Carregando cursos...</small>}
-            </div>
-            <div className="form-group-reserva-check" style={fieldStyle}>
-              <input type="checkbox" id="nsa2" checked={naoSeAplica} onChange={e => {
-                setNaoSeAplica(e.target.checked);
-                if (e.target.checked) setCurso("");
-              }} />
-              <label htmlFor="nsa2"> Não se aplica a um curso</label>
-            </div>
-            <div style={{ display: "flex", gap: "0.75rem", marginLeft: 0, marginRight: 0 }}>
-              <button type="submit" className="btn-submit-reserva"
-                      style={{ flex: 1, margin: 0, height: 44, fontSize: 15 }}
-                      disabled={loading}>
-                {loading ? "Enviando..." : "Solicitar"}
-              </button>
-              <button type="button" className="btn-cancelar"
-                      style={{ marginTop: 0, height: 44, padding: "8px 20px" }}
-                      onClick={onClose}>Cancelar</button>
-            </div>
-          </form>
         </div>
       </div>
   );
@@ -525,6 +569,21 @@ export default function GradeReservas() {
 
   useEffect(() => { fetchSchedule(isoDate); }, [isoDate, fetchSchedule]);
 
+  useEffect(() => {
+    if (fullscreen) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('gr-fullscreen-active');
+    } else {
+      document.body.style.overflow = '';
+      document.body.classList.remove('gr-fullscreen-active');
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.classList.remove('gr-fullscreen-active');
+    };
+  }, [fullscreen]);
+
   const roomsList = useMemo(() => schedule?.rooms || [], [schedule]);
 
   const allPeriods = useMemo(() => {
@@ -685,6 +744,7 @@ export default function GradeReservas() {
     />
   );
 
+  const isDisabled = isHolidayDay || isSunday;
   return (
     <div className="gr-page">
       <Navbar activePage="Reservas" />
@@ -710,10 +770,12 @@ export default function GradeReservas() {
               </p>
             </div>
             <div className="gr-card__actions">
-              <button className="gr-btn gr-btn--outline" onClick={exportToPDF}>
+              <button className="gr-btn gr-btn--outline" onClick={exportToPDF} disabled={isDisabled}
+                      style={{ opacity: isDisabled ? 0.5 : 1 }}>
                 Exportar PDF
               </button>
-              <button className="gr-btn gr-btn--outline" onClick={() => window.print()}>
+              <button className="gr-btn gr-btn--outline" onClick={() => window.print()} disabled={isDisabled}
+                      style={{ opacity: isDisabled ? 0.5 : 1 }}>
                 Imprimir
               </button>
               <button className="gr-btn gr-btn--icon" onClick={() => setFullscreen(true)} title="Tela cheia">

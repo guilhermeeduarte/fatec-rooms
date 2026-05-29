@@ -104,7 +104,7 @@ export default function CadastroSalas() {
         description="Crie e gerencie os ambientes do sistema."
       />
 
-      <div className="content">
+      <div className="content plok" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px",marginTop: "2em", marginBottom: "3em"}}>
         <div className="cadastro-sala-card">
 
           {cadastrado ? (
@@ -124,7 +124,7 @@ export default function CadastroSalas() {
                 >
                   Cadastrar outra sala
                 </button>
-                <Link className="btn-submit-cadastro" to="/gerenciar-salas" style={{ textAlign: "center" }}>
+                <Link className="btn-submit-cadastro" to="/gerenciar-salas" style={{ textAlign: "center", textDecoration: "none"}}>
                   Ver salas cadastradas
                 </Link>
               </div>
@@ -132,7 +132,7 @@ export default function CadastroSalas() {
           ) : (
             /* ── FORMULÁRIO ── */
             <>
-              <h2 align="center">Nova Sala</h2>
+              <h2 className={"ajude-me"} align="center">Nova Sala</h2>
 
               <form onSubmit={handleSubmit} className="cadastro-sala-form">
 

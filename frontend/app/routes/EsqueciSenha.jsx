@@ -78,7 +78,7 @@ export default function EsqueciSenha() {
                 description="Informe seu email para receber o link de recuperação"
             />
 
-            <div className="content">
+            <div className="content plok" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px",marginTop: "2em", marginBottom: "3em"}}>
                 {erro && <div className="error-msg">{erro}</div>}
 
                 <form onSubmit={handleSubmit} className="form-reset-senha">
@@ -104,7 +104,7 @@ export default function EsqueciSenha() {
                 </form>
 
                 <div style={{ textAlign: "center", marginTop: 16 }}>
-                    <a href="/">Voltar para o login</a>
+                    <a className={"see-all"} href="/">Voltar para o Login</a>
                 </div>
             </div>
 

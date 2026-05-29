@@ -75,6 +75,8 @@ export default function ReservaRecorrente() {
   const [showPopup, setShowPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
 
+  const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
+
   useEffect(() => {
     if (error) setShowErrorPopup(true);
   }, [error]);
@@ -131,29 +133,62 @@ export default function ReservaRecorrente() {
     });
   }, [selectedClassGroup, activePeriods]);
 
+  const [filterCourse, setFilterCourse] = useState("");
+// Agrupar reservas por curso para contagem
+  const reservationsByCourse = useMemo(() => {
+    const counts = {};
+    recurringBookings.forEach(item => {
+      const courseName = item.courseName || "Sem curso";
+      if (!counts[courseName]) {
+        counts[courseName] = 0;
+      }
+      counts[courseName]++;
+    });
+    return counts;
+  }, [recurringBookings]);
+
+// Filtrar reservas por curso
+  const filteredRecurringBookings = useMemo(() => {
+    if (!filterCourse) return recurringBookings;
+    return recurringBookings.filter(item =>
+        (item.courseName || "Sem curso") === filterCourse
+    );
+  }, [recurringBookings, filterCourse]);
+
+// Total de cursos distintos
+  const totalCourses = Object.keys(reservationsByCourse).length;
+
   useEffect(() => {
     if (!selectedClassGroup) {
       setAutoSelectedPeriodIds([]);
       return;
     }
-    const ids = shiftPeriods.map((p) => p.id);
-    setAutoSelectedPeriodIds(ids);
 
+    // Períodos normais do turno (Manhã/Tarde/Noite)
+    const shiftPeriodIds = shiftPeriods.map((p) => p.id);
+
+    // Períodos de sábado (sempre adicionar se hasSaturday for true)
+    let saturdayPeriodIds = [];
+    if (selectedClassGroup.hasSaturday === true) {
+      saturdayPeriodIds = activePeriods
+          .filter((p) => isSaturdayOnlyPeriod(p))
+          .map((p) => p.id);
+    }
+
+    // IDs de todos os períodos pré-selecionados (turno + sábado)
+    const allAutoIds = [...shiftPeriodIds, ...saturdayPeriodIds];
+    setAutoSelectedPeriodIds(allAutoIds);
+
+    // Dias da semana (sábado incluso se tiver)
     const defaultDays = ["SEG", "TER", "QUA", "QUI", "SEX"];
-    const autoWeekDays = selectedClassGroup.hasSaturday
-      ? [...defaultDays, "SAB"]
-      : defaultDays;
+    const autoWeekDays = selectedClassGroup.hasSaturday === true
+        ? [...defaultDays, "SAB"]
+        : [...defaultDays];
 
     setForm((prev) => ({
       ...prev,
       weekDays: autoWeekDays,
-      periodIds: [
-        ...ids,
-        ...prev.periodIds.filter((id) => {
-          const p = activePeriods.find((ap) => ap.id === id);
-          return p && isSaturdayOnlyPeriod(p);
-        }),
-      ],
+      periodIds: allAutoIds,
     }));
   }, [form.classGroupId]); // eslint-disable-line
 
@@ -312,20 +347,29 @@ export default function ReservaRecorrente() {
   }
 
   function selectAllShiftPeriods() {
-    const ids = shiftPeriods.map((p) => p.id);
-    setAutoSelectedPeriodIds(ids);
+    // Períodos normais do turno
+    const shiftPeriodIds = shiftPeriods.map((p) => p.id);
+
+    // Períodos de sábado
+    let saturdayPeriodIds = [];
+    if (selectedClassGroup?.hasSaturday === true) {
+      saturdayPeriodIds = activePeriods
+          .filter((p) => isSaturdayOnlyPeriod(p))
+          .map((p) => p.id);
+    }
+
+    const allAutoIds = [...shiftPeriodIds, ...saturdayPeriodIds];
+    setAutoSelectedPeriodIds(allAutoIds);
+
     const defaultDays = ["SEG", "TER", "QUA", "QUI", "SEX"];
-    const autoWeekDays = selectedClassGroup?.hasSaturday ? [...defaultDays, "SAB"] : defaultDays;
+    const autoWeekDays = selectedClassGroup?.hasSaturday === true
+        ? [...defaultDays, "SAB"]
+        : [...defaultDays];
+
     setForm((prev) => ({
       ...prev,
       weekDays: autoWeekDays,
-      periodIds: [
-        ...ids,
-        ...prev.periodIds.filter((id) => {
-          const p = activePeriods.find((ap) => ap.id === id);
-          return p && isSaturdayOnlyPeriod(p);
-        }),
-      ],
+      periodIds: allAutoIds,
     }));
   }
 
@@ -417,10 +461,10 @@ export default function ReservaRecorrente() {
         description="Cadastre reservas recorrentes para turmas durante o semestre."
       />
 
-      <div className="content-solicitarReserva">
+      <div className="content-solicitarReserva" style={{background: "#FAFAFA"}}>
 
         {/* PAINEL ESQUERDO — calendário */}
-        <div className="div-calendario">
+        <div className="div-calendario" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px"}}>
           <div className="title-calendario">
             <h3>Calendário do Semestre:</h3>
             <p>
@@ -449,28 +493,17 @@ export default function ReservaRecorrente() {
               day.setHours(0, 0, 0, 0);
               if (day < semesterRange.start || day > semesterRange.end) return "dia-fora";
               if (d.getDay() === 0) return null;
-              if (markedDates.has(iso)) return "dia-aceita";
+
+              // Verifica se o dia está selecionado
+              const code = jsDoWToCode[d.getDay()];
+              if (code && form.weekDays.includes(code)) {
+                return "dia-recorrente2"; // Classe que pinta o quadrado
+              }
               return null;
             }}
-            tileContent={({ date: d, view }) => {
-              if (view !== "month") return null;
-              if (!semesterRange) return null;
-              const day = new Date(d);
-              day.setHours(0, 0, 0, 0);
-              if (day < semesterRange.start || day > semesterRange.end) return null;
-              const code = jsDoWToCode[d.getDay()];
-              if (!code || !form.weekDays.includes(code)) return null;
-              return (
-                <span style={{
-                  display: "block",
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: "#16a34a",
-                  margin: "2px auto 0",
-                }} />
-              );
-            }}
+
+              // Remova a função tileContent ou deixe vazia
+            tileContent={null}
             locale="pt-BR"
             formatShortWeekday={(locale, d) =>
               d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
@@ -495,29 +528,106 @@ export default function ReservaRecorrente() {
             </div>
           )}
 
-          <div className="reservas-feitas" style={{ marginTop: "1rem" }}>
-            <h4>Reservas Cadastradas:</h4>
-            <div className="lista-horarios">
-              {recurringBookings.length === 0 ? (
-                <p>Nenhuma reserva recorrente cadastrada.</p>
+          <div className="reservas-feitas2" style={{ marginTop: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "10px" }}>
+              <h4 style={{ margin: 0 }}>
+                Reservas Cadastradas: {filteredRecurringBookings.length}
+              </h4>
+
+              {/* Filtro por curso */}
+              {totalCourses > 0 && (
+                  <select
+                      value={filterCourse}
+                      onChange={(e) => setFilterCourse(e.target.value)}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "8px",
+                        border: "1px solid #6B6B6B",
+                        color: "#1A1A1A",
+                        fontFamily: "Inter, sans-serif",
+                        fontSize: "0.8rem",
+                        background: "white",
+                        cursor: "pointer",
+                      }}
+                      className={"sozinho"}
+                  >
+                    <option value="">Todos os cursos</option>
+                    {Object.entries(reservationsByCourse).map(([course, count]) => (
+                        <option key={course} value={course}>
+                          {course} ({count})
+                        </option>
+                    ))}
+                  </select>
+              )}
+            </div>
+
+            <div className="lista-horarios" style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              maxHeight: "300px",
+              overflowY: "auto",
+              paddingRight: "4px"
+            }}>
+              {filteredRecurringBookings.length === 0 ? (
+                  <div style={{
+                    padding: "16px",
+                    textAlign: "center",
+                    color: "#6b7280",
+                    background: "#f9fafb",
+                    borderRadius: "8px",
+                    fontSize: "0.85rem"
+                  }}>
+                    {filterCourse
+                        ? `Nenhuma reserva encontrada para o curso "${filterCourse}".`
+                        : "Nenhuma reserva recorrente cadastrada."}
+                  </div>
               ) : (
-                recurringBookings.map((item) => (
-                  <p key={item.id}>
-                    <span className="hora">
-                      {item.courseName || item.courseAbbreviation} • {item.classGroupLabel} • {item.weekDays.map((d) => d.substring(0, 3)).join(", ")}
-                    </span>
-                    <span className="prof">
-                      {item.roomName} • {item.periods.map((p) => p.periodName).join(", ")}
-                    </span>
-                  </p>
-                ))
+                  filteredRecurringBookings.map((item) => (
+                      <div key={item.id} style={{
+                        background: "#fafafa",
+                        boxShadow: "0 1px 4px rgba(0,0,0,.1)",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        padding: "10px 12px",
+                        transition: "all 0.2s"
+                      }}>
+                        <div style={{
+                          fontWeight: 600,
+                          fontSize: "0.85rem",
+                          color: "#1f2937",
+                          marginBottom: "4px"
+                        }}>
+                          {item.classGroupLabel || "Turma não definida"}
+                        </div>
+                        <div style={{
+                          fontSize: "0.75rem",
+                          color: "#6b7280",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          gap: "8px"
+                        }}>
+                          <span>{item.roomName || "Sala não definida"}</span>
+                          <span style={{
+                            background: "#e5e7eb",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            fontSize: "0.65rem"
+                          }}>
+              {item.weekDays?.length || 0} dias na semana
+            </span>
+                        </div>
+                      </div>
+                  ))
               )}
             </div>
           </div>
         </div>
 
         {/* PAINEL DIREITO — formulário */}
-        <div className="div-forms-reserva">
+        <div className="div-forms-reserva" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px"}}>
           <form onSubmit={handleSubmit}>
 
             <div className="form-group-reserva">
@@ -595,125 +705,302 @@ export default function ReservaRecorrente() {
             </div>
 
             {/* ── SEÇÃO DE PERÍODOS ── */}
-            <div className="form-group-reserva">
+            <div className="form-group-periodo">
               <label>Períodos:</label>
 
               {selectedClassGroup && shiftPeriods.length > 0 && (
-                <div style={{
-                  background: "#eff6ff",
-                  border: "1px solid #bfdbfe",
-                  borderRadius: "8px",
-                  padding: "10px 14px",
-                  marginBottom: "10px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "8px",
-                  flexWrap: "wrap",
-                }}>
-                  <span style={{ fontSize: "0.8rem", color: "#1d4ed8" }}>
-                    ✓ Períodos e dias da semana do turno <strong>{shiftLabel}</strong> pré-selecionados automaticamente.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={selectAllShiftPeriods}
-                    style={{
-                      fontSize: "0.75rem",
-                      padding: "3px 10px",
-                      borderRadius: "6px",
-                      border: "1px solid #93c5fd",
-                      background: "white",
-                      color: "#1d4ed8",
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    Restaurar seleção automática
-                  </button>
-                </div>
+                  <div style={{
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "8px",
+                    padding: "10px 14px",
+                    marginBottom: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                  }}>
+      <span style={{ fontSize: "0.8rem", color: "#1d4ed8" }}>
+        ✓ Períodos e dias do turno da <strong>{shiftLabel}</strong> pré-selecionados automaticamente.
+      </span>
+                    <button
+                        type="button"
+                        onClick={selectAllShiftPeriods}
+                        style={{
+                          fontSize: "0.75rem",
+                          padding: "3px 10px",
+                          borderRadius: "6px",
+                          border: "1px solid #93c5fd",
+                          background: "white",
+                          color: "#1d4ed8",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                        }}
+                    >
+                      Restaurar seleção automática
+                    </button>
+                  </div>
               )}
 
-              <div className="period-dropdown-options" style={{ position: "static", boxShadow: "none", border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-                <div style={{ marginBottom: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button
+              {/* Dropdown de períodos */}
+              <div className="period-dropdown">
+                <button
                     type="button"
-                    style={{ fontSize: 12, padding: "2px 8px", borderRadius: 6, border: "1px solid #ccc", cursor: "pointer", background: "white" }}
-                    onClick={() => {
-                      const shiftIds = shiftPeriods.map((p) => p.id);
-                      const satIds = form.weekDays.includes("SAB")
-                        ? activePeriods.filter(isSaturdayOnlyPeriod).map((p) => p.id)
-                        : [];
-                      setForm((prev) => ({ ...prev, periodIds: [...new Set([...shiftIds, ...satIds])] }));
-                    }}
-                  >
-                    Selecionar todos
-                  </button>
-                  <button
-                    type="button"
-                    style={{ fontSize: 12, padding: "2px 8px", borderRadius: 6, border: "1px solid #ccc", cursor: "pointer", background: "white" }}
-                    onClick={() => { setForm((prev) => ({ ...prev, periodIds: [] })); setAutoSelectedPeriodIds([]); }}
-                  >
-                    Limpar
-                  </button>
-                </div>
+                    className="period-dropdown-button"
+                    onClick={() => setPeriodDropdownOpen(prev => !prev)}
+                    disabled={!selectedClassGroup}
+                >
+                  {form.periodIds.length === 0
+                      ? "Selecione os períodos"
+                      : `${form.periodIds.length} período${form.periodIds.length > 1 ? "s" : ""} selecionado${form.periodIds.length > 1 ? "s" : ""}`}
+                  <span className="dropdown-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                         className="lucide lucide-chevron-down-icon lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
+                  </span>
+                </button>
 
-                {!selectedClassGroup && (
-                  <div style={{ padding: "0.5rem", textAlign: "center", color: "#888" }}>
-                    Selecione uma turma para ver os períodos disponíveis.
-                  </div>
-                )}
+                {periodDropdownOpen && (
+                    <div className="period-dropdown-options">
+                      {!selectedClassGroup ? (
+                          <small>Selecione uma turma para ver os períodos disponíveis.</small>
+                      ) : (
+                          <>
+                            <div style={{ marginBottom: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                              <button
+                                  type="button"
+                                  style={{ fontSize: 12, padding: "2px 8px", borderRadius: 6, border: "1px solid #ccc", cursor: "pointer", background: "white" }}
+                                  onClick={() => {
+                                    const shiftIds = shiftPeriods.map((p) => p.id);
+                                    const satIds = form.weekDays.includes("SAB")
+                                        ? activePeriods.filter(isSaturdayOnlyPeriod).map((p) => p.id)
+                                        : [];
+                                    setForm((prev) => ({ ...prev, periodIds: [...new Set([...shiftIds, ...satIds])] }));
+                                  }}
+                              >
+                                Selecionar todos do turno
+                              </button>
+                              <button
+                                  type="button"
+                                  style={{ fontSize: 12, padding: "2px 8px", borderRadius: 6, border: "1px solid #ccc", cursor: "pointer", background: "white" }}
+                                  onClick={() => {
+                                    const allIds = activePeriods.map((p) => p.id);
+                                    setForm((prev) => ({ ...prev, periodIds: [...new Set([...allIds])] }));
+                                  }}
+                              >
+                                Selecionar todos
+                              </button>
+                              <button
+                                  type="button"
+                                  style={{ fontSize: 12, padding: "2px 8px", borderRadius: 6, border: "1px solid #ccc", cursor: "pointer", background: "white" }}
+                                  onClick={() => { setForm((prev) => ({ ...prev, periodIds: [] })); setAutoSelectedPeriodIds([]); }}
+                              >
+                                Limpar
+                              </button>
+                            </div>
 
-                {selectedClassGroup && (
-                  <div>
-                    {shiftLabel && (
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                        Turno {shiftLabel} — pré-selecionado
-                      </div>
-                    )}
-                    {activePeriods.filter(p => !isSaturdayOnlyPeriod(p)).map((period) => {
-                      const isChecked = form.periodIds.includes(period.id);
-                      const isAuto = autoSelectedPeriodIds.includes(period.id);
-                      return (
-                        <label
-                          key={period.id}
-                          className="period-checkbox"
-                          style={{
-                            background: isAuto && isChecked ? "#eff6ff" : "transparent",
-                            borderRadius: "6px",
-                            padding: "4px 6px",
-                            marginBottom: "2px",
-                            border: isAuto && isChecked ? "1px solid #bfdbfe" : "1px solid transparent",
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => togglePeriod(period.id)}
-                          />
-                          <span>
-                            {period.name} — {period.startTime?.slice(0, 5)} às {period.endTime?.slice(0, 5)}
-                            {isAuto && isChecked && (
-                              <span style={{ fontSize: "10px", marginLeft: "6px", color: "#2563eb", fontWeight: 600 }}>
-                                (auto)
-                              </span>
-                            )}
+                            {/* Agrupar períodos por turno */}
+                            {["MORNING", "AFTERNOON", "EVENING"].map((shiftType) => {
+                              const shiftPeriodsList = activePeriods.filter(p =>
+                                  !isSaturdayOnlyPeriod(p) && getPeriodShift(p) === shiftType
+                              );
+                              if (shiftPeriodsList.length === 0) return null;
+
+                              const shiftDisplayName =
+                                  shiftType === "MORNING" ? "Manhã" :
+                                      shiftType === "AFTERNOON" ? "Tarde" : "Noite";
+
+                              const isAutoShift = selectedClassGroup?.shift === shiftType;
+
+                              return (
+                                  <div key={shiftType}>
+                                    <div style={{
+                                      fontSize: "11px",
+                                      fontWeight: 700,
+                                      color: isAutoShift ? "#16a34a" : "#6b7280",
+                                      marginTop: "8px",
+                                      marginBottom: "6px",
+                                      textTransform: "uppercase",
+                                      letterSpacing: "0.5px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "6px"
+                                    }}>
+                                      {shiftDisplayName}
+                                      {isAutoShift && (
+                                          <span style={{ fontSize: "9px", background: "#dcfce7", color: "#16a34a", padding: "2px 6px", borderRadius: "10px" }}>
+                      turno da turma
+                    </span>
+                                      )}
+                                    </div>
+
+                                    {shiftPeriodsList.map((period) => {
+                                      const isChecked = form.periodIds.includes(period.id);
+                                      const isAuto = isAutoShift && autoSelectedPeriodIds.includes(period.id);
+                                      return (
+                                          <label
+                                              key={period.id}
+                                              className="period-checkbox"
+                                              style={{
+                                                background: isAuto && isChecked ? "#eff6ff" : "transparent",
+                                                borderRadius: "6px",
+                                                padding: "4px 6px",
+                                                marginBottom: "2px",
+                                                border: isAuto && isChecked ? "1px solid #bfdbfe" : "1px solid transparent",
+                                              }}
+                                          >
+                                            <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={() => togglePeriod(period.id)}
+                                            />
+                                            <span>
+                        {period.name} — {period.startTime?.slice(0, 5)} às {period.endTime?.slice(0, 5)}
+                                              {isAuto && isChecked && (
+                                                  <span style={{ fontSize: "10px", marginLeft: "6px", color: "#2563eb", fontWeight: 600 }}>
+                            (auto)
                           </span>
-                        </label>
-                      );
-                    })}
-                  </div>
+                                              )}
+                      </span>
+                                          </label>
+                                      );
+                                    })}
+                                  </div>
+                              );
+                            })}
+
+                            {/* Períodos de sábado */}
+                            {saturdayPeriods.length > 0 && (
+                                <>
+                                  <div style={{
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                    color: "#6b7280",
+                                    marginTop: "12px",
+                                    marginBottom: "6px",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.5px"
+                                  }}>Sábado
+                                  </div>
+                                  {saturdayPeriods.map((period) => {
+                                    const isChecked = form.periodIds.includes(period.id);
+                                    const isAuto = autoSelectedPeriodIds.includes(period.id);
+                                    return (
+                                        <label
+                                            key={period.id}
+                                            className="period-checkbox"
+                                            style={{
+                                              background: isAuto && isChecked ? "#eff6ff" : "transparent",
+                                              borderRadius: "6px",
+                                              padding: "4px 6px",
+                                              marginBottom: "2px",
+                                              border: isAuto && isChecked ? "1px solid #bfdbfe" : "1px solid transparent",
+                                            }}
+                                        >
+                                          <input
+                                              type="checkbox"
+                                              checked={isChecked}
+                                              onChange={() => togglePeriod(period.id)}
+                                          />
+                                          <span>
+                      {period.name} — {period.startTime?.slice(0, 5)} às {period.endTime?.slice(0, 5)}
+                                            {isAuto && isChecked && (
+                                                <span style={{ fontSize: "10px", marginLeft: "6px", color: "#2563eb", fontWeight: 600 }}>
+                          (auto)
+                        </span>
+                                            )}
+                    </span>
+                                        </label>
+                                    );
+                                  })}
+                                </>
+                            )}
+                          </>
+                      )}
+                    </div>
                 )}
               </div>
 
+              {/* Resumo dos períodos selecionados */}
               {form.periodIds.length > 0 && (
-                <div style={{ marginTop: 8, fontSize: 12, color: "#374151", background: "#f9fafb", borderRadius: "6px", padding: "6px 10px" }}>
-                  <strong>{form.periodIds.length}</strong> período{form.periodIds.length > 1 ? "s" : ""} selecionado{form.periodIds.length > 1 ? "s" : ""}
-                  {autoSelectedPeriodIds.filter((id) => form.periodIds.includes(id)).length > 0 && (
-                    <span style={{ color: "#2563eb", marginLeft: "6px" }}>
-                      ({autoSelectedPeriodIds.filter((id) => form.periodIds.includes(id)).length} automáticos)
-                    </span>
-                  )}
-                </div>
+                  <div style={{ marginTop: 12, padding: "8px 12px", background: "#eff6ff", borderRadius: "8px", border: "1px solid #bfdbfe" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#1d4ed8", marginBottom: "6px" }}>
+                      Período{form.periodIds.length !== 1 ? "s" : ""} selecionado{form.periodIds.length !== 1 ? "s" : ""}:
+                    </div>
+
+                    {/* Manhã */}
+                    {activePeriods.filter(p => form.periodIds.includes(p.id) && !isSaturdayOnlyPeriod(p) && getPeriodShift(p) === "MORNING").length > 0 && (
+                        <>
+                          <div style={{ fontSize: "10px", fontWeight: 700, color: "#1d4ed8", marginTop: "11px", marginBottom: "4px" }}> </div>
+                          {activePeriods
+                              .filter((p) => form.periodIds.includes(p.id) && !isSaturdayOnlyPeriod(p) && getPeriodShift(p) === "MORNING")
+                              .sort((a, b) => a.startTime?.localeCompare(b.startTime))
+                              .map((p) => (
+                                  <div key={p.id} style={{ fontSize: "14px", color: "#1d4ed8", display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span style={{ fontWeight: 600, minWidth: "35px" }}>{p.name || p.periodName}</span>
+                                    <span style={{ color: "#1d4ed8" }}>
+                {p.startTime?.slice(0, 5)} <span style={{ fontWeight: 500 }}>até</span> {p.endTime?.slice(0, 5)}
+              </span>
+                                  </div>
+                              ))}
+                        </>
+                    )}
+
+                    {/* Tarde */}
+                    {activePeriods.filter(p => form.periodIds.includes(p.id) && !isSaturdayOnlyPeriod(p) && getPeriodShift(p) === "AFTERNOON").length > 0 && (
+                        <>
+                          <div style={{ fontSize: "10px", fontWeight: 700, color: "#3b82f6", marginTop: "11px", marginBottom: "4px" }}> </div>
+                          {activePeriods
+                              .filter((p) => form.periodIds.includes(p.id) && !isSaturdayOnlyPeriod(p) && getPeriodShift(p) === "AFTERNOON")
+                              .sort((a, b) => a.startTime?.localeCompare(b.startTime))
+                              .map((p) => (
+                                  <div key={p.id} style={{ fontSize: "14px", color: "#1d4ed8", display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span style={{ fontWeight: 600, minWidth: "35px" }}>{p.name || p.periodName}</span>
+                                    <span style={{ color: "#1d4ed8" }}>
+                {p.startTime?.slice(0, 5)} <span style={{ fontWeight: 500 }}>até</span> {p.endTime?.slice(0, 5)}
+              </span>
+                                  </div>
+                              ))}
+                        </>
+                    )}
+
+                    {/* Noite */}
+                    {activePeriods.filter(p => form.periodIds.includes(p.id) && !isSaturdayOnlyPeriod(p) && getPeriodShift(p) === "EVENING").length > 0 && (
+                        <>
+                          <div style={{ fontSize: "10px", fontWeight: 700, color: "#a855f7", marginTop: "11px", marginBottom: "4px" }}> </div>
+                          {activePeriods
+                              .filter((p) => form.periodIds.includes(p.id) && !isSaturdayOnlyPeriod(p) && getPeriodShift(p) === "EVENING")
+                              .sort((a, b) => a.startTime?.localeCompare(b.startTime))
+                              .map((p) => (
+                                  <div key={p.id} style={{ fontSize: "14px", color: "#1d4ed8", display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span style={{ fontWeight: 600, minWidth: "35px" }}>{p.name || p.periodName}</span>
+                                    <span style={{ color: "#1d4ed8" }}>
+                {p.startTime?.slice(0, 5)} <span style={{ fontWeight: 500 }}>até</span> {p.endTime?.slice(0, 5)}
+              </span>
+                                  </div>
+                              ))}
+                        </>
+                    )}
+
+                    {/* Sábado */}
+                    {activePeriods.filter(p => form.periodIds.includes(p.id) && isSaturdayOnlyPeriod(p)).length > 0 && (
+                        <>
+                          <div style={{ fontSize: "10px", fontWeight: 700, color: "#6b7280", marginTop: "11px", marginBottom: "4px" }}> </div>
+                          {activePeriods
+                              .filter((p) => form.periodIds.includes(p.id) && isSaturdayOnlyPeriod(p))
+                              .sort((a, b) => a.startTime?.localeCompare(b.startTime))
+                              .map((p) => (
+                                  <div key={p.id} style={{ fontSize: "14px", color: "#1d4ed8", display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span style={{ fontWeight: 600, minWidth: "35px" }}>{p.name || p.periodName}</span>
+                                    <span style={{ color: "#1d4ed8" }}>
+                {p.startTime?.slice(0, 5)} <span style={{ fontWeight: 500 }}>até</span> {p.endTime?.slice(0, 5)}
+              </span>
+                                  </div>
+                              ))}
+                        </>
+                    )}
+                  </div>
               )}
             </div>
 

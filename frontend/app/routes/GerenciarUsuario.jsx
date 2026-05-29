@@ -323,7 +323,7 @@ export default function GerenciarUsuario() {
                 description="Veja todos os usuários cadastrados e acesse as ações de editar ou desativar."
             />
 
-            <div className="content">
+            <div className="content plok" style={{background: "none"}}>
 
                 {/* Barra de busca e filtros — usa classes já existentes no app.css */}
                 <div className="filtros">
@@ -375,22 +375,22 @@ export default function GerenciarUsuario() {
                     <>
                         <div className="reservas-list">
                             {usuariosFiltrados.map((usuario) => (
-                                <div key={usuario.id} className="reserva-item" style={{flexDirection:"column"}}>
-  <div className="usuario-info">
-    <div className="reserva-sala-user">{usuario.nome}</div>
-    <div className="usuario-detalhes">
-      <div style={{display:"flex", gap:"8px", flexWrap:"wrap", marginTop:"6px"}}>
-  <div className="usuario-box">
-    <span className="usuario-label">E-mail</span>
-    <span className="usuario-value">{usuario.email}</span>
-  </div>
-  <div className="usuario-box">
-    <span className="usuario-label">Tipo</span>
-    <span className="usuario-value">{usuario.tipo}</span>
-  </div>
-</div>
-    </div>
-  </div>
+                                                <div key={usuario.id} className="reserva-item"  style={{flexDirection:"column"}}>
+                  <div className="usuario-info">
+                    <div className="reserva-sala-user">{usuario.nome}</div>
+                    <div className="usuario-detalhes">
+                      <div style={{display:"flex", gap:"8px", flexWrap:"wrap", marginTop:"6px"}}>
+                  <div className="usuario-box">
+                    <span className="usuario-label">E-mail</span>
+                    <span className="usuario-value">{usuario.email}</span>
+                  </div>
+                  <div className="usuario-box">
+                    <span className="usuario-label">Tipo</span>
+                    <span className="usuario-value">{usuario.tipo}</span>
+                  </div>
+                </div>
+                    </div>
+                  </div>
                                     <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", width:"100%", marginTop:"8px"}}>
                                         <div className={`reserva-status ${getStatusClass(usuario.status)}`}>
                                             {getStatusLabel(usuario.status)}
@@ -425,7 +425,6 @@ export default function GerenciarUsuario() {
                                                     <button
                                                         className="btn-action btn-success"
                                                         onClick={() => handleOpenModal(usuario, "reativar")}
-                                                        style={{ background: "#16a34a", color: "white" }}
                                                     >
                                                         Reativar
                                                     </button>
@@ -455,7 +454,7 @@ export default function GerenciarUsuario() {
                         </p>
                         <div className="confirm-buttons">
                             <button
-                                className="btn-action btn-secondary"
+                                className="sonic"
                                 onClick={() => setShowModal(false)}
                             >
                                 Cancelar
@@ -519,14 +518,14 @@ export default function GerenciarUsuario() {
                             <div className="modal-actions">
                                 <button
                                     type="button"
-                                    className="btn-action btn-cancel"
+                                    className="sonic"
                                     onClick={() => setShowEditModal(false)}
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="btn-action btn-save"
+                                    className="btn-action btn-success"
                                     disabled={savingEdit}
                                 >
                                     {savingEdit ? "Salvando..." : "Salvar"}
@@ -552,7 +551,7 @@ export default function GerenciarUsuario() {
                         </p>
                         <div className="confirm-buttons">
                             <button
-                                className="btn-action btn-secondary"
+                                className="sonic"
                                 onClick={() => setShowConfirmModal(false)}
                             >
                                 Voltar
@@ -591,7 +590,7 @@ export default function GerenciarUsuario() {
                         </p>
                         <div className="confirm-buttons">
                             <button
-                                className="btn-action btn-secondary"
+                                className="sonic"
                                 onClick={() => {
                                     setShowReativarModal(false);
                                     setSelectedUser(null);

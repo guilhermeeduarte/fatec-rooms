@@ -65,63 +65,86 @@ export default function RedefinirSenha() {
 
     if (isInvalid) {
         return (
-            <>
-                {/* <Navbar activePage="Login" /> */}
-                {/* <PageHero
-                    tag="Segurança"
-                    title="Redefinir Senha"
-                    description="Link inválido ou expirado"
-                /> */}
+            <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+                <Navbar activePage="Login" />
 
-                <div className="content">
-                    <h3>Link inválido ou expirado</h3>
-                    <button
-                        className="btn-submit-cadastro"
-                        onClick={() => navigate("/esqueci-senha")}
-                    >
-                        Solicitar novo link
-                    </button>
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+                    <div className="confirm-modal" style={{ maxWidth: "400px", margin: "0 auto" }}>
+                        <div className="confirm-icon" style={{ background: "#fee2e2" }}>
+                            !
+                        </div>
+                        <h2>Link inválido ou expirado</h2>
+                        <p>
+                            O link de redefinição de senha é inválido ou já expirou.
+                            <br />
+                            <span style={{ fontSize: "0.8rem", color: "#dc2626", display: "block", marginTop: "8px" }}>
+                                Solicite um novo link de recuperação.
+                            </span>
+                        </p>
+                        <div className="confirm-buttons">
+                            <button
+                                className="btn-action btn-danger"
+                                onClick={() => navigate("/esqueci-senha")}
+                            >
+                                Solicitar novo link
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                {/* <Footer /> */}
-            </>
+                <Footer />
+            </div>
         );
     }
 
     if (sucesso) {
         return (
-            <>
-                {/* <Navbar activePage="Login" /> */}
-                {/* <PageHero
-                    tag="Segurança"
-                    title="Senha redefinida"
-                    description="Sua senha foi atualizada"
-                /> */}
+            <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+                <Navbar activePage="Login" />
 
-                <div className="content">
-                    <h3>Senha redefinida com sucesso!</h3>
-                    <button
-                        className="btn-submit-cadastro"
-                        onClick={() => navigate("/")}
-                    >
-                        Ir para login
-                    </button>
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+                    <div className="confirm-modal" style={{ maxWidth: "400px", margin: "0 auto" }}>
+                        <div className="confirm-icon" style={{ background: "#dcfce7" }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24"
+                                 fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"
+                                 strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="m9 12 2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <h2>Senha redefinida com sucesso!</h2>
+                        <p>
+                            Sua senha foi atualizada.
+                            <br />
+                            <span style={{ fontSize: "0.8rem", color: "#16a34a", display: "block", marginTop: "8px" }}>
+                                Agora você pode fazer login com sua nova senha.
+                            </span>
+                        </p>
+                        <div className="confirm-buttons">
+                            <button
+                                className="btn-action btn-success"
+                                onClick={() => navigate("/")}
+                            >
+                                Ir para o login
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                {/* <Footer /> */}
-            </>
+                <Footer />
+            </div>
         );
     }
 
     return (
-        <>
-            {/* <Navbar activePage="Login" /> */}
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+            <Navbar activePage="Login" />
 
-            {/* <PageHero
+            <PageHero
                 tag="Segurança"
                 title="Redefinir Senha"
                 description="Crie uma nova senha segura"
-            /> */}
+            />
 
             <div className="content">
                 {erro && <div className="error-msg">{erro}</div>}
@@ -150,8 +173,8 @@ export default function RedefinirSenha() {
                         </div>
 
                         {senha.length > 0 && (
-                            <div>
-                                {strengthLabels[strength]}
+                            <div style={{ fontSize: "0.75rem", color: strength >= 3 ? "#16a34a" : strength >= 2 ? "#f59e0b" : "#dc2626", marginTop: "4px" }}>
+                                Força: {strengthLabels[strength]}
                             </div>
                         )}
                     </div>
@@ -184,13 +207,11 @@ export default function RedefinirSenha() {
                 </form>
 
                 <div style={{ textAlign: "center", marginTop: 16 }}>
-                    <a href="/">
-                        Voltar para o login
-                    </a>
+                    <a className="see-all" href="/">Voltar para o Login</a>
                 </div>
             </div>
 
-            {/* <Footer /> */}
-        </>
+            <Footer />
+        </div>
     );
 }
