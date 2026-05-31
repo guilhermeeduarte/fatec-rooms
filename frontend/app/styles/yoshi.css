@@ -27,8 +27,9 @@
     }
 
     .card-right .input-group span {
-        text-align: right; /* Alinha "dias" à direita */
+        text-align: center; /* Alinha "dias" à direita */
         width: 100%;
+        font-size: 16px;
         font-weight: 500;
     }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { LoadingState, ErrorState } from "../components/PageState";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 
@@ -203,8 +204,29 @@ export default function AprovarCadastros() {
         ? cadastros.find((c) => c.id === confirmacao.id)
         : null;
 
-    if (loading) return <div>Carregando...</div>;
-    if (error) return <div>Erro: {error}</div>;
+    if (loading) {
+        return (
+            <LoadingState
+                activePage="configrmar"
+                heroTag="Autorização"
+                heroTitle="Solicitações de Cadastro"
+                heroDescription="Aceite ou recuse cadastros"
+                description="Carregando solicitações..."
+            />
+        );
+    }
+
+    if (error) {
+        return (
+            <ErrorState
+                error={error}
+                activePage="Área do Professor"
+                heroTag="Painel do Professor"
+                heroTitle="Área do Professor"
+                heroDescription="Acompanhe suas reservas, solicite novas salas e controle seu calendário."
+            />
+        );
+    }
 
     return (
         <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -213,6 +235,7 @@ export default function AprovarCadastros() {
             <PageHero
                 variant="coordenador"
                 title="Solicitações de Cadastro"
+                tag="Autorização"
                 description="Aceite ou recuse cadastros"
             />
 

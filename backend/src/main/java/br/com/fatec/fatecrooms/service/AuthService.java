@@ -59,8 +59,13 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Usuário ou senha inválidos."));
 
-        if (user.getEnabled() == 0)
-            throw new DisabledException("Seu cadastro ainda não foi aprovado por um coordenador.");
+        if (user.getEnabled() == 0) {
+            if (user.getAuthlevel() == 0) {
+                throw new DisabledException("Seu cadastro ainda não foi aprovado por um coordenador. Aguarde aprovação antes de entrar.");
+            } else {
+                throw new DisabledException("Sua conta está desativada. Entre em contato com o coordenador para reativá-la.");
+            }
+        }
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), request.getPassword())

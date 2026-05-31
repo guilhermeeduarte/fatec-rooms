@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
+import { LoadingState, ErrorState } from "../components/PageState";
 import Popup from "../components/Popup";
 import { Search } from 'lucide-react';
 import "../styles/todasReservas.css";
@@ -47,6 +48,7 @@ export default function TodasReservas() {
   const [filtrosAvancados, setFiltrosAvancados] = useState({
     pessoa: "", sala: "", periodo: "", curso: ""
   });
+
   function extrairMotivo(notes) {
     if (!notes) return "";
     const motivoParte = notes.split(/\nCurso:/i)[0];
@@ -115,8 +117,6 @@ export default function TodasReservas() {
   }
 
   async function fetchReservas(pageNum, append = false) {
-    // Se não houver filtros ativos, carrega normalmente
-    // Se houver filtro ativo, não carrega mais páginas automaticamente
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
@@ -182,19 +182,16 @@ export default function TodasReservas() {
 
   function loadMore() {
     if (!hasMore) return;
-
     const next = page + 1;
     setPage(next);
     fetchReservas(next, true);
   }
 
-  // Função para abrir o modal de confirmação
   function openConfirmCancelModal(reserva) {
     setSelectedReserva(reserva);
     setShowConfirmModal(true);
   }
 
-  // Função para confirmar o cancelamento
   async function handleConfirmCancel() {
     if (!selectedReserva) return;
 
@@ -293,6 +290,32 @@ export default function TodasReservas() {
       case "Recusada": return "tr-card tr-card--recusada" + tipo;
       default: return "tr-card" + tipo;
     }
+  }
+
+  // Tela de loading
+  if (loading && !loadingMore) {
+    return (
+        <LoadingState
+            activePage="Todas as Reservas"
+            heroTitle="Gerenciar Reservas"
+            heroTag="Área do Coordenador"
+            heroDescription="Visualize, filtre e gerencie todas as reservas do sistema."
+            description="Carregando reservas..."
+        />
+    );
+  }
+
+  // Tela de erro
+  if (error && !loading) {
+    return (
+        <ErrorState
+            error={error}
+            activePage="Todas as Reservas"
+            heroTitle="Gerenciar Reservas"
+            heroTag="Área do Coordenador"
+            heroDescription="Visualize, filtre e gerencie todas as reservas do sistema."
+        />
+    );
   }
 
   return (
@@ -395,9 +418,6 @@ export default function TodasReservas() {
           <p className="tr-count">
             {loading ? "Carregando…" : `${reservasOrdenadas.length} reserva${reservasOrdenadas.length !== 1 ? "s" : ""} encontrada${reservasOrdenadas.length !== 1 ? "s" : ""}`}
           </p>
-
-          {/* ── Erro ── */}
-          {error && <div className="tr-error">{error}</div>}
 
           {/* ── Lista ── */}
           <div className="tr-list">

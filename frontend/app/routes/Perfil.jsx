@@ -46,6 +46,17 @@ export default function UserProfile() {
     }
   }, [token]);
 
+  // Timer para limpar mensagens
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError(null);
+        setSuccess(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
+
   async function fetchUser() {
     if (!token) return;
     try {
@@ -179,131 +190,138 @@ export default function UserProfile() {
             description="Edite e gerencie suas informações."
         />
 
-        <div className="perfil-page">
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
+        <div style={{display: "grid", gridTemplateColumns: "1fr", gap: "24px", marginTop: "3em"}}>
+          <div className="perfil-page" style={{display: "flex", justifyContent: "center", paddingBottom: 0}}>
+            <div style={{width: "100%", marginBottom: "-1em", marginTop: "-3em"}}>
+              {error && <div className="error-message">{error}</div>}
+              {success && <div className="success-message">{success}</div>}
+            </div>
+          </div>
 
-          {!editando ? (
-              <div className="perfil-grid">
+          <div className="perfil-page" style={{flex: 1, display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 0 }}>
 
-                {/* Card principal — avatar + nome + cargo */}
-                <div className="perfil-card perfil-card--hero">
-                  <div className="perfil-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
-                      <circle cx="12" cy="8" r="4" />
-                      <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
-                    </svg>
-                  </div>
-                  <h2 className="perfil-nome">{user.firstname} {user.lastname}</h2>
-                  <span className="perfil-cargo-badge" style={getCargoColor(user.authlevel)}>
-                {getCargoLabel(user.authlevel)}
-              </span>
-                  <p className="perfil-email-hint">{user.email}</p>
-                </div>
+            {!editando ? (
+                <div className="perfil-grid" style={{width: "100%"}}>
 
-                {/* Card de informações detalhadas */}
-                <div className="perfil-card perfil-card--info">
-                  <h3 className="perfil-section-title">Informações da conta</h3>
-
-                  <div className="perfil-info-grid">
-                    <div className="perfil-info-item">
-                      <span className="perfil-info-label">Nome</span>
-                      <span className="perfil-info-value">{user.firstname}</span>
+                  {/* Card principal — avatar + nome + cargo */}
+                  <div className="perfil-card perfil-card--hero" style={{height: "100%", boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px"}}>
+                    <div className="perfil-avatar">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+                      </svg>
                     </div>
-                    <div className="perfil-info-item">
-                      <span className="perfil-info-label">Sobrenome</span>
-                      <span className="perfil-info-value">{user.lastname}</span>
-                    </div>
-                    <div className="perfil-info-item perfil-info-item--wide">
-                      <span className="perfil-info-label">E-mail</span>
-                      <span className="perfil-info-value">{user.email}</span>
-                    </div>
-                    <div className="perfil-info-item">
-                      <span className="perfil-info-label">Cargo</span>
-                      <span className="perfil-info-value">{getCargoLabel(user.authlevel)}</span>
-                    </div>
+                    <h2 className="perfil-nome">{user.firstname} {user.lastname}</h2>
+                    <span className="perfil-cargo-badge" style={getCargoColor(user.authlevel)}>
+                      {getCargoLabel(user.authlevel)}
+                    </span>
+                    <p style={{fontSize: "15px", marginTop: "1em"}} className="perfil-email-hint">{user.email}</p>
                   </div>
 
-                  <div className="perfil-actions">
-                    <button className="btn-action btn-secondary" onClick={handleEditClick}>
-                      Editar informações
-                    </button>
-                    <button
-                        className="btn-action"
-                        onClick={handleSolicitarTrocaSenha}
-                    >
-                      Alterar senha por e-mail
-                    </button>
-                  </div>
-                </div>
+                  {/* Card de informações detalhadas */}
+                  <div className="perfil-card perfil-card--info" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px"}}>
+                    <h3 style={{fontSize: "1.1rem;"}} className="perfil-section-title">Informações da conta</h3>
 
-              </div>
-          ) : (
-              <div className="perfil-grid perfil-grid--form">
-                <div className="perfil-card perfil-card--form">
-                  <h3 className="perfil-section-title">Editar Informações</h3>
-
-                  <form onSubmit={handleSubmit}>
-                    <div className="perfil-form-row">
-                      <div className="form-group">
-                        <label>Nome</label>
-                        <input
-                            type="text"
-                            name="firstname"
-                            value={formData.firstname}
-                            onChange={handleChange}
-                            required
-                        />
+                    <div className="perfil-info-grid">
+                      <div className="perfil-info-item">
+                        <span className="perfil-info-label">Nome</span>
+                        <span className="perfil-info-value">{user.firstname}</span>
                       </div>
-                      <div className="form-group">
-                        <label>Sobrenome</label>
-                        <input
-                            type="text"
-                            name="lastname"
-                            value={formData.lastname}
-                            onChange={handleChange}
-                            required
-                        />
+                      <div className="perfil-info-item">
+                        <span className="perfil-info-label">Sobrenome</span>
+                        <span className="perfil-info-value">{user.lastname}</span>
                       </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label>E-mail</label>
-                      <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          required
-                      />
+                      <div className="perfil-info-item perfil-info-item--wide">
+                        <span className="perfil-info-label">E-mail</span>
+                        <span className="perfil-info-value">{user.email}</span>
+                      </div>
+                      <div className="perfil-info-item">
+                        <span className="perfil-info-label">Cargo</span>
+                        <span className="perfil-info-value">{getCargoLabel(user.authlevel)}</span>
+                      </div>
                     </div>
 
                     <div className="perfil-actions">
-                      <button
-                          type="button"
-                          className="sonic"
-                          onClick={() => {
-                            setEditando(false);
-                            setError(null);
-                            setSuccess(null);
-                          }}
-                      >
-                        Cancelar
+                      <button className="btn-action btn-secondary" onClick={handleEditClick}>
+                        Editar informações
                       </button>
                       <button
-                          type="submit"
-                          className="btn-action btn-save"
-                          disabled={saving}
+                          className="btn-action"
+                          onClick={handleSolicitarTrocaSenha}
                       >
-                        {saving ? "Salvando..." : "Salvar Alterações"}
+                        Alterar senha por e-mail
                       </button>
                     </div>
-                  </form>
-                </div>
-              </div>
-          )}
-        </div>
+                  </div>
 
+                </div>
+            ) : (
+                <div className="perfil-grid perfil-grid--form">
+                  <div className="perfil-card perfil-card--form" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px"}}>
+                    <h3 style={{fontSize:"1.1rem"}} className="perfil-section-title">Editar Informações</h3>
+
+                    <form onSubmit={handleSubmit}>
+                      <div className="perfil-form-row">
+                        <div className="form-group">
+                          <label>Nome</label>
+                          <input
+                              type="text"
+                              name="firstname"
+                              value={formData.firstname}
+                              onChange={handleChange}
+                              required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Sobrenome</label>
+                          <input
+                              type="text"
+                              name="lastname"
+                              value={formData.lastname}
+                              onChange={handleChange}
+                              required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label>E-mail</label>
+                        <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                        />
+                      </div>
+
+                      <div className="perfil-actions">
+                        <button
+                            type="button"
+                            className="sonic"
+                            onClick={() => {
+                              setEditando(false);
+                              setError(null);
+                              setSuccess(null);
+                            }}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="btn-action btn-save"
+                            disabled={saving}
+                            style={{borderRadius: "12px", padding: "0.9em"}}
+                        >
+                          {saving ? "Salvando..." : "Salvar Alterações"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+            )}
+          </div>
+        </div>
         <Footer />
       </div>
   );

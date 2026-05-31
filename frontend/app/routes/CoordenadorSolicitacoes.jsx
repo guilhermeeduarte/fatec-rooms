@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import Popup from "../components/Popup";
+import { LoadingState, ErrorState } from "../components/PageState";
 
 export default function CoordenadorSolicitacoes() {
   const [reservas, setReservas] = useState([]);
@@ -206,6 +207,42 @@ export default function CoordenadorSolicitacoes() {
     loadReservas(next, true);
   }
 
+  // Função para tentar recarregar os dados
+  const handleRetry = () => {
+    setLoading(true);
+    setError(null);
+    loadReservas(0);
+  };
+
+  // Estado de loading
+  if (loading) {
+    return (
+        <LoadingState
+            activePage="Coordenação"
+            heroTag="Área do Coordenador"
+            heroTitle="Solicitações de Reserva"
+            heroDescription="Aprove ou rejeite as solicitações de reservas pendentes."
+            description="Carregando solicitações pendentes..."
+        />
+    );
+  }
+
+  // Estado de erro
+  if (error) {
+    return (
+        <ErrorState
+            error={error}
+            title="Erro ao carregar solicitações"
+            onRetry={handleRetry}
+            onBack={() => window.location.href = "/"}
+            activePage="Coordenação"
+            heroTag="Área do Coordenador"
+            heroTitle="Solicitações de Reserva"
+            heroDescription="Aprove ou rejeite as solicitações de reservas pendentes."
+        />
+    );
+  }
+
   return (
       <>
         <Navbar activePage="Coordenação" />
@@ -232,10 +269,10 @@ export default function CoordenadorSolicitacoes() {
 
             {/* LISTA DE SOLICITAÇÕES */}
             <div className="container-reservas">
-              {loading && <p>Carregando solicitações...</p>}
-              {error && <p className="error-message">{error}</p>}
               {!loading && !error && reservasFiltradas.length === 0 && (
-                  <p>Nenhuma solicitação pendente.</p>
+                  <div className="empty-state">
+                    {busca ? "Nenhuma solicitação corresponde à busca." : "Nenhuma solicitação pendente."}
+                  </div>
               )}
               {reservasFiltradas.map((reserva) => (
                   <div
@@ -300,7 +337,7 @@ export default function CoordenadorSolicitacoes() {
           </div>
         </div>
 
-        {hasMore && (
+        {hasMore && reservasFiltradas.length > 0 && (
             <div style={{ textAlign: "center", margin: "20px 0" }}>
               <button className="btn-submit" onClick={loadMore} disabled={loadingMore} style={{ width: "200px" }}>
                 {loadingMore ? "Carregando..." : "Carregar mais"}
@@ -314,9 +351,8 @@ export default function CoordenadorSolicitacoes() {
               <div className="confirm-modal">
                 <div className="confirm-icon" style={{background: "#dcfce7"}}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24"
-                       fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"
-                       stroke-linejoin="round"
-                       className="lucide lucide-circle-check-icon lucide-circle-check">
+                       fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"
+                       strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10"/>
                     <path d="m9 12 2 2 4-4"/>
                   </svg>

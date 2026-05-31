@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 import Popup from "../components/Popup";
+import { LoadingState, ErrorState } from "../components/PageState";
 import "../styles/yoshi.css";
 import {
   CalendarCheck,
@@ -101,6 +102,11 @@ export default function Configuracao() {
   const [bookingSuspended, setBookingSuspended] = useState(false);
   const [savingSuspension, setSavingSuspension] = useState(false);
 
+
+  // No início do componente, após os outros useState:
+  const [loadingError, setLoadingError] = useState(null);  // Para erros de carregamento da página
+  const [operationError, setOperationError] = useState(null);  // Para erros de operações do usuário
+  const [showOperationErrorPopup, setShowOperationErrorPopup] = useState(false);
   // -------------------- Efeito inicial (cliente) --------------------
   useEffect(() => {
     const t = localStorage.getItem("token");
@@ -145,9 +151,9 @@ export default function Configuracao() {
     };
   }, [showExamWeekForm, showSemesterModal]);
 
-  useEffect(() => {
-    if (error) setShowErrorPopup(true);
-  }, [error]);
+  const handleRetry = () => {
+    window.location.reload();
+  };
 
   // -------------------- Função para formatar nome do semestre na exibição --------------------
   function formatarNomeSemestre(name) {
@@ -169,7 +175,7 @@ export default function Configuracao() {
   async function carregarInicial(tokenParam) {
     try {
       setLoading(true);
-      setError(null);
+      setLoadingError(null);  // Limpa erro de loading
       const [configResp, semResp, suspensionResp] = await Promise.all([
         fetch(`${API_URL}/config/booking/min-advance-days`, { headers: { Authorization: `Bearer ${tokenParam}` } }),
         fetch(`${API_URL}/semesters`, { headers: { Authorization: `Bearer ${tokenParam}` } }),
@@ -198,7 +204,7 @@ export default function Configuracao() {
         setBookingSuspended(suspData.suspended ?? false);
       }
     } catch (err) {
-      setError(err.message);
+      setLoadingError(err.message);  // Usa loadingError
     } finally {
       setLoading(false);
     }
@@ -213,7 +219,7 @@ export default function Configuracao() {
       const lista = Array.isArray(data) ? data : [];
       setAllSemestres(lista);
     } catch (err) {
-      setError(err.message);
+      setLoadingError(err.message);  // Usa loadingError
     } finally {
       setLoadingSemesters(false);
     }
@@ -296,8 +302,8 @@ export default function Configuracao() {
       setShowPopup(true);
       await carregarExamWeeks(semesterSelecionado, token);
     } catch (err) {
-      setError(err.message);
-      setShowErrorPopup(true);
+      setOperationError(err.message);
+      setShowOperationErrorPopup(true);
     } finally {
       setShowDeleteExamWeekModal(false);
       setExamWeekToDelete(null);
@@ -305,10 +311,14 @@ export default function Configuracao() {
   }
   // -------------------- Funções que usam o token do estado (já disponível) --------------------
   async function salvarPrazo() {
-    if (valorTempPrazo < 1) { setError("O prazo deve ser maior que 0."); return; }
+    if (valorTempPrazo < 1) {
+      setOperationError("O prazo deve ser maior que 0.");
+      setShowOperationErrorPopup(true);
+      return;
+    }
     if (!token) return;
     setSavingPrazo(true);
-    setError(null);
+    setOperationError(null);
     setSuccess(null);
     try {
       const resp = await fetch(`${API_URL}/config/booking/min-advance-days`, {
@@ -323,7 +333,8 @@ export default function Configuracao() {
       setSuccess("Prazo de antecedência atualizado com sucesso!");
       setShowPopup(true);
     } catch (err) {
-      setError(err.message);
+      setOperationError(err.message);
+      setShowOperationErrorPopup(true);
     } finally {
       setSavingPrazo(false);
     }
@@ -332,7 +343,7 @@ export default function Configuracao() {
   async function toggleSuspension() {
     if (!token) return;
     setSavingSuspension(true);
-    setError(null);
+    setOperationError(null);
 
     const newState = !bookingSuspended;
     setBookingSuspended(newState);
@@ -356,8 +367,8 @@ export default function Configuracao() {
         throw new Error(errorMessage);
       }
     } catch (err) {
-      setError(err.message);
-      setShowErrorPopup(true);
+      setOperationError(err.message);
+      setShowOperationErrorPopup(true);
     } finally {
       setSavingSuspension(false);
     }
@@ -371,16 +382,16 @@ export default function Configuracao() {
 
     // Validação 1: campos obrigatórios
     if (!nomeTrimmed || !startDate || !endDate) {
-      setError("Preencha todos os campos obrigatórios.");
-      setShowErrorPopup(true);
+      setOperationError("Preencha todos os campos obrigatórios.");
+      setShowOperationErrorPopup(true);
       return;
     }
 
     // Validação 2: formato do nome
     const nomeValido = /^(\d{4})\/([1-2])$/.test(nomeTrimmed);
     if (!nomeValido) {
-      setError("Formato inválido! Use o padrão AAAA/X (ex: 2026/1 para 1º semestre ou 2026/2 para 2º semestre)");
-      setShowErrorPopup(true);
+      setOperationError("Formato inválido! Use o padrão AAAA/X (ex: 2026/1 para 1º semestre ou 2026/2 para 2º semestre)");
+      setShowOperationErrorPopup(true);
       return;
     }
 
@@ -388,21 +399,21 @@ export default function Configuracao() {
     if (!editingSemesterId) {
       const existeDuplicata = allSemestres.some(sem => sem.name === nomeTrimmed);
       if (existeDuplicata) {
-        setError(`O semestre "${nomeTrimmed}" já existe. Não é possível criar duplicatas.`);
-        setShowErrorPopup(true);
+        setOperationError(`O semestre "${nomeTrimmed}" já existe. Não é possível criar duplicatas.`);
+        setShowOperationErrorPopup(true);
         return;
       }
     }
 
     // Validação 4: datas
     if (new Date(startDate) > new Date(endDate)) {
-      setError("A data de início não pode ser posterior à data de fim.");
-      setShowErrorPopup(true);
+      setOperationError("A data de início não pode ser posterior à data de fim.");
+      setShowOperationErrorPopup(true);
       return;
     }
 
     setSavingSemester(true);
-    setError(null);
+    setOperationError(null);
     setSuccess(null);
 
     try {
@@ -432,8 +443,8 @@ export default function Configuracao() {
       await carregarTodosSemestres(token);
       await carregarInicial(token);
     } catch (err) {
-      setError(err.message);
-      setShowErrorPopup(true);
+      setOperationError(err.message);
+      setShowOperationErrorPopup(true);
     } finally {
       setSavingSemester(false);
     }
@@ -463,8 +474,8 @@ export default function Configuracao() {
         else setSemesterSelecionado("");
       }
     } catch (err) {
-      setError(err.message);
-      setShowErrorPopup(true);
+      setOperationError(err.message);
+      setShowOperationErrorPopup(true);
     } finally {
       setShowDeleteSemesterModal(false);
       setSemesterToDelete(null);
@@ -490,7 +501,7 @@ export default function Configuracao() {
         else setSemesterSelecionado("");
       }
     } catch (err) {
-      setError(err.message);
+      setOperationError(err.message);
     }
   }
 
@@ -499,15 +510,15 @@ export default function Configuracao() {
     if (!token || !semesterSelecionado) return;
     const { examType, startDate, endDate, description } = currentExamWeek;
     if (!examType || !startDate || !endDate) {
-      setError("Preencha tipo, data início e data fim.");
+      setOperationError("Preencha tipo, data início e data fim.");
       return;
     }
     if (new Date(startDate) > new Date(endDate)) {
-      setError("Data início não pode ser posterior à data fim.");
+      setOperationError("Data início não pode ser posterior à data fim.");
       return;
     }
     setSavingExamWeek(true);
-    setError(null);
+    setOperationError(null);
     setSuccess(null);
     try {
       const url = editingExamWeekId
@@ -524,7 +535,7 @@ export default function Configuracao() {
       handleCloseExamWeekForm();
       await carregarExamWeeks(semesterSelecionado, token);
     } catch (err) {
-      setError(err.message);
+      setOperationError(err.message);
     } finally {
       setSavingExamWeek(false);
     }
@@ -543,7 +554,7 @@ export default function Configuracao() {
       setShowPopup(true);
       await carregarExamWeeks(semesterSelecionado, token);
     } catch (err) {
-      setError(err.message);
+      setOperationError(err.message);
     }
   }
 
@@ -551,9 +562,9 @@ export default function Configuracao() {
     e.preventDefault();
     if (!token) return;
     const { name, holidayDate, type, description } = currentHoliday;
-    if (!name || !holidayDate) { setError("Nome e data são obrigatórios."); return; }
+    if (!name || !holidayDate) { setOperationError("Nome e data são obrigatórios."); return; }
     setSavingHoliday(true);
-    setError(null);
+    setOperationError(null);
     setSuccess(null);
     try {
       const resp = await fetch(`${API_URL}/holidays`, {
@@ -568,7 +579,7 @@ export default function Configuracao() {
       setCurrentHoliday(EMPTY_HOLIDAY);
       await carregarFeriados(token);
     } catch (err) {
-      setError(err.message);
+      setOperationError(err.message);
     } finally {
       setSavingHoliday(false);
     }
@@ -577,7 +588,7 @@ export default function Configuracao() {
   async function deletarFeriado(id, name) {
     if (!token) return;
     if (!window.confirm(`Remover "${name}"?`)) return;
-    setError(null);
+    setOperationError(null);
     try {
       const resp = await fetch(`${API_URL}/holidays/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
       if (!resp.ok) throw new Error("Erro ao remover feriado");
@@ -585,14 +596,14 @@ export default function Configuracao() {
       setShowPopup(true);
       await carregarFeriados(token);
     } catch (err) {
-      setError(err.message);
+      setOperationError(err.message);
     }
   }
 
   async function previewNacionais() {
     if (!token) return;
     setLoadingPreview(true);
-    setError(null);
+    setOperationError(null);
     setShowPreview(false);
     try {
       const resp = await fetch(`${API_URL}/holidays/national/preview?year=${nationalYear}`, { headers: { Authorization: `Bearer ${token}` } });
@@ -601,7 +612,7 @@ export default function Configuracao() {
       setPreviewHolidays(data);
       setShowPreview(true);
     } catch (err) {
-      setError(err.message);
+      setOperationError(err.message);
     } finally {
       setLoadingPreview(false);
     }
@@ -610,7 +621,7 @@ export default function Configuracao() {
   async function importarNacionais() {
     if (!token) return;
     setImportingNational(true);
-    setError(null);
+    setOperationError(null);
     setSuccess(null);
     try {
       const resp = await fetch(`${API_URL}/holidays/national/import?year=${nationalYear}`, {
@@ -624,7 +635,7 @@ export default function Configuracao() {
       setShowPreview(false);
       await carregarFeriados(token);
     } catch (err) {
-      setError(err.message);
+      setOperationError(err.message);
     } finally {
       setImportingNational(false);
     }
@@ -650,7 +661,7 @@ export default function Configuracao() {
     setShowSemesterModal(false);
     setCurrentSemester(EMPTY_SEMESTER);
     setEditingSemesterId(null);
-    setError(null);
+    setOperationError(null);
   }
 
   function handleOpenExamWeekForm(examWeek = null) {
@@ -673,7 +684,7 @@ export default function Configuracao() {
     setShowExamWeekForm(false);
     setCurrentExamWeek(EMPTY_EXAM_WEEK);
     setEditingExamWeekId(null);
-    setError(null);
+    setOperationError(null);
   }
 
   // -------------------- Utilitários de UI --------------------
@@ -701,13 +712,33 @@ export default function Configuracao() {
   }
 
   // -------------------- Renderização condicional --------------------
-  if (loading) return (
-      <>
-        <Navbar activePage="configuracao" />
-        <div className="content">Carregando configurações...</div>
-        <Footer />
-      </>
-  );
+  // Renderização condicional
+  if (loading) {
+    return (
+        <LoadingState
+            activePage="configuracao"
+            heroTag="Área de Configuração"
+            heroTitle="Configurações do sistema"
+            heroDescription="Gerencie suas preferências e configurações do sistema."
+            description="Carregando configurações..."
+        />
+    );
+  }
+
+  if (loadingError && !loading) {
+    return (
+        <ErrorState
+            error={loadingError}
+            title="Erro ao carregar configurações"
+            onRetry={handleRetry}
+            onBack={() => navigate("/")}
+            activePage="configuracao"
+            heroTag="Área de Configuração"
+            heroTitle="Configurações do sistema"
+            heroDescription="Gerencie suas preferências e configurações do sistema."
+        />
+    );
+  }
 
   // -------------------- JSX --------------------
   return (
@@ -719,10 +750,10 @@ export default function Configuracao() {
             description="Gerencie suas preferências e configurações do sistema."
         />
 
-        <div className="content-config">
+        <div className="content-config" >
           {/* Prazo */}
           <h2 className="secao-titulo">Reservas</h2>
-          <div className="card" style={{ flexWrap: "wrap" }}>
+          <div className="card" style={{ flexWrap: "wrap", boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb"}}>
             <div className="card-left" style={{ flex: "1 1 200px" }}>
               <div className="icon-box"><CalendarCheck size={28} /></div>
               <div className="card-info">
@@ -738,7 +769,7 @@ export default function Configuracao() {
             ) : (
                 <div className="card-right" style={{ flex: "1 1 auto", justifyContent: "flex-end", flexWrap: "wrap", gap: "12px" }}>
                   <div className="input-group">
-                    <input type="number" value={valorTempPrazo} onChange={(e) => setValorTempPrazo(Number(e.target.value))} min="1" />
+                    <input style={{padding: "0.65rem 0.6rem", borderRadius: "10px", border: "1px solid #ccc", background: "#f5f5f5", fontFamily: "Inter" }} type="number" value={valorTempPrazo} onChange={(e) => setValorTempPrazo(Number(e.target.value))} min="1" />
                     <span>dias</span>
                   </div>
                   <div className="botoes">
@@ -751,7 +782,7 @@ export default function Configuracao() {
 
           {/* Suspensão */}
           <h2 className="secao-titulo">Disponibilidade</h2>
-          <div className="card">
+          <div className="card" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb"}}>
             <div className="card-left">
               <div className="icon-box" style={{ background: bookingSuspended ? "#fee2e2" : undefined }}>
                 <ShieldCheck size={28} color={bookingSuspended ? "#dc2626" : undefined} />
@@ -790,7 +821,7 @@ export default function Configuracao() {
 
           {/* Feriados */}
           <h2 className="secao-titulo">Feriados</h2>
-          <div className="card" style={{ marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
+          <div className="card" style={{ marginBottom: "1rem", flexWrap: "wrap", gap: "1rem", boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb" }}>
             <div className="card-left">
               <div className="icon-box"><Download size={22} /></div>
               <div className="card-info">
@@ -803,8 +834,8 @@ export default function Configuracao() {
                   type="number"
                   value={nationalYear}
                   onChange={(e) => setNationalYear(Number(e.target.value))}
-                  min="2024" max="2030"
-                  style={{ width: "90px", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #ccc" }}
+                  min="2024" max="2050"
+                  style={{padding: "0.65rem 0.6rem", borderRadius: "10px", border: "1px solid #ccc", background: "#f5f5f5", fontFamily: "Inter" }}
               />
               <button className="btn-action btn-editar" onClick={previewNacionais} disabled={loadingPreview}>
                 {loadingPreview ? "Buscando..." : "Prévia"}
@@ -835,7 +866,7 @@ export default function Configuracao() {
               </div>
           )}
 
-          <div className="card" style={{ flexDirection: "column", alignItems: "stretch", gap: "0.75rem" }}>
+          <div className="card" style={{ flexDirection: "column", alignItems: "stretch", gap: "0.75rem", boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb" }}>
             <div onClick={() => setFeriadosAbertos(prev => !prev)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", userSelect: "none" }}>
               <strong style={{ fontSize: "0.95rem" }}>
                 {holidays.length} feriado{holidays.length !== 1 ? "s" : ""} cadastrado{holidays.length !== 1 ? "s" : ""}
@@ -900,7 +931,7 @@ export default function Configuracao() {
               <div className="card"><p>Nenhum semestre cadastrado.</p></div>
           ) : (
               <>
-                <div className="card" style={{ marginBottom: "1rem" }}>
+                <div className="card" style={{ marginBottom: "1rem",boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb" }}>
                   <div className="card-left">
                     <div className="card-info">
                       <h3>Semestre ativo</h3>
@@ -913,7 +944,7 @@ export default function Configuracao() {
                     </select>
                   </div>
                 </div>
-                <div className="card" style={{ flexDirection: "column", alignItems: "stretch" }}>
+                <div className="card" style={{ flexDirection: "column", alignItems: "stretch", boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb"  }}>
                   {loadingExamWeeks ? <p>Carregando semanas de avaliação...</p> : examWeeks.length === 0 ? <p style={{ color: "var(--gray-500)" }}>Nenhuma semana de avaliação cadastrada.</p> : (
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                         {examWeeks.map((ew) => (
@@ -940,7 +971,7 @@ export default function Configuracao() {
 
           {/* Semestres */}
           <h2 className="secao-titulo">Gerenciamento de Semestres</h2>
-          <div className="card" style={{ flexDirection: "column", alignItems: "stretch", gap: "0.75rem" }}>
+          <div className="card" style={{ flexDirection: "column", alignItems: "stretch", gap: "0.75rem", boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb" }}>
             <div onClick={() => setSemestersAbertos(prev => !prev)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", userSelect: "none" }}>
               <strong style={{ fontSize: "0.95rem" }}>{allSemestres.length} semestre{allSemestres.length !== 1 ? "s" : ""} cadastrado{allSemestres.length !== 1 ? "s" : ""}</strong>
               <span style={{ fontSize: "0.85rem", color: "#888" }}>{semestersAbertos ? "▲ Recolher" : "▼ Expandir"}</span>
@@ -1005,9 +1036,7 @@ export default function Configuracao() {
                         placeholder="Ex.: 2026/1"
                         required
                         style={{
-                          borderColor: currentSemester.name && !/^(\d{4})\/([1-2])$/.test(currentSemester.name.trim())
-                              ? "#dc2626"
-                              : "#d1d5db"
+                          border: "1.5px solid #6b6b6b"
                         }}
                     />
                     <small style={{ color: "#6b7280", fontSize: "0.7rem", display: "block", marginTop: "4px" }}>
@@ -1072,7 +1101,7 @@ export default function Configuracao() {
         )}
 
         {showPopup && <Popup message={success} onClose={() => setShowPopup(false)} />}
-        {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
+        {showOperationErrorPopup && <Popup message={operationError} onClose={() => setShowOperationErrorPopup(false)} type="error" />}
 
         {/* Modal de confirmação de exclusão de semestre */}
         {showDeleteSemesterModal && semesterToDelete && (

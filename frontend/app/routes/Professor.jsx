@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
+import { LoadingState, ErrorState } from "../components/PageState";
 
 const menuActions = [
   {
@@ -296,21 +297,31 @@ export default function Professor() {
     }
   };
 
-  if (loading) return (
-    <>
-      <Navbar activePage="Área do Professor" />
-      <div className="content">Carregando dados do professor...</div>
-      <Footer />
-    </>
-  );
 
-  if (error) return (
-    <>
-      <Navbar activePage="Área do Professor" />
-      <div className="content">Erro: {error}</div>
-      <Footer />
-    </>
-  );
+
+    if (loading) {
+        return (
+            <LoadingState
+                activePage="Área do Professor"
+                heroTag="Painel do Professor"
+                heroTitle="Área do Professor"
+                heroDescription="Acompanhe suas reservas, solicite novas salas e controle seu calendário."
+                description="Carregando dados do professor..."
+            />
+        );
+    }
+
+    if (error) {
+        return (
+            <ErrorState
+                error={error}
+                activePage="Área do Professor"
+                heroTag="Painel do Professor"
+                heroTitle="Área do Professor"
+                heroDescription="Acompanhe suas reservas, solicite novas salas e controle seu calendário."
+            />
+        );
+    }
 
   return (
     <>

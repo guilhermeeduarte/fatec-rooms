@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 import "../styles/reservasRecentes.css";
+import { LoadingState, ErrorState } from "../components/PageState";
 
 const menuActions = [
     {
@@ -152,10 +153,16 @@ export default function Coordenador() {
       navigate('/');
     }
   }, [navigate]);
-
   useEffect(() => {
     async function loadDashboard() {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Sessão expirada. Faça login novamente.");
+        setLoading(false);
+        navigate("/");
+        return;
+      }
+
       const headers = {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -163,15 +170,21 @@ export default function Coordenador() {
       const today = new Date().toISOString().slice(0, 10);
 
       try {
+        // Adiciona timeout para as requisições
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos de timeout
+
         const [roomsResp, usersResp, todayResp, recentResp, pendingResp, recurringResp, pendingUsersResp] = await Promise.all([
-          fetch('/api/rooms', { headers }),
-          fetch('/api/admin/users', { headers }),
-          fetch(`/api/bookings/admin/by-date?date=${today}`, { headers }),
-          fetch('/api/bookings/admin/all?page=0&size=5', { headers }),
-          fetch('/api/bookings/admin/pending?page=0&size=50', { headers }),
-          fetch('/api/recurring-bookings?page=0&size=5', { headers }),
-          fetch('/api/admin/users/pending', { headers }), // Novo endpoint
+          fetch('/api/rooms', { headers, signal: controller.signal }),
+          fetch('/api/admin/users', { headers, signal: controller.signal }),
+          fetch(`/api/bookings/admin/by-date?date=${today}`, { headers, signal: controller.signal }),
+          fetch('/api/bookings/admin/all?page=0&size=5', { headers, signal: controller.signal }),
+          fetch('/api/bookings/admin/pending?page=0&size=50', { headers, signal: controller.signal }),
+          fetch('/api/recurring-bookings?page=0&size=5', { headers, signal: controller.signal }),
+          fetch('/api/admin/users/pending', { headers, signal: controller.signal }),
         ]);
+
+        clearTimeout(timeoutId);
 
         if (!roomsResp.ok) throw new Error('Falha ao buscar salas');
         if (!usersResp.ok) throw new Error('Falha ao buscar professores');
@@ -186,7 +199,6 @@ export default function Coordenador() {
         const pendingData = await pendingResp.json();
         const recurringData = recurringResp.ok ? await recurringResp.json() : { content: [] };
 
-        // Usar o endpoint específico para usuários pendentes
         let pendingUsersData = [];
         if (pendingUsersResp.ok) {
           pendingUsersData = await pendingUsersResp.json();
@@ -199,8 +211,15 @@ export default function Coordenador() {
         setRecentBookings(recentData.content ?? recentData);
         setPendingBookings(pendingData.content ?? pendingData);
         setRecentRecurring(recurringData.content ?? recurringData ?? []);
+        setError(null);
       } catch (err) {
-        setError(err.message || 'Erro ao carregar painel do coordenador.');
+        if (err.name === 'AbortError') {
+          setError('A requisição demorou muito. Verifique sua conexão e tente novamente.');
+        } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+          setError('Erro de conexão. Verifique sua internet e tente novamente.');
+        } else {
+          setError(err.message || 'Erro ao carregar painel do coordenador.');
+        }
       } finally {
         setLoading(false);
       }
@@ -235,21 +254,29 @@ export default function Coordenador() {
 
   if (loading) {
     return (
-      <>
-        <Navbar activePage="Área do Coordenador" />
-        <div className="content">Carregando painel do coordenador...</div>
-        <Footer />
-      </>
+        <LoadingState
+            activePage="Área do Coordenador"
+            heroVariant="coordenador"
+            heroTag="Painel Administrativo"
+            heroTitle="Área do Coordenador"
+            heroDescription="Gerencie salas, professores e reservas."
+            description="Carregando painel do coordenador..."
+        />
     );
   }
 
   if (error) {
     return (
-      <>
-        <Navbar activePage="Área do Coordenador" />
-        <div className="content">Erro: {error}</div>
-        <Footer />
-      </>
+        <ErrorState
+            error={error}
+            activePage="Área do Coordenador"
+            heroVariant="coordenador"
+            heroTag="Painel Administrativo"
+            heroTitle="Área do Coordenador"
+            heroDescription="Gerencie salas, professores e reservas."
+            onRetry={() => window.location.reload()}
+            onBack={() => navigate("/")}
+        />
     );
   }
 

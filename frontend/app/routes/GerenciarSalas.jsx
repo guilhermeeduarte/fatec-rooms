@@ -4,12 +4,13 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 import Popup from "../components/Popup";
+import { LoadingState, ErrorState } from "../components/PageState";
 
 export default function GerenciarSalas() {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loadingError, setLoadingError] = useState(null); // Apenas para erro de carregamento
 
   // Estados para o modal de confirmação
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -28,6 +29,8 @@ export default function GerenciarSalas() {
     async function loadRooms() {
       const token = localStorage.getItem("token");
       try {
+        setLoading(true);
+        setLoadingError(null);
         const response = await fetch("/api/rooms/all", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -40,7 +43,7 @@ export default function GerenciarSalas() {
         const data = await response.json();
         setRooms(data || []);
       } catch (err) {
-        setError(err.message || "Erro ao buscar salas.");
+        setLoadingError(err.message || "Erro ao buscar salas.");
       } finally {
         setLoading(false);
       }
@@ -80,7 +83,6 @@ export default function GerenciarSalas() {
 
         try {
           const errorData = await response.json();
-          // Tratamento específico para erro de reservas vinculadas
           if (response.status === 500 || errorData.message?.includes("reserva") || errorData.error?.includes("reserva")) {
             errorMessage = `Não é possível remover a sala "${roomToDelete.name}". Existem reservas vinculadas a esta sala.`;
           } else if (errorData.message) {
@@ -100,22 +102,53 @@ export default function GerenciarSalas() {
         throw new Error(errorMessage);
       }
 
-      // Remove a sala da lista localmente
       setRooms(prev => prev.filter(room => room.id !== roomToDelete.id));
       setPopupMessage(`Sala "${roomToDelete.name}" removida com sucesso.`);
       setShowPopup(true);
-
-      // Fecha o popup após 3 segundos
       setTimeout(() => setShowPopup(false), 3000);
     } catch (err) {
       setPopupMessage(err.message);
       setShowErrorPopup(true);
-      setTimeout(() => setShowErrorPopup(false), 4000); // Tempo maior para ler a mensagem
+      setTimeout(() => setShowErrorPopup(false), 4000);
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);
       setRoomToDelete(null);
     }
+  }
+
+  // Função para tentar recarregar os dados
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
+  // Estado de loading
+  if (loading) {
+    return (
+        <LoadingState
+            activePage="Gerenciar Salas"
+            heroTag="Gerenciamento"
+            heroTitle="Gerenciamento de Salas"
+            heroDescription="Veja todas as salas cadastradas e acesse as ações de adicionar, editar ou remover."
+            description="Carregando salas..."
+        />
+    );
+  }
+
+  // Estado de erro de loading
+  if (loadingError && !loading) {
+    return (
+        <ErrorState
+            error={loadingError}
+            title="Erro ao carregar salas"
+            onRetry={handleRetry}
+            onBack={() => navigate("/")}
+            activePage="Gerenciar Salas"
+            heroTag="Gerenciamento"
+            heroTitle="Gerenciamento de Salas"
+            heroDescription="Veja todas as salas cadastradas e acesse as ações de adicionar, editar ou remover."
+        />
+    );
   }
 
   return (
@@ -133,9 +166,7 @@ export default function GerenciarSalas() {
               Adicionar sala
             </Link>
           </div>
-          {loading && <div className="form-title">Carregando salas...</div>}
-          {error && <div className="form-title">Erro: {error}</div>}
-          {!loading && !error && rooms.length === 0 && (
+          {rooms.length === 0 && (
               <div className="form-title">Nenhuma sala cadastrada encontrada.</div>
           )}
           <div className="reservas-list">
@@ -208,7 +239,7 @@ export default function GerenciarSalas() {
             <Popup message={popupMessage} onClose={() => setShowPopup(false)} type="success" />
         )}
 
-        {/* Popup de erro */}
+        {/* Popup de erro - apenas para operações (excluir sala) */}
         {showErrorPopup && (
             <Popup message={popupMessage} onClose={() => setShowErrorPopup(false)} type="error" />
         )}

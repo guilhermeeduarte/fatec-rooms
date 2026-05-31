@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import Popup from "../components/Popup";
+import { LoadingState, ErrorState } from "../components/PageState";
 import Calendar from "react-calendar";
 
 function formatDateTime(dateStr) {
@@ -49,9 +50,10 @@ export default function SolicitaReserva() {
     const [recurringBookings, setRecurringBookings] = useState([]);
     const [holidays, setHolidays] = useState([]);
     const [examDatesSet, setExamDatesSet] = useState(new Set());
-    const [courses, setCourses] = useState([]); // Estado para armazenar os cursos
+    const [courses, setCourses] = useState([]);
     const [date, setDate] = useState(new Date());
     const [loadingPage, setLoadingPage] = useState(true);
+    const [loadingError, setLoadingError] = useState(null);
     const [loadingAvailability, setLoadingAvailability] = useState(false);
     const [loadingSubmit, setLoadingSubmit] = useState(false);
     const [error, setError] = useState(null);
@@ -82,6 +84,11 @@ export default function SolicitaReserva() {
     const [selectedPeriodIds, setSelectedPeriodIds] = useState([]);
     const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
 
+    // Função para tentar recarregar os dados
+    const handleRetry = () => {
+        window.location.reload();
+    };
+
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) { navigate("/login"); return; }
@@ -89,7 +96,7 @@ export default function SolicitaReserva() {
         async function loadPageData() {
             try {
                 setLoadingPage(true);
-                setError(null);
+                setLoadingError(null);
 
                 const headers = { Authorization: `Bearer ${token}` };
                 const [roomsRes, bookingsRes, holidaysRes, semestersRes, coursesRes] = await Promise.all([
@@ -97,7 +104,7 @@ export default function SolicitaReserva() {
                     fetch("/api/bookings/my", { headers }),
                     fetch("/api/holidays", { headers }),
                     fetch("/api/semesters", { headers }),
-                    fetch("/api/courses", { headers }), // Buscar cursos
+                    fetch("/api/courses", { headers }),
                 ]);
 
                 if (!roomsRes.ok) throw new Error("Falha ao carregar salas.");
@@ -114,7 +121,6 @@ export default function SolicitaReserva() {
                 // Carregar cursos
                 if (coursesRes.ok) {
                     const coursesData = await coursesRes.json();
-                    // Filtra apenas cursos ativos
                     const activeCourses = Array.isArray(coursesData)
                         ? coursesData.filter(course => course.active === true)
                         : [];
@@ -123,7 +129,7 @@ export default function SolicitaReserva() {
                     console.warn("Não foi possível carregar os cursos.");
                 }
 
-                // Carrega reservas recorrentes ativas para exibição no histórico abaixo do calendário.
+                // Carrega reservas recorrentes ativas
                 try {
                     const recurringRes = await fetch("/api/recurring-bookings", { headers });
                     if (recurringRes.ok) {
@@ -134,7 +140,7 @@ export default function SolicitaReserva() {
                     console.warn("Não foi possível carregar reservas recorrentes.", err);
                 }
 
-                // Carregar semanas de avaliação dos semestres ativos
+                // Carregar semanas de avaliação
                 if (semestersRes.ok) {
                     const semestersData = await semestersRes.json();
                     const activeSemesters = Array.isArray(semestersData) ? semestersData : (semestersData.content || []);
@@ -180,8 +186,7 @@ export default function SolicitaReserva() {
                 }
 
             } catch (err) {
-                setError(err.message || "Erro ao carregar a página.");
-                setShowErrorPopup(true);
+                setLoadingError(err.message || "Erro ao carregar a página.");
             } finally {
                 setLoadingPage(false);
             }
@@ -206,7 +211,6 @@ export default function SolicitaReserva() {
             setAvailability(await res.json());
         } catch (err) {
             setError(err.message || "Erro ao buscar disponibilidade.");
-            setShowErrorPopup(true);
             setAvailability(null);
         } finally {
             setLoadingAvailability(false);
@@ -295,7 +299,6 @@ export default function SolicitaReserva() {
         const token = localStorage.getItem("token");
         if (!token) { navigate("/login"); return; }
 
-        // No handleSubmit, onde constrói o notes
         const notes = form.naoSeAplica
             ? form.motivo
             : `${form.motivo}\nCurso: ${form.curso || "-"}`;
@@ -353,14 +356,33 @@ export default function SolicitaReserva() {
 
     const availablePeriods = availability?.periods?.filter(p => p.available) || [];
 
-    if (loadingPage) return (
-        <>
-            <Navbar activePage="SolicitaReserva" />
-            <PageHero variant="SolicitaReserva" tag="Painel Operacional" title="Solicitação de Reserva" description="Carregando..." />
-            <div className="content-solicitarReserva"><div className="form-title">Carregando informações...</div></div>
-            <Footer />
-        </>
-    );
+    // Estados de loading e erro
+    if (loadingPage) {
+        return (
+            <LoadingState
+                activePage="SolicitaReserva"
+                heroTag="Painel Operacional"
+                heroTitle="Solicitação de Reserva"
+                heroDescription="Gerencie as reservas de salas e visualize o histórico de solicitações."
+                description="Carregando informações..."
+            />
+        );
+    }
+
+    if (loadingError && !loadingPage) {
+        return (
+            <ErrorState
+                error={loadingError}
+                title="Erro ao carregar página"
+                onRetry={handleRetry}
+                onBack={() => navigate("/")}
+                activePage="SolicitaReserva"
+                heroTag="Painel Operacional"
+                heroTitle="Solicitação de Reserva"
+                heroDescription="Gerencie as reservas de salas e visualize o histórico de solicitações."
+            />
+        );
+    }
 
     // Tela de bloqueio por suspensão
     if (bookingSuspended) return (

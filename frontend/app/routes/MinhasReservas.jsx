@@ -3,13 +3,14 @@ import Navbar from "../components/Navbar";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import Popup from "../components/Popup";
+import { LoadingState, ErrorState } from "../components/PageState";
 import { Search } from 'lucide-react';
 import "../styles/todasReservas.css";
 
 export default function MinhasReservas() {
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loadingError, setLoadingError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -58,12 +59,21 @@ export default function MinhasReservas() {
     }
   }
 
+  // Função para tentar recarregar os dados
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
   async function carregar() {
     const token = localStorage.getItem("token");
-    if (!token) { setError("Faça login para ver suas reservas."); setLoading(false); return; }
+    if (!token) {
+      setLoadingError("Faça login para ver suas reservas.");
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      setError(null);
+      setLoadingError(null);
       const res = await fetch("/api/bookings/my", { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error("Falha ao carregar suas reservas.");
       const data = await res.json();
@@ -92,8 +102,7 @@ export default function MinhasReservas() {
         };
       }));
     } catch (err) {
-      setError(err.message || "Erro ao carregar suas reservas.");
-      setShowErrorPopup(true);
+      setLoadingError(err.message || "Erro ao carregar suas reservas.");
     } finally {
       setLoading(false);
     }
@@ -113,7 +122,7 @@ export default function MinhasReservas() {
   async function salvarEdicao(id) {
     const token = localStorage.getItem("token");
     if (!token) {
-      setError("Faça login para editar.");
+      setSuccess("Faça login para editar.");
       setShowErrorPopup(true);
       return;
     }
@@ -163,7 +172,7 @@ export default function MinhasReservas() {
       setShowSuccessPopup(true);
 
     } catch (err) {
-      setError(err.message || "Erro ao salvar.");
+      setSuccess(err.message || "Erro ao salvar.");
       setShowErrorPopup(true);
     } finally {
       setSalvando(false);
@@ -182,7 +191,7 @@ export default function MinhasReservas() {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      setError("Faça login para cancelar a reserva.");
+      setSuccess("Faça login para cancelar a reserva.");
       setShowErrorPopup(true);
       setShowConfirmModal(false);
       setSelectedReserva(null);
@@ -205,7 +214,7 @@ export default function MinhasReservas() {
       setShowConfirmModal(false);
       setSelectedReserva(null);
     } catch (err) {
-      setError(err.message || "Erro ao cancelar.");
+      setSuccess(err.message || "Erro ao cancelar.");
       setShowErrorPopup(true);
     }
   }
@@ -250,6 +259,34 @@ export default function MinhasReservas() {
 
   const podeEditar = (r) => r.status === "Pendente" || r.status === "Aceita";
   const podeAcionar = (r) => r.status !== "Cancelada" && r.status !== "Recusada";
+
+  // Estados de loading e erro
+  if (loading) {
+    return (
+        <LoadingState
+            activePage="Minhas Reservas"
+            heroTag="Área do Professor"
+            heroTitle="Minhas Reservas"
+            heroDescription="Visualize, filtre e gerencie suas reservas."
+            description="Carregando suas reservas..."
+        />
+    );
+  }
+
+  if (loadingError && !loading) {
+    return (
+        <ErrorState
+            error={loadingError}
+            title="Erro ao carregar reservas"
+            onRetry={handleRetry}
+            onBack={() => window.location.href = "/"}
+            activePage="Minhas Reservas"
+            heroTag="Área do Professor"
+            heroTitle="Minhas Reservas"
+            heroDescription="Visualize, filtre e gerencie suas reservas."
+        />
+    );
+  }
 
   return (
       <div className="tr-page">
@@ -334,15 +371,12 @@ export default function MinhasReservas() {
 
           {/* ── Contador de resultados ── */}
           <p className="tr-count">
-            {loading ? "Carregando…" : `${reservasFiltradas.length} reserva${reservasFiltradas.length !== 1 ? "s" : ""} encontrada${reservasFiltradas.length !== 1 ? "s" : ""}`}
+            {`${reservasFiltradas.length} reserva${reservasFiltradas.length !== 1 ? "s" : ""} encontrada${reservasFiltradas.length !== 1 ? "s" : ""}`}
           </p>
-
-          {/* ── Erro ── */}
-          {error && <div className="tr-error">{error}</div>}
 
           {/* ── Lista ── */}
           <div className="tr-list">
-            {!loading && reservasFiltradas.length === 0 && (
+            {reservasFiltradas.length === 0 && (
                 <div className="tr-empty">
                   {hasActiveFilters ? "Nenhuma reserva corresponde aos filtros." : "Você ainda não possui reservas."}
                 </div>
@@ -462,7 +496,7 @@ export default function MinhasReservas() {
         <Footer />
 
         {showSuccessPopup && <Popup message={success} onClose={() => setShowSuccessPopup(false)} />}
-        {showErrorPopup && <Popup message={error} onClose={() => setShowErrorPopup(false)} type="error" />}
+        {showErrorPopup && <Popup message={success} onClose={() => setShowErrorPopup(false)} type="error" />}
       </div>
   );
 }

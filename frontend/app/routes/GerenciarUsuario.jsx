@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
+import { LoadingState, ErrorState } from "../components/PageState";
 
 export default function GerenciarUsuario() {
     const navigate = useNavigate();
@@ -45,6 +46,8 @@ export default function GerenciarUsuario() {
         async function loadUsers() {
             try {
                 setLoading(true);
+                setError(null);
+
                 const meResponse = await fetch("/api/users/me", {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -142,7 +145,6 @@ export default function GerenciarUsuario() {
         filterStatus !== "todos";
 
     // --- Helpers de status ---
-    // --- Helpers de status ---
     function getStatusLabel(status) {
         if (status === 1) return "Ativo";
         if (status === 0) return "Desativado";
@@ -162,12 +164,13 @@ export default function GerenciarUsuario() {
         setSelectedUser(usuario);
         if (action === "reativar") {
             setShowReativarModal(true);
-            setShowModal(false); // Garante que o modal de desativar não abra
+            setShowModal(false);
         } else {
             setShowModal(true);
-            setShowReativarModal(false); // Garante que o modal de reativar não abra
+            setShowReativarModal(false);
         }
     }
+
     function openEditModal(usuario) {
         setEditingUser(usuario);
         setSuccessMessage(null);
@@ -248,7 +251,6 @@ export default function GerenciarUsuario() {
             );
             setSuccessMessage("Alteração salva.");
 
-            // Fechar modal após 1.5 segundos
             setTimeout(() => {
                 setShowEditModal(false);
                 setSuccessMessage(null);
@@ -296,20 +298,39 @@ export default function GerenciarUsuario() {
         }
     }
 
+    // Função para tentar recarregar os dados
+    const handleRetry = () => {
+        setLoading(true);
+        setError(null);
+        // Recarregar a página ou refazer a requisição
+        window.location.reload();
+    };
+
+    // Estados de loading e erro
     if (loading) {
         return (
-            <>
-                <Navbar activePage="gerenciar-usuarios" />
-                <PageHero
-                    tag="Gerenciamento"
-                    title="Gerenciamento de Usuários"
-                    description="Veja todos os usuários cadastrados e acesse as ações de editar ou desativar."
-                />
-                <div className="content">
-                    <p>Carregando usuários...</p>
-                </div>
-                <Footer />
-            </>
+            <LoadingState
+                activePage="gerenciar-usuarios"
+                heroTag="Gerenciamento"
+                heroTitle="Gerenciamento de Usuários"
+                heroDescription="Veja todos os usuários cadastrados e acesse as ações de editar ou desativar."
+                description="Carregando usuários..."
+            />
+        );
+    }
+
+    if (error) {
+        return (
+            <ErrorState
+                error={error}
+                title="Erro ao carregar usuários"
+                onRetry={handleRetry}
+                onBack={() => navigate("/")}
+                activePage="gerenciar-usuarios"
+                heroTag="Gerenciamento"
+                heroTitle="Gerenciamento de Usuários"
+                heroDescription="Veja todos os usuários cadastrados e acesse as ações de editar ou desativar."
+            />
         );
     }
 
@@ -325,7 +346,7 @@ export default function GerenciarUsuario() {
 
             <div className="content plok" style={{background: "none"}}>
 
-                {/* Barra de busca e filtros — usa classes já existentes no app.css */}
+                {/* Barra de busca e filtros */}
                 <div className="filtros">
                     <input
                         type="text"
@@ -363,9 +384,7 @@ export default function GerenciarUsuario() {
                     )}
                 </div>
 
-                {error ? (
-                    <div className="error-message">Erro: {error}</div>
-                ) : usuariosFiltrados.length === 0 ? (
+                {usuariosFiltrados.length === 0 ? (
                     <div className="empty-state">
                         {hasActiveFilters
                             ? "Nenhum usuário corresponde aos filtros aplicados."
@@ -375,28 +394,28 @@ export default function GerenciarUsuario() {
                     <>
                         <div className="reservas-list">
                             {usuariosFiltrados.map((usuario) => (
-                                                <div key={usuario.id} className="reserva-item"  style={{flexDirection:"column"}}>
-                  <div className="usuario-info">
-                    <div className="reserva-sala-user">{usuario.nome}</div>
-                    <div className="usuario-detalhes">
-                      <div style={{display:"flex", gap:"8px", flexWrap:"wrap", marginTop:"6px"}}>
-                  <div className="usuario-box">
-                    <span className="usuario-label">E-mail</span>
-                    <span className="usuario-value">{usuario.email}</span>
-                  </div>
-                  <div className="usuario-box">
-                    <span className="usuario-label">Tipo</span>
-                    <span className="usuario-value">{usuario.tipo}</span>
-                  </div>
-                </div>
-                    </div>
-                  </div>
+                                <div key={usuario.id} className="reserva-item" style={{flexDirection:"column"}}>
+                                    <div className="usuario-info">
+                                        <div className="reserva-sala-user">{usuario.nome}</div>
+                                        <div className="usuario-detalhes">
+                                            <div style={{display:"flex", gap:"8px", flexWrap:"wrap", marginTop:"6px"}}>
+                                                <div className="usuario-box">
+                                                    <span className="usuario-label">E-mail</span>
+                                                    <span className="usuario-value">{usuario.email}</span>
+                                                </div>
+                                                <div className="usuario-box">
+                                                    <span className="usuario-label">Tipo</span>
+                                                    <span className="usuario-value">{usuario.tipo}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", width:"100%", marginTop:"8px"}}>
                                         <div className={`reserva-status ${getStatusClass(usuario.status)}`}>
                                             {getStatusLabel(usuario.status)}
                                         </div>
                                         <div style={{display:"flex", gap:"8px"}}>
-                                            {/* Usuário Pendente - botões desabilitados e com opacidade */}
+                                            {/* Usuário Pendente - botões desabilitados */}
                                             {usuario.tipo === "Pendente" ? (
                                                 <>
                                                     <button className="btn-action btn-secondary" disabled style={{ opacity: 0.5, cursor: "not-allowed" }}>
@@ -432,31 +451,34 @@ export default function GerenciarUsuario() {
                                             )}
                                         </div>
                                     </div>
-</div>
+                                </div>
                             ))}
                         </div>
                     </>
                 )}
             </div>
 
-            {/* Modal: desativar - primeiro aviso */}
+            {/* Modais (mantidos iguais) */}
             {showModal && selectedUser && (
                 <div className="modal-overlay">
                     <div className="confirm-modal">
-                        <div className="confirm-icon" style={{ background: "#fef3c7"}}><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert-icon lucide-triangle-alert"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
+                        <div className="confirm-icon" style={{ background: "#fef3c7"}}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                                <path d="M12 9v4"/>
+                                <path d="M12 17h.01"/>
+                            </svg>
+                        </div>
                         <h2>Desativar usuário</h2>
                         <p>
                             Você está prestes a desativar o usuário <br/> <strong>{selectedUser.nome}</strong>.
                             <br />
                             <span style={{ fontSize: "0.8rem", color: "#d97706", display: "block", marginTop: "8px" }}>
-                    Esta ação pode ser revertida posteriormente.
-                </span>
+                                Esta ação pode ser revertida posteriormente.
+                            </span>
                         </p>
                         <div className="confirm-buttons">
-                            <button
-                                className="sonic"
-                                onClick={() => setShowModal(false)}
-                            >
+                            <button className="sonic" onClick={() => setShowModal(false)}>
                                 Cancelar
                             </button>
                             <button
@@ -473,7 +495,6 @@ export default function GerenciarUsuario() {
                 </div>
             )}
 
-            {/* Modal: editar */}
             {showEditModal && editingUser && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -536,7 +557,6 @@ export default function GerenciarUsuario() {
                 </div>
             )}
 
-            {/* Modal: confirmação de desativação */}
             {showConfirmModal && selectedUser && (
                 <div className="modal-overlay">
                     <div className="confirm-modal">
@@ -546,20 +566,14 @@ export default function GerenciarUsuario() {
                             Tem certeza que deseja desativar o usuário <br/> <strong>{selectedUser.nome}</strong>?
                             <br />
                             <span style={{ fontSize: "0.8rem", color: "#dc2626", display: "block", marginTop: "8px" }}>
-                    O usuário perderá acesso ao sistema até que seja reabilitado pela equipe.
-                </span>
+                                O usuário perderá acesso ao sistema até que seja reabilitado pela equipe.
+                            </span>
                         </p>
                         <div className="confirm-buttons">
-                            <button
-                                className="sonic"
-                                onClick={() => setShowConfirmModal(false)}
-                            >
+                            <button className="sonic" onClick={() => setShowConfirmModal(false)}>
                                 Voltar
                             </button>
-                            <button
-                                className="btn-action btn-danger"
-                                onClick={handleConfirmDisable}
-                            >
+                            <button className="btn-action btn-danger" onClick={handleConfirmDisable}>
                                 Sim, desativar
                             </button>
                         </div>
@@ -567,15 +581,13 @@ export default function GerenciarUsuario() {
                 </div>
             )}
 
-            {/* Modal: confirmação de reativação */}
             {showReativarModal && selectedUser && (
                 <div className="modal-overlay">
                     <div className="confirm-modal">
                         <div className="confirm-icon" style={{background: "#dcfce7"}}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24"
-                                 fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"
-                                 stroke-linejoin="round"
-                                 className="lucide lucide-circle-check-icon lucide-circle-check">
+                                 fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"
+                                 strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="10"/>
                                 <path d="m9 12 2 2 4-4"/>
                             </svg>
@@ -585,8 +597,8 @@ export default function GerenciarUsuario() {
                             Tem certeza que deseja reativar o usuário <br/> <strong>{selectedUser.nome}</strong>?
                             <br/>
                             <span style={{fontSize: "0.8rem", color: "#16a34a", display: "block", marginTop: "8px" }}>
-                    O usuário voltará a ter acesso normal ao sistema.
-                </span>
+                                O usuário voltará a ter acesso normal ao sistema.
+                            </span>
                         </p>
                         <div className="confirm-buttons">
                             <button
@@ -598,10 +610,7 @@ export default function GerenciarUsuario() {
                             >
                                 Cancelar
                             </button>
-                            <button
-                                className="btn-action btn-success"
-                                onClick={handleConfirmReativar}
-                            >
+                            <button className="btn-action btn-success" onClick={handleConfirmReativar}>
                                 Sim, reativar
                             </button>
                         </div>

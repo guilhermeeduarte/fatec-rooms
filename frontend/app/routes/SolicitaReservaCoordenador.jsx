@@ -5,6 +5,7 @@ import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import Popup from "../components/Popup";
 import Calendar from "react-calendar";
+import { LoadingState, ErrorState } from "../components/PageState";
 
 function formatDateTime(dateStr) {
   const date = new Date(dateStr);
@@ -36,7 +37,7 @@ export default function SolicitaReservaCoordenador() {
   const [recurringBookings, setRecurringBookings] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [examDatesSet, setExamDatesSet] = useState(new Set());
-  const [courses, setCourses] = useState([]); // Estado para cursos
+  const [courses, setCourses] = useState([]);
   const [date, setDate] = useState(new Date());
   const [loadingPage, setLoadingPage] = useState(true);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
@@ -91,7 +92,7 @@ export default function SolicitaReservaCoordenador() {
           fetch("/api/holidays", { headers }),
           fetch("/api/semesters", { headers }),
           fetch("/api/recurring-bookings", { headers }),
-          fetch("/api/courses", { headers }), // Buscar cursos
+          fetch("/api/courses", { headers }),
         ]);
 
         if (!roomsRes.ok) throw new Error("Falha ao carregar salas.");
@@ -109,10 +110,8 @@ export default function SolicitaReservaCoordenador() {
           setHolidays(Array.isArray(data) ? data : []);
         }
 
-        // Carregar cursos
         if (coursesRes.ok) {
           const coursesData = await coursesRes.json();
-          // Filtra apenas cursos ativos
           const activeCourses = Array.isArray(coursesData)
               ? coursesData.filter(course => course.active === true)
               : [];
@@ -121,7 +120,6 @@ export default function SolicitaReservaCoordenador() {
           console.warn("Não foi possível carregar os cursos.");
         }
 
-        // Semanas de avaliação
         if (semestersRes.ok) {
           const semestersData = await semestersRes.json();
           const activeSemesters = Array.isArray(semestersData)
@@ -158,7 +156,6 @@ export default function SolicitaReservaCoordenador() {
         }
       } catch (err) {
         setError(err.message || "Erro ao carregar a página.");
-        setShowErrorPopup(true);
       } finally {
         setLoadingPage(false);
       }
@@ -187,7 +184,6 @@ export default function SolicitaReservaCoordenador() {
       setAvailability(await res.json());
     } catch (err) {
       setError(err.message || "Erro ao buscar disponibilidade.");
-      setShowErrorPopup(true);
       setAvailability(null);
     } finally {
       setLoadingAvailability(false);
@@ -308,7 +304,6 @@ export default function SolicitaReservaCoordenador() {
       return;
     }
 
-    // Constrói o notes com motivo e curso
     const notes = form.naoSeAplica
         ? form.motivo
         : `${form.motivo}\nCurso: ${form.curso || "-"}`;
@@ -364,22 +359,39 @@ export default function SolicitaReservaCoordenador() {
 
   const availablePeriods = availability?.periods?.filter((p) => p.available) || [];
 
-  if (loadingPage)
+  // Função para tentar recarregar os dados
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
+  // Estado de loading
+  if (loadingPage) {
     return (
-        <>
-          <Navbar activePage="SolicitaReservaCoordenador" />
-          <PageHero
-              variant="SolicitaReserva"
-              tag="Painel do Coordenador"
-              title="Reserva de Salas"
-              description="Carregando..."
-          />
-          <div className="content-solicitarReserva">
-            <div className="form-title">Carregando informações...</div>
-          </div>
-          <Footer />
-        </>
+        <LoadingState
+            activePage="SolicitaReservaCoordenador"
+            heroTag="Painel do Coordenador"
+            heroTitle="Reserva de Salas"
+            heroDescription="Como coordenador, suas reservas são aprovadas automaticamente."
+            description="Carregando informações..."
+        />
     );
+  }
+
+  // Estado de erro
+  if (error && !loadingPage) {
+    return (
+        <ErrorState
+            error={error}
+            title="Erro ao carregar página"
+            onRetry={handleRetry}
+            onBack={() => navigate("/")}
+            activePage="SolicitaReservaCoordenador"
+            heroTag="Painel do Coordenador"
+            heroTitle="Reserva de Salas"
+            heroDescription="Como coordenador, suas reservas são aprovadas automaticamente."
+        />
+    );
+  }
 
   return (
       <>

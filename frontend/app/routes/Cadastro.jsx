@@ -55,9 +55,7 @@ function validateSenha(senha) {
 function parseRegisterError(message, status) {
     if (!message) return "Erro no cadastro. Tente novamente mais tarde.";
 
-    // Verificar se é erro 400 (Bad Request)
     if (status === 400) {
-        // Tentar extrair informações mais específicas
         if (message.includes("Username") || message.includes("username")) {
             return "Usuário já cadastrado. Este e-mail já está em uso.";
         }
@@ -67,7 +65,6 @@ function parseRegisterError(message, status) {
         return "Dados inválidos. Verifique se o e-mail já não está cadastrado.";
     }
 
-    // Mensagens específicas por conteúdo
     if (message.includes("Username já está em uso")) {
         return "Usuário já cadastrado. Verifique seu e-mail institucional ou use outro login.";
     }
@@ -152,15 +149,12 @@ export default function Cadastro() {
                 let status = response.status;
 
                 try {
-                    // Tentar extrair mensagem do JSON
                     const errorData = await response.json();
                     errorMessage = errorData.message || errorData.error || "";
                 } catch (e) {
-                    // Se não for JSON, pegar texto puro
                     errorMessage = await response.text();
                 }
 
-                // Tratamento especial para e-mail já cadastrado
                 if (status === 400) {
                     if (errorMessage.includes("email") || errorMessage.includes("Email")) {
                         throw new Error("Este e-mail já está cadastrado. Use outro endereço ou faça login.");
@@ -175,14 +169,63 @@ export default function Cadastro() {
 
             await response.text();
             setSubmitted(true);
-            setTimeout(() => navigate("/"), 3000);
+            setTimeout(() => navigate("/"), 5000);
         } catch (err) {
             setError(err.message);
         }
     }
 
+    // Tela de sucesso - com a mesma estilização do EsqueciSenha
+    if (submitted) {
+        return (
+            <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+                <Navbar activePage="Cadastro" />
+
+                <PageHero
+                    className="page-hero-cadastro"
+                    tag="Área de Cadastro"
+                    title="Cadastro do Usuário"
+                    description="Crie sua conta para acessar o sistema."
+                />
+
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+                    <div className="confirm-modal" style={{
+                        boxShadow: "0 1px 4px rgba(0,0,0,.1)",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "20px",
+                        maxWidth: "500px",
+                        width: "100%",
+                        margin: "0 auto",
+                        padding: "2rem",
+                        paddingBottom: "0",
+                        textAlign: "center"
+                    }}>
+                        <div className="confirm-icon" style={{ background: "#dcfce7", width: "64px", height: "64px" }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24"
+                                 fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"
+                                 strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="m9 12 2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <h2 style={{ fontSize: "1.5rem", marginTop: "0.5rem" }}>Cadastro realizado com sucesso!</h2>
+                        <p style={{ fontSize: "1rem", lineHeight: "1.5", color: "#374151" }}>
+                            Seu cadastro ficará pendente até ser aprovado por um coordenador.
+                        </p>
+                        <p style={{ fontSize: "0.9rem", color: "#16a34a", marginTop: "8px", padding: "12px", borderRadius: "8px" }}>
+                            Você será redirecionado para o login em breve.
+                        </p>
+                    </div>
+                </div>
+
+                <Footer />
+            </div>
+        );
+    }
+
+    // Tela do formulário
     return (
-        <>
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <Navbar activePage="Cadastro" />
 
             <PageHero
@@ -191,121 +234,110 @@ export default function Cadastro() {
                 title="Cadastro do Usuário"
                 description="Crie sua conta para acessar o sistema."
             />
-
-            <div className="content plok" style={{boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px",marginTop: "2em", marginBottom: "3em"}}>
-                {submitted ? (
-                    <div className="success-msg">
-                        <div className="success-icon">
-                            <svg viewBox="0 0 24 24">
-                                <polyline points="20 6 9 17 4 12" />
-                            </svg>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="content plok" style={{width: "100%", maxWidth: "1200px", boxShadow: "0 1px 4px rgba(0,0,0,.1)", border: "1px solid #e5e7eb", borderRadius: "20px", marginTop: "2em", marginBottom: "3em"}}>
+                    {error && (
+                        <div className="error-msg">
+                            <p>{error}</p>
                         </div>
-                        <h3>Cadastro realizado com sucesso!</h3>
-                        <p>Seu cadastro ficará pendente de aprovação por um coordenador. Você será redirecionado para o login em breve.</p>
-                    </div>
-                ) : (
-                    <>
-                        {error && (
-                            <div className="error-msg">
-                                <p>{error}</p>
-                            </div>
-                        )}
-                        <form onSubmit={handleSubmit}>
-                            <div className="form-group-cadastro">
-                                <label>Nome completo</label>
+                    )}
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group-cadastro">
+                            <label>Nome completo</label>
+                            <input
+                                type="text"
+                                name="nome"
+                                placeholder="Ex: João Silva"
+                                value={form.nome}
+                                onChange={handleChange}
+                                required
+                            />
+                            <small className="form-help">Informe nome e sobrenome, sem números.</small>
+                        </div>
+                        <div className="form-group-cadastro">
+                            <label>E-mail institucional</label>
+                            <input
+                                type="text"
+                                name="email"
+                                placeholder="joao@professor.cps.sp.gov.br"
+                                value={form.email}
+                                onChange={handleChange}
+                                required
+                            />
+                            <small className="form-help">Use seu e-mail institucional válido.</small>
+                        </div>
+                        <div className="form-group-cadastro">
+                            <label>Crie sua senha</label>
+                            <div className="input-with-icon">
                                 <input
-                                    type="text"
-                                    name="nome"
-                                    placeholder="Ex: João Silva"
-                                    value={form.nome}
+                                    type={showSenha ? "text" : "password"}
+                                    name="senha"
+                                    placeholder="Digite sua senha"
+                                    value={form.senha}
                                     onChange={handleChange}
                                     required
                                 />
-                                <small className="form-help">Informe nome e sobrenome, sem números.</small>
-                            </div>
-                            <div className="form-group-cadastro">
-                                <label>E-mail institucional</label>
-                                <input
-                                    type="text"
-                                    name="email"
-                                    placeholder="joao@professor.cps.sp.gov.br"
-                                    value={form.email}
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <small className="form-help">Use seu e-mail institucional válido.</small>
-                            </div>
-                            <div className="form-group-cadastro">
-                                <label>Crie sua senha</label>
-                                <div className="input-with-icon">
-                                    <input
-                                        type={showSenha ? "text" : "password"}
-                                        name="senha"
-                                        placeholder="Digite sua senha"
-                                        value={form.senha}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        className="password-toggle"
-                                        onClick={() => setShowSenha((prev) => !prev)}
-                                        aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
-                                    >
-                                        {showSenha ? <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                          viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                          stroke-width="2" stroke-linecap="round"
-                                                          stroke-linejoin="round"
-                                                          className="lucide lucide-eye-off-icon lucide-eye-off">
-                                            <path
-                                                d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
-                                            <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
-                                            <path
-                                                d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
-                                            <path d="m2 2 20 20"/>
-                                        </svg> : <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowSenha((prev) => !prev)}
+                                    aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
+                                >
+                                    {showSenha ? <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                       viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                      className="lucide lucide-eye-icon lucide-eye">
-                                            <path
-                                                d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
-                                            <circle cx="12" cy="12" r="3"/>
-                                        </svg>}
-                                    </button>
-                                </div>
-                                <small className="form-help">Mínimo 6 caracteres, sem espaços ou repetições.</small>
+                                                      strokeWidth="2" strokeLinecap="round"
+                                                      strokeLinejoin="round"
+                                                      className="lucide lucide-eye-off-icon lucide-eye-off">
+                                        <path
+                                            d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
+                                        <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
+                                        <path
+                                            d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
+                                        <path d="m2 2 20 20"/>
+                                    </svg> : <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                                                  className="lucide lucide-eye-icon lucide-eye">
+                                        <path
+                                            d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>}
+                                </button>
                             </div>
-                            <div className="form-group-cadastro">
-                                <label>Confirme sua senha</label>
-                                <div className="input-with-icon">
-                                    <input
-                                        type={showConfirmSenha ? "text" : "password"}
-                                        name="confirmarSenha"
-                                        placeholder="Confirme sua senha"
-                                        value={form.confirmarSenha}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        className="password-toggle"
-                                        onClick={() => setShowConfirmSenha((prev) => !prev)}
-                                        aria-label={showConfirmSenha ? "Ocultar senha" : "Mostrar senha"}
-                                    >
-                                        {showConfirmSenha ? <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off-icon lucide-eye-off"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-icon lucide-eye"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>}
-                                    </button>
-                                </div>
+                            <small className="form-help">Mínimo 6 caracteres, sem espaços ou repetições.</small>
+                        </div>
+                        <div className="form-group-cadastro">
+                            <label>Confirme sua senha</label>
+                            <div className="input-with-icon">
+                                <input
+                                    type={showConfirmSenha ? "text" : "password"}
+                                    name="confirmarSenha"
+                                    placeholder="Confirme sua senha"
+                                    value={form.confirmarSenha}
+                                    onChange={handleChange}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowConfirmSenha((prev) => !prev)}
+                                    aria-label={showConfirmSenha ? "Ocultar senha" : "Mostrar senha"}
+                                >
+                                    {showConfirmSenha ? <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye-off-icon lucide-eye-off"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye-icon lucide-eye"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>}
+                                </button>
                             </div>
+                        </div>
 
-                            <button type="submit" className="btn-submit-cadastro">
-                                Cadastrar-se
-                            </button>
-                        </form>
-                    </>
-                )}
+                        <button type="submit" className="btn-submit-cadastro">
+                            Cadastrar-se
+                        </button>
+                        <div style={{ textAlign: "center", marginTop: "1em" }}>
+                            <a className="see-all" href="/">Voltar para o Login</a>
+                        </div>
+                    </form>
+                </div>
             </div>
-
             <Footer />
-        </>
+        </div>
     );
 }

@@ -1155,6 +1155,7 @@ button.menu-card {
 .reserva-info {
   flex: 1;
   min-width: 0;
+  margin-left: -1.5em;
 }
 
 .room-actions {
@@ -1533,6 +1534,16 @@ button.menu-card {
     padding: 10px;
   }
 }
+
+@media (max-width: 468px) {
+  .form-group-cadastro {
+    margin-bottom: 12px;
+    margin-left: 1px;
+    margin-right: 1px;
+    padding: 10px;
+  }
+}
+
 
 .form-group-cadastro label {
   display: block;
@@ -3206,10 +3217,6 @@ button:disabled {
   color: white;
 }
 
-.btn-rejeitar:hover {
-  background: #D32F2F;
-}
-
 /* Modal de rejeição */
 .modal-rejeicao {
   margin-top: 15px;
@@ -3600,7 +3607,6 @@ button:disabled {
 
 .perfil-grid--form {
   grid-template-columns: 1fr;
-  max-width: 600px;
 }
 
 /* card base */
@@ -8038,7 +8044,15 @@ footer, .Footer {
 .content.plok{
   margin-right: 1em !important;
   margin-left: 1em !important;
+  }
 }
+
+
+@media(max-width: 940px) {
+  .content.plok3{
+    margin-right: 1em !important;
+    margin-left: 1em !important;
+  }
 }
 
 @media(min-width: 600px) and (max-width: 1280px) {
@@ -8119,3 +8133,26 @@ footer, .Footer {
   display: none;
 }
 
+@media(max-width: 769px){
+   .perfil-page{
+   display: inline-block !important;
+
+  }
+  .perfil-grid.perfil-grid--form {
+    display: flex;
+    justify-content: center;
+  }
+  .perfil-card.perfil-card--form {
+    min-width: 100% !important;
+  }
+
+}
+
+@media(max-width: 398px) {
+
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
