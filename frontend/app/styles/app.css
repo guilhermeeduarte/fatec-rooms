@@ -1117,6 +1117,7 @@ button.menu-card {
 /* Reservas */
 .reservas-list {
   padding: 0;
+  margin-left: 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1155,7 +1156,6 @@ button.menu-card {
 .reserva-info {
   flex: 1;
   min-width: 0;
-  margin-left: -1.5em;
 }
 
 .room-actions {

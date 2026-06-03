@@ -74,6 +74,16 @@
     text-overflow: ellipsis;
 }
 
+.dashboard-sidebar .reserva-sala.reserva-sala--empty {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+}
+
+.dashboard-sidebar .reserva-item:has(.reserva-sala--empty) {
+    overflow: visible;
+}
+
 .dashboard-sidebar .reserva-prof {
     font-size: 11px;
     color: var(--gray-500);
@@ -105,4 +115,12 @@
     .dashboard-sidebar {
         width: 100%;
     }
+}
+.reservas-list .reserva-item {
+    padding: 12px 16px;
+}
+
+.reserva-info {
+    flex: 1;
+    min-width: 0;
 }

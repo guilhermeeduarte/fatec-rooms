@@ -378,7 +378,7 @@ export default function SolicitaReservaCoordenador() {
   }
 
   // Estado de erro
-  if (error && !loadingPage) {
+  if (!loadingPage && error && salas.length === 0) {
     return (
         <ErrorState
             error={error}
